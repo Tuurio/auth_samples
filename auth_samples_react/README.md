@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# Tuurio Auth React Demo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
 
-Currently, two official plugins are available:
+## What you need
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- A client registered in your Tuurio account (from the id.tuurio.com dashboard).
+- The client configuration snippet copied from the dashboard.
 
-## React Compiler
+Make sure the client has these URLs configured:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+Redirect URI: http://localhost:5173/auth/callback
+Post-logout Redirect URI: http://localhost:5173/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+npm install
+npm run dev
+```
+
+Open:
+
+```
+http://localhost:5173
+```
+
+## What you will see
+
+- A login screen with a “Continue with Tuurio ID” button.
+- After you authenticate, you are redirected back to the app.
+- The app shows:
+  - Access token and ID token (raw + decoded claims).
+  - Token expiry time and scope.
+  - User profile JSON.
+  - Logout button that ends the session and returns to the app.
+
+## Configuration
+
+Edit `src/auth.ts` with the values from your **Connect** page:
+
+```
+https://<tenantId>.id.tuurio.com/admin/clients
+```
+
+All relevant values (client ID, redirect/callback URL, post-logout URL, scopes) must be copied from your
+tenant’s client configuration. **This demo uses sample values**, so replace them with your tenant’s settings.
+
+The current sample values are:
+
+```
+authority: https://test.id.tuurio.com
+client_id: spa-K53I
+redirect_uri: http://localhost:5173/auth/callback
+post_logout_redirect_uri: http://localhost:5173/
+scope: openid profile email
+```
+
+## Notes
+
+- The app stores session state in `sessionStorage` to reduce persistence.
+- The OAuth callback route is `/auth/callback`.
+
+## Troubleshooting
+
+**Login hangs on “Completing sign-in”**
+- In dev, React StrictMode can double-run the callback. This demo already guards against that.
+- If you customized `AuthCallback`, ensure you only call `signinRedirectCallback()` once.
+
+**No matching state found in storage after login**
+- Make sure the origin you open matches the redirect URI exactly
+  (no `127.0.0.1` vs `localhost`, no `https` vs `http`).
+- If your IdP opens the callback in a new tab, `sessionStorage` won’t match.
+  Switch to `localStorage` or keep the flow in the same tab.
+
+**Server error: redirectUris cannot be empty**
+- Your client registration in the IdP has an empty redirect URIs list.
+  Add `http://localhost:5173/auth/callback` and save.
