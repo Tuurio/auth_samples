@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Not Found</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="app">
+        <aside class="side-panel">
+          <div class="brand">
+            <div class="logo-mark">tu</div>
+            <div>
+              <p class="brand-name">Tuurio Auth Studio</p>
+              <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+            </div>
+          </div>
+          <div class="side-card">
+            <h1>Design for secure sign-in.</h1>
+            <p class="muted">
+              A minimal Java server that signs in with OpenID Connect, displays decoded tokens,
+              and supports secure logout redirects.
+            </p>
+            <div class="status-row">
+              <span class="status status-neutral">Route not found</span>
+              <span class="muted">Authority: test.id.tuurio.com</span>
+            </div>
+          </div>
+          <div class="side-list">
+            <div>
+              <span class="eyebrow">Architecture</span>
+              <p>Authorization code flow + PKCE</p>
+            </div>
+            <div>
+              <span class="eyebrow">Storage</span>
+              <p>Server session storage</p>
+            </div>
+            <div>
+              <span class="eyebrow">Scope</span>
+              <p>openid profile email</p>
+            </div>
+          </div>
+        </aside>
+        <main class="main-panel">
+          <section class="card">
+            <div class="stack">
+              <div class="status status-bad">404</div>
+              <h2 class="card-title">This route doesn't exist.</h2>
+              <p class="muted">Return to the login page to start a new session.</p>
+              <a class="button ghost" href="/">Go home</a>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tuurio Auth Java Demo</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="app">
+        <aside class="side-panel">
+          <div class="brand">
+            <div class="logo-mark">tu</div>
+            <div>
+              <p class="brand-name">Tuurio Auth Studio</p>
+              <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+            </div>
+          </div>
+          <div class="side-card">
+            <h1>Design for secure sign-in.</h1>
+            <p class="muted">
+              A minimal Java server that signs in with OpenID Connect, displays decoded tokens,
+              and supports secure logout redirects.
+            </p>
+            <div class="status-row">
+              <span class="status" th:classappend="' status-' + ${statusTone}">[[${statusLabel}]]</span>
+              <span class="muted">Authority: test.id.tuurio.com</span>
+            </div>
+          </div>
+          <div class="side-list">
+            <div>
+              <span class="eyebrow">Architecture</span>
+              <p>Authorization code flow + PKCE</p>
+            </div>
+            <div>
+              <span class="eyebrow">Storage</span>
+              <p>Server session storage</p>
+            </div>
+            <div>
+              <span class="eyebrow">Scope</span>
+              <p>openid profile email</p>
+            </div>
+          </div>
+        </aside>
+        <main class="main-panel">
+          <div th:if="${authenticated}">
+            <div class="stack">
+              <section class="card">
+                <div class="card-header">
+                  <span class="eyebrow">Session ready</span>
+                  <h2 class="card-title">You're signed in</h2>
+                  <p class="muted">
+                    Tokens expire at [[${expiresLabel}]] and are scoped for [[${scopeLabel}]].
+                  </p>
+                </div>
+                <div class="button-row">
+                  <a class="button ghost" href="/logout">Logout</a>
+                  <span class="helper">Tokens expire automatically; logout revokes session.</span>
+                </div>
+              </section>
+
+              <div class="token-grid">
+                <section class="card card-panel">
+                  <div class="panel-header">
+                    <div>
+                      <h3 class="panel-title">Access Token</h3>
+                      <p class="muted">Used to call protected APIs.</p>
+                    </div>
+                  </div>
+                  <pre class="token-block">[[${accessToken}]]</pre>
+                  <div class="token-claims">
+                    <span class="eyebrow">Decoded claims</span>
+                    <pre class="code-block">[[${accessDecoded}]]</pre>
+                  </div>
+                </section>
+
+                <section class="card card-panel">
+                  <div class="panel-header">
+                    <div>
+                      <h3 class="panel-title">ID Token</h3>
+                      <p class="muted">Proves the authenticated user.</p>
+                    </div>
+                  </div>
+                  <pre class="token-block">[[${idToken}]]</pre>
+                  <div class="token-claims">
+                    <span class="eyebrow">Decoded claims</span>
+                    <pre class="code-block">[[${idDecoded}]]</pre>
+                  </div>
+                </section>
+              </div>
+
+              <section class="card card-soft">
+                <h3 class="section-title">User profile (UserInfo)</h3>
+                <pre class="code-block">[[${profileJson}]]</pre>
+              </section>
+            </div>
+          </div>
+
+          <div th:unless="${authenticated}">
+            <div class="stack">
+              <section class="card">
+                <div class="card-header">
+                  <span class="eyebrow">OAuth 2.1 + OpenID Connect</span>
+                  <h2 class="card-title">Sign in to continue</h2>
+                  <p class="muted">
+                    This app uses the authorization code flow with PKCE to fetch tokens securely for a
+                    browser-based client.
+                  </p>
+                </div>
+                <div class="button-row">
+                  <a class="button primary" href="/login">Continue with Tuurio ID</a>
+                  <span class="helper">You'll be redirected to test.id.tuurio.com</span>
+                </div>
+                <div class="status status-bad" th:if="${error}" th:text="${error}"></div>
+              </section>
+              <section class="card card-soft">
+                <div class="feature-grid">
+                  <div class="feature">
+                    <h3>PKCE by default</h3>
+                    <p class="muted">Proof Key for Code Exchange protects the code flow.</p>
+                  </div>
+                  <div class="feature">
+                    <h3>Short-lived tokens</h3>
+                    <p class="muted">Access tokens are scoped to openid profile email.</p>
+                  </div>
+                  <div class="feature">
+                    <h3>Session aware</h3>
+                    <p class="muted">Token state is persisted in server session storage.</p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
