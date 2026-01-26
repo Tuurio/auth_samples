@@ -1,6 +1,6 @@
-# Tuurio Auth React Demo
+# Tuurio Auth Next.js Demo
 
-A React + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+A Next.js demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
 
 ## What you need
 
@@ -10,8 +10,8 @@ A React + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays
 Make sure the client has these URLs configured:
 
 ```
-Redirect URI: http://localhost:5173/auth/callback
-Post-logout Redirect URI: http://localhost:5173/
+Redirect URI: http://localhost:3000/auth/callback
+Post-logout Redirect URI: http://localhost:3000/
 ```
 
 ## Setup
@@ -24,13 +24,13 @@ npm run dev
 Open:
 
 ```
-http://localhost:5173
+http://localhost:3000
 ```
 
 ## Redirect URL checklist
 
 - Redirect URI must match exactly (protocol, host, port, path).
-- Dev server port is `5173`.
+- Dev server port is `3000`.
 - Callback route is `/auth/callback`.
 
 ## What you will see
@@ -45,7 +45,7 @@ http://localhost:5173
 
 ## Configuration
 
-Edit `src/auth.ts` with the values from your **Connect** page:
+Edit `lib/auth.ts` with the values from your **Connect** page:
 
 ```
 https://<tenantId>.id.tuurio.com/admin/clients
@@ -58,9 +58,9 @@ The current sample values are:
 
 ```
 authority: https://test.id.tuurio.com
-client_id: spa-K53I
-redirect_uri: http://localhost:5173/auth/callback
-post_logout_redirect_uri: http://localhost:5173/
+clientId: spa-K53I
+redirectUri: http://localhost:3000/auth/callback
+postLogoutRedirectUri: http://localhost:3000/
 scope: openid profile email
 ```
 
@@ -73,7 +73,7 @@ scope: openid profile email
 
 **Login hangs on “Completing sign-in”**
 - In dev, React StrictMode can double-run the callback. This demo already guards against that.
-- If you customized `AuthCallback`, ensure you only call `signinRedirectCallback()` once.
+- If you customized the callback page, ensure you only call `signinRedirectCallback()` once.
 
 **No matching state found in storage after login**
 - Make sure the origin you open matches the redirect URI exactly
@@ -83,4 +83,4 @@ scope: openid profile email
 
 **Server error: redirectUris cannot be empty**
 - Your client registration in the IdP has an empty redirect URIs list.
-  Add `http://localhost:5173/auth/callback` and save.
+  Add `http://localhost:3000/auth/callback` and save.

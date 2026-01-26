@@ -1,0 +1,23 @@
+{
+  "name": "auth-samples-nextjs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.2.5",
+    "oidc-client-ts": "^3.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.2.67",
+    "@types/react-dom": "^18.2.22",
+    "typescript": "^5.4.5"
+  }
+}

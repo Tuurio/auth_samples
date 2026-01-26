@@ -1,0 +1,27 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application
+    android:label="Tuurio Auth Android Demo"
+    android:theme="@style/Theme.TuurioAuthSample">
+    <activity
+      android:name=".MainActivity"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+
+    <activity
+      android:name="net.openid.appauth.RedirectUriReceiverActivity"
+      android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data
+                android:scheme="com.example.app"
+                android:host="oauth2redirect" />
+        </intent-filter>
+    </activity>
+  </application>
+</manifest>

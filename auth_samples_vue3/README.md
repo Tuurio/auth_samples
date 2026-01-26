@@ -27,6 +27,12 @@ Open:
 http://localhost:5173
 ```
 
+## Redirect URL checklist
+
+- Redirect URI must match exactly (protocol, host, port, path).
+- Dev server port is `5173`.
+- Callback route is `/auth/callback`.
+
 ## What you will see
 
 - A login screen with a “Continue with Tuurio ID” button.

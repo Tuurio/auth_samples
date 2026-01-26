@@ -1,6 +1,6 @@
-# Tuurio Auth React Demo
+# Tuurio Auth Angular Demo
 
-A React + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+An Angular demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
 
 ## What you need
 
@@ -10,27 +10,27 @@ A React + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays
 Make sure the client has these URLs configured:
 
 ```
-Redirect URI: http://localhost:5173/auth/callback
-Post-logout Redirect URI: http://localhost:5173/
+Redirect URI: http://localhost:4200/auth/callback
+Post-logout Redirect URI: http://localhost:4200/
 ```
 
 ## Setup
 
 ```
 npm install
-npm run dev
+npm start
 ```
 
 Open:
 
 ```
-http://localhost:5173
+http://localhost:4200
 ```
 
 ## Redirect URL checklist
 
 - Redirect URI must match exactly (protocol, host, port, path).
-- Dev server port is `5173`.
+- Dev server port is `4200`.
 - Callback route is `/auth/callback`.
 
 ## What you will see
@@ -45,7 +45,7 @@ http://localhost:5173
 
 ## Configuration
 
-Edit `src/auth.ts` with the values from your **Connect** page:
+Edit `src/app/auth/auth.config.ts` with the values from your **Connect** page:
 
 ```
 https://<tenantId>.id.tuurio.com/admin/clients
@@ -58,9 +58,9 @@ The current sample values are:
 
 ```
 authority: https://test.id.tuurio.com
-client_id: spa-K53I
-redirect_uri: http://localhost:5173/auth/callback
-post_logout_redirect_uri: http://localhost:5173/
+clientId: spa-K53I
+redirectUri: http://localhost:4200/auth/callback
+postLogoutRedirectUri: http://localhost:4200/
 scope: openid profile email
 ```
 
@@ -72,8 +72,7 @@ scope: openid profile email
 ## Troubleshooting
 
 **Login hangs on “Completing sign-in”**
-- In dev, React StrictMode can double-run the callback. This demo already guards against that.
-- If you customized `AuthCallback`, ensure you only call `signinRedirectCallback()` once.
+- Ensure you only call `signinRedirectCallback()` once per callback. This demo guards against duplicates in the callback component.
 
 **No matching state found in storage after login**
 - Make sure the origin you open matches the redirect URI exactly
@@ -83,4 +82,4 @@ scope: openid profile email
 
 **Server error: redirectUris cannot be empty**
 - Your client registration in the IdP has an empty redirect URIs list.
-  Add `http://localhost:5173/auth/callback` and save.
+  Add `http://localhost:4200/auth/callback` and save.
