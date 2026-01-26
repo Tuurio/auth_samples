@@ -276,9 +276,9 @@ struct TokenView: View {
       }
 
       CardView(tone: .soft) {
-        Text("User profile")
+        Text("User profile (UserInfo)")
           .font(.system(size: 16, weight: .semibold))
-        CodeBlock(text: session.profileJson ?? "No profile claims.")
+        CodeBlock(text: session.profileJson ?? "No profile data.")
       }
     }
   }

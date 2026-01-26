@@ -37,8 +37,13 @@ try {
         $expiresAt = (int) $tokens['expires_at'];
     }
 
-    $profile = decode_jwt($tokens['id_token'] ?? '');
-    $profileJson = $profile ? json_encode($profile, JSON_PRETTY_PRINT) : null;
+    $discovery = fetch_discovery($config);
+    $userInfoEndpoint = $discovery['userinfo_endpoint'] ?? null;
+    $profileJson = null;
+    if ($userInfoEndpoint) {
+        $profile = fetch_userinfo($userInfoEndpoint, $accessToken);
+        $profileJson = json_encode($profile, JSON_PRETTY_PRINT);
+    }
 
     $_SESSION['auth'] = [
         'access_token' => $accessToken,

@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "oidc-client-ts";
-import { authManager, handleCallback, login, logout } from "./auth";
+import { authManager, fetchUserInfo, handleCallback, login, logout } from "./auth";
 
 type AuthContextValue = {
   user: User | null;
+  profile: Record<string, unknown> | null;
   loading: boolean;
   error: string | null;
   login: () => Promise<void>;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,13 +26,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     authManager
       .getUser()
-      .then((currentUser) => {
+      .then(async (currentUser) => {
         if (!active) return;
         if (currentUser && isUserExpired(currentUser)) {
           authManager.removeUser().catch(() => undefined);
           setUser(null);
+          setProfile(null);
         } else {
           setUser(currentUser);
+          if (currentUser?.access_token) {
+            try {
+              const info = await fetchUserInfo(currentUser.access_token);
+              if (active) setProfile(info);
+            } catch {
+              if (active) setProfile(null);
+            }
+          }
         }
         setLoading(false);
       })
@@ -44,15 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isUserExpired(loadedUser)) {
         authManager.removeUser().catch(() => undefined);
         setUser(null);
+        setProfile(null);
         return;
       }
       setUser(loadedUser);
       setError(null);
+      if (loadedUser.access_token) {
+        fetchUserInfo(loadedUser.access_token)
+          .then((info) => setProfile(info))
+          .catch(() => setProfile(null));
+      }
     };
-    const onUserUnloaded = () => setUser(null);
+    const onUserUnloaded = () => {
+      setUser(null);
+      setProfile(null);
+    };
     const onAccessTokenExpired = () => {
       authManager.removeUser().catch(() => undefined);
       setUser(null);
+      setProfile(null);
     };
 
     authManager.events.addUserLoaded(onUserLoaded);
@@ -70,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      profile,
       loading,
       error,
       login: async () => {
@@ -84,10 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(null);
         const signedInUser = await handleCallback();
         setUser(signedInUser);
+        if (signedInUser.access_token) {
+          try {
+            const info = await fetchUserInfo(signedInUser.access_token);
+            setProfile(info);
+          } catch {
+            setProfile(null);
+          }
+        }
         return signedInUser;
       },
     }),
-    [user, loading, error],
+    [user, profile, loading, error],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

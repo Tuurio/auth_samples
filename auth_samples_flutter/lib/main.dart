@@ -513,11 +513,11 @@ class TokenView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'User profile',
+                'User profile (UserInfo)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
-              CodeBlock(text: session.profileJson ?? 'No profile claims.'),
+              CodeBlock(text: session.profileJson ?? 'No profile data.'),
             ],
           ),
         ),

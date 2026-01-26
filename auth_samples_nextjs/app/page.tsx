@@ -9,7 +9,7 @@ import { LoginView } from "../components/LoginView";
 import { TokenView } from "../components/TokenView";
 
 function HomeContent() {
-  const { user, loading, error, login, logout } = useAuth();
+  const { user, profile, loading, error, login, logout } = useAuth();
   const status = useMemo(() => {
     if (loading) return { label: "Checking session", tone: "neutral" } as const;
     if (user) return { label: "Authenticated", tone: "good" } as const;
@@ -23,7 +23,7 @@ function HomeContent() {
           <LoadingState title="Loading session" subtitle="Verifying tokens and session state." />
         </Card>
       ) : user ? (
-        <TokenView user={user} onLogout={logout} />
+        <TokenView user={user} profile={profile} onLogout={logout} />
       ) : (
         <LoginView onLogin={login} error={error} />
       )}

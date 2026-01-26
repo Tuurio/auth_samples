@@ -41,8 +41,8 @@ import { decodeJwt, formatUnixTime } from "../../utils/jwt";
       </div>
 
       <app-card tone="soft">
-        <h3 class="section-title">User profile</h3>
-        <pre class="code-block">{{ user().profile | json }}</pre>
+        <h3 class="section-title">User profile (UserInfo)</h3>
+        <pre class="code-block">{{ profile() ? (profile() | json) : "No profile data." }}</pre>
       </app-card>
     </div>
   `,
@@ -50,6 +50,7 @@ import { decodeJwt, formatUnixTime } from "../../utils/jwt";
 export class TokenViewComponent {
   @Output() logout = new EventEmitter<void>();
   user = input.required<User>();
+  profile = input<Record<string, unknown> | null>(null);
 
   accessTokenInfo = computed(() => decodeJwt(this.user().access_token));
   idToken = computed(() => this.user().id_token ?? "");

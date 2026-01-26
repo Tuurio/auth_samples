@@ -6,7 +6,15 @@ import { Card } from "./Card";
 import { TokenPanel } from "./TokenPanel";
 import { decodeJwt, formatUnixTime } from "../lib/jwt";
 
-export function TokenView({ user, onLogout }: { user: User; onLogout: () => Promise<void> }) {
+export function TokenView({
+  user,
+  profile,
+  onLogout,
+}: {
+  user: User;
+  profile: Record<string, unknown> | null;
+  onLogout: () => Promise<void>;
+}) {
   const accessTokenInfo = useMemo(() => decodeJwt(user.access_token), [user.access_token]);
   const idToken = user.id_token ?? "";
   const idTokenInfo = useMemo(() => decodeJwt(idToken), [idToken]);
@@ -46,8 +54,10 @@ export function TokenView({ user, onLogout }: { user: User; onLogout: () => Prom
       </div>
 
       <Card tone="soft">
-        <h3 className="section-title">User profile</h3>
-        <pre className="code-block">{JSON.stringify(user.profile, null, 2)}</pre>
+        <h3 className="section-title">User profile (UserInfo)</h3>
+        <pre className="code-block">
+          {profile ? JSON.stringify(profile, null, 2) : "No profile data."}
+        </pre>
       </Card>
     </div>
   );

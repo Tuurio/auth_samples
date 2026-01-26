@@ -70,7 +70,7 @@ function render_token_view(array $session): string
     $idToken = $session['id_token'] ?? '';
     $scopeLabel = $session['scope'] ?? 'openid profile email';
     $expires = format_time($session['expires_at'] ?? null);
-    $profileJson = $session['profile_json'] ?? 'No profile claims.';
+    $profileJson = $session['profile_json'] ?? 'No profile data.';
 
     $accessDecoded = decode_jwt($accessToken);
     $idDecoded = decode_jwt($idToken);
@@ -101,7 +101,7 @@ function render_token_view(array $session): string
       </div>
 
       <section class="card card-soft">
-        <h3 class="section-title">User profile</h3>
+        <h3 class="section-title">User profile (UserInfo)</h3>
         <pre class="code-block">{$profileJsonEscaped}</pre>
       </section>
     </div>

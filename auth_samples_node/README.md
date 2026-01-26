@@ -1,8 +1,8 @@
-# Tuurio Auth PHP Server Demo
+# Tuurio Auth Node.js Demo
 
-A server-rendered PHP demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+A server-rendered Node.js demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
 
-This version performs the authorization code exchange on the server and stores tokens in the PHP session.
+This version performs the authorization code exchange on the server and stores tokens in memory per session.
 
 ## What you need
 
@@ -12,35 +12,31 @@ This version performs the authorization code exchange on the server and stores t
 Make sure the client has these URLs configured:
 
 ```
-Redirect URI: http://localhost:8080/
-Post-logout Redirect URI: http://localhost:8080/
+Redirect URI: http://localhost:8082/auth/callback
+Post-logout Redirect URI: http://localhost:8082/
 ```
 
 ## Setup
 
 From the repo root:
 
-Export your Tuurio client secret (required for confidential clients):
-
 ```
-export TUURIO_ID_SECRET=your-client-secret
-```
-
-```
-php -S localhost:8080 -t auth_samples_php/public auth_samples_php/router.php
+cd auth_samples_node
+npm install
+npm start
 ```
 
 Open:
 
 ```
-http://localhost:8080
+http://localhost:8082
 ```
 
 ## Redirect URL checklist
 
 - Redirect URI must match exactly (protocol, host, port, path).
-- Dev server port is `8080`.
-- This app accepts callbacks on `/` or `/auth/callback`; use the one you configured.
+- Dev server port is `8082`.
+- Callback route is `/auth/callback`.
 
 ## What you will see
 
@@ -54,7 +50,7 @@ http://localhost:8080
 
 ## Configuration
 
-Edit `src/config.php` with the values from your **Connect** page:
+Edit `src/config.js` with the values from your **Connect** page:
 
 ```
 https://<tenantId>.id.tuurio.com/admin/clients
@@ -64,25 +60,22 @@ The current sample values are:
 
 ```
 authority: https://test.id.tuurio.com
-client_id: php-KQD8
-redirect_uri: http://localhost:8080/
-post_logout_redirect_uri: http://localhost:8080/
+clientId: spa-K53I
+redirectUri: http://localhost:8082/auth/callback
+postLogoutRedirectUri: http://localhost:8082/
 scope: openid profile email
 ```
 
-The client secret is read from the `TUURIO_ID_SECRET` environment variable and sent
-using `client_secret_basic` to the token endpoint.
-
 ## Notes
 
-- Tokens are stored in the PHP session. Adjust session lifetime as needed.
-- Token exchange happens server-side using cURL.
+- Tokens are stored in memory via `express-session`. Use a real session store for production.
+- Token exchange happens server-side using `fetch` (Node 18+).
 
 ## Troubleshooting
 
 **Login hangs on “Completing sign-in”**
 - Ensure the callback URL matches exactly.
-- Check PHP logs for token exchange errors.
+- Check server logs for token exchange errors.
 
 **No matching state found**
 - Confirm the browser session is preserved between authorize and callback.
@@ -90,4 +83,4 @@ using `client_secret_basic` to the token endpoint.
 
 **Server error: redirectUris cannot be empty**
 - Your client registration in the IdP has an empty redirect URIs list.
-  Add `http://localhost:8080/` (or `/auth/callback` if you prefer) and save.
+  Add `http://localhost:8082/auth/callback` and save.

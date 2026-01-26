@@ -7,7 +7,7 @@ import LoginView from '../components/LoginView.vue';
 import TokenView from '../components/TokenView.vue';
 import { computed } from 'vue';
 
-const { user, loading, error, login, logout } = useAuth();
+const { user, profile, loading, error, login, logout } = useAuth();
 
 const status = computed(() => {
   if (loading.value) return { label: "Checking session", tone: "neutral" } as const;
@@ -21,7 +21,7 @@ const status = computed(() => {
     <Card v-if="loading">
       <LoadingState title="Loading session" subtitle="Verifying tokens and session state." />
     </Card>
-    <TokenView v-else-if="user" :user="user" @logout="logout" />
+    <TokenView v-else-if="user" :user="user" :profile="profile" @logout="logout" />
     <LoginView v-else :error="error" @login="login" />
   </Shell>
 </template>

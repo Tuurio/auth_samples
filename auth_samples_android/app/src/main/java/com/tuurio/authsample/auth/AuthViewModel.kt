@@ -3,9 +3,13 @@ package com.tuurio.authsample.auth
 import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
   private val repository = AuthRepository(application)
@@ -37,17 +41,21 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
       }
 
       val idToken = tokenResponse.idToken
-      val profileJson = decodeJwt(idToken)
+      viewModelScope.launch {
+        val profileJson = withContext(Dispatchers.IO) {
+          repository.fetchUserInfo(accessToken)
+        }
 
-      val session = UserSession(
-        accessToken = accessToken,
-        idToken = idToken,
-        scope = tokenResponse.scope,
-        expiresAtMillis = tokenResponse.accessTokenExpirationTime,
-        profileJson = profileJson,
-      )
-      repository.saveSession(session)
-      _uiState.update { AuthUiState(loading = false, session = session) }
+        val session = UserSession(
+          accessToken = accessToken,
+          idToken = idToken,
+          scope = tokenResponse.scope,
+          expiresAtMillis = tokenResponse.accessTokenExpirationTime,
+          profileJson = profileJson,
+        )
+        repository.saveSession(session)
+        _uiState.update { AuthUiState(loading = false, session = session) }
+      }
     }
   }
 

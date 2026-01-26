@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_config.dart';
-import 'jwt.dart';
 
 class AuthSession {
   AuthSession({
@@ -44,6 +44,7 @@ class AuthSession {
 class AuthController extends ChangeNotifier {
   final FlutterAppAuth _appAuth = const FlutterAppAuth();
   static const _storageKey = 'tuurio_auth_session';
+  String? _userInfoEndpoint;
 
   AuthSession? session;
   bool loading = true;
@@ -73,7 +74,7 @@ class AuthController extends ChangeNotifier {
         return;
       }
 
-      final profile = decodeJwt(result.idToken);
+      final userInfo = await _fetchUserInfo(result.accessToken!);
       final session = AuthSession(
         accessToken: result.accessToken!,
         idToken: result.idToken,
@@ -81,7 +82,7 @@ class AuthController extends ChangeNotifier {
         expiresAt: result.accessTokenExpirationDateTime?.millisecondsSinceEpoch == null
             ? null
             : result.accessTokenExpirationDateTime!.millisecondsSinceEpoch ~/ 1000,
-        profileJson: profile == null ? null : const JsonEncoder.withIndent('  ').convert(profile),
+        profileJson: userInfo,
       );
 
       this.session = session;
@@ -140,5 +141,36 @@ class AuthController extends ChangeNotifier {
     session = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey);
+  }
+
+  Future<String?> _fetchUserInfo(String accessToken) async {
+    final endpoint = await _getUserInfoEndpoint();
+    if (endpoint == null) return null;
+    final response = await http.get(
+      Uri.parse(endpoint),
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+    if (response.statusCode >= 400) return null;
+    try {
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      return const JsonEncoder.withIndent('  ').convert(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _getUserInfoEndpoint() async {
+    if (_userInfoEndpoint != null) return _userInfoEndpoint;
+    final response = await http.get(
+      Uri.parse('${AuthConfig.issuer}/.well-known/openid-configuration'),
+    );
+    if (response.statusCode >= 400) return null;
+    try {
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      _userInfoEndpoint = data['userinfo_endpoint'] as String?;
+      return _userInfoEndpoint;
+    } catch (_) {
+      return null;
+    }
   }
 }

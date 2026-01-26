@@ -40,7 +40,7 @@ http://localhost:3000
 - The app shows:
   - Access token and ID token (raw + decoded claims).
   - Token expiry time and scope.
-  - User profile JSON.
+  - UserInfo JSON (user profile).
   - Logout button that ends the session and returns to the app.
 
 ## Configuration

@@ -300,8 +300,8 @@ fun TokenView(session: UserSession, onLogout: () -> Unit) {
     }
 
     CardSurface(tone = CardTone.Soft) {
-      Text("User profile", fontWeight = FontWeight.SemiBold)
-      CodeBlock(session.profileJson ?: "No profile claims.")
+      Text("User profile (UserInfo)", fontWeight = FontWeight.SemiBold)
+      CodeBlock(session.profileJson ?: "No profile data.")
     }
   }
 }

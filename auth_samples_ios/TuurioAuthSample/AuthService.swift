@@ -49,6 +49,11 @@ final class AuthService: ObservableObject {
       }
       self.authState = state
       self.updateSessionFromState()
+      if let accessToken = state.lastTokenResponse?.accessToken {
+        Task {
+          await self.loadUserInfo(accessToken: accessToken)
+        }
+      }
     }
   }
 
@@ -110,10 +115,57 @@ final class AuthService: ObservableObject {
       idToken: idToken,
       scope: tokenResponse.scope,
       expiresAt: tokenResponse.accessTokenExpirationDate,
-      profileJson: decodeJwt(idToken)
+      profileJson: session?.profileJson
     )
 
     self.session = session
     storage.save(session)
+  }
+
+  private func loadUserInfo(accessToken: String) async {
+    do {
+      let config = try await discoverConfiguration()
+      guard let userInfoEndpoint = config.discoveryDocument?.userinfoEndpoint else {
+        return
+      }
+
+      var request = URLRequest(url: userInfoEndpoint)
+      request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+      let (data, response) = try await URLSession.shared.data(for: request)
+      guard let http = response as? HTTPURLResponse, http.statusCode < 300 else {
+        return
+      }
+
+      let json = try JSONSerialization.jsonObject(with: data)
+      let pretty = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted])
+      let profile = String(data: pretty, encoding: .utf8)
+
+      if var current = session {
+        current = AuthSession(
+          accessToken: current.accessToken,
+          idToken: current.idToken,
+          scope: current.scope,
+          expiresAt: current.expiresAt,
+          profileJson: profile
+        )
+        session = current
+        storage.save(current)
+      }
+    } catch {
+      // Ignore userinfo errors for demo
+    }
+  }
+
+  private func discoverConfiguration() async throws -> OIDServiceConfiguration {
+    try await withCheckedThrowingContinuation { continuation in
+      OIDAuthorizationService.discoverConfiguration(forIssuer: AuthConfig.issuer) { config, error in
+        if let config {
+          continuation.resume(returning: config)
+        } else {
+          continuation.resume(throwing: error ?? NSError(domain: "Auth", code: 1))
+        }
+      }
+    }
   }
 }

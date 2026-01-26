@@ -12,13 +12,14 @@ import net.openid.appauth.ResponseTypeValues
 import net.openid.appauth.TokenResponse
 
 class AuthRepository(context: Context) {
-    private val appContext = context.applicationContext
-    private val serviceConfig = AuthorizationServiceConfiguration(
-        AuthConfig.authorizeEndpoint,
-        AuthConfig.tokenEndpoint,
-    )
-    private val authService = AuthorizationService(appContext)
-    private val sessionStorage = SessionStorage(appContext)
+  private val appContext = context.applicationContext
+  private val serviceConfig = AuthorizationServiceConfiguration(
+    AuthConfig.authorizeEndpoint,
+    AuthConfig.tokenEndpoint,
+  )
+  private val authService = AuthorizationService(appContext)
+  private val sessionStorage = SessionStorage(appContext)
+  private var userInfoEndpoint: String? = null
 
     fun getAuthorizationIntent(): Intent {
         val request = AuthorizationRequest.Builder(
@@ -56,12 +57,12 @@ class AuthRepository(context: Context) {
         }
     }
 
-    fun fetchEndSessionIntent(onReady: (Intent) -> Unit, onError: (String) -> Unit) {
-        AuthorizationServiceConfiguration.fetchFromUrl(AuthConfig.discoveryUri) { config, ex ->
-            if (ex != null || config == null) {
-                onError(ex?.errorDescription ?: "Unable to load discovery document.")
-                return@fetchFromUrl
-            }
+  fun fetchEndSessionIntent(onReady: (Intent) -> Unit, onError: (String) -> Unit) {
+    AuthorizationServiceConfiguration.fetchFromUrl(AuthConfig.discoveryUri) { config, ex ->
+      if (ex != null || config == null) {
+        onError(ex?.errorDescription ?: "Unable to load discovery document.")
+        return@fetchFromUrl
+      }
 
             val endSession = EndSessionRequest.Builder(config)
                 .setPostLogoutRedirectUri(AuthConfig.postLogoutRedirectUri).build()
@@ -76,11 +77,49 @@ class AuthRepository(context: Context) {
         sessionStorage.save(session)
     }
 
-    fun clearSession() {
-        sessionStorage.clear()
+  fun clearSession() {
+    sessionStorage.clear()
+  }
+
+  fun dispose() {
+    authService.dispose()
+  }
+
+  suspend fun fetchUserInfo(accessToken: String): String? {
+    val endpoint = getUserInfoEndpoint() ?: return null
+    val url = java.net.URL(endpoint)
+    val connection = (url.openConnection() as java.net.HttpURLConnection).apply {
+      requestMethod = "GET"
+      setRequestProperty("Authorization", "Bearer $accessToken")
     }
 
-    fun dispose() {
-        authService.dispose()
+    return try {
+      val responseCode = connection.responseCode
+      if (responseCode >= 400) return null
+      val stream = connection.inputStream.bufferedReader().use { it.readText() }
+      stream
+    } finally {
+      connection.disconnect()
     }
+  }
+
+  private suspend fun getUserInfoEndpoint(): String? {
+    if (userInfoEndpoint != null) return userInfoEndpoint
+    val url = java.net.URL(AuthConfig.discoveryUri.toString())
+    val connection = (url.openConnection() as java.net.HttpURLConnection).apply {
+      requestMethod = "GET"
+    }
+
+    return try {
+      val responseCode = connection.responseCode
+      if (responseCode >= 400) return null
+      val payload = connection.inputStream.bufferedReader().use { it.readText() }
+      val json = org.json.JSONObject(payload)
+      val endpoint = json.optString("userinfo_endpoint", null)
+      userInfoEndpoint = endpoint
+      endpoint
+    } finally {
+      connection.disconnect()
+    }
+  }
 }

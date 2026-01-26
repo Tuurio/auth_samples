@@ -111,6 +111,35 @@ function fetch_discovery(array $config): array
     return $data;
 }
 
+function fetch_userinfo(string $endpoint, string $accessToken): array
+{
+    $ch = curl_init($endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_HTTPHEADER => ["Authorization: Bearer {$accessToken}"],
+        CURLOPT_RETURNTRANSFER => true,
+    ]);
+
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        throw new RuntimeException('UserInfo request failed: ' . $error);
+    }
+
+    if ($status >= 400) {
+        throw new RuntimeException('UserInfo request failed: ' . $response);
+    }
+
+    $data = json_decode($response, true);
+    if (!is_array($data)) {
+        throw new RuntimeException('Unable to parse UserInfo response.');
+    }
+
+    return $data;
+}
+
 function decode_jwt(string $token): ?array
 {
     if ($token === '') {

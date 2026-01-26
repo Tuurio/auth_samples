@@ -16,7 +16,7 @@ function App() {
 }
 
 function Home() {
-  const { user, loading, error, login, logout } = useAuth();
+  const { user, profile, loading, error, login, logout } = useAuth();
 
   return (
     <Shell
@@ -33,7 +33,7 @@ function Home() {
           <LoadingState title="Loading session" subtitle="Verifying tokens and session state." />
         </Card>
       ) : user ? (
-        <TokenView user={user} onLogout={logout} />
+        <TokenView user={user} profile={profile} onLogout={logout} />
       ) : (
         <LoginView onLogin={login} error={error} />
       )}
@@ -110,7 +110,15 @@ function LoginView({ onLogin, error }: { onLogin: () => Promise<void>; error: st
   );
 }
 
-function TokenView({ user, onLogout }: { user: User; onLogout: () => Promise<void> }) {
+function TokenView({
+  user,
+  profile,
+  onLogout,
+}: {
+  user: User;
+  profile: Record<string, unknown> | null;
+  onLogout: () => Promise<void>;
+}) {
   const accessTokenInfo = useMemo(() => decodeJwt(user.access_token), [user.access_token]);
   const idToken = user.id_token ?? "";
   const idTokenInfo = useMemo(() => decodeJwt(idToken), [idToken]);
@@ -150,8 +158,10 @@ function TokenView({ user, onLogout }: { user: User; onLogout: () => Promise<voi
       </div>
 
       <Card tone="soft">
-        <h3 className="section-title">User profile</h3>
-        <pre className="code-block">{JSON.stringify(user.profile, null, 2)}</pre>
+        <h3 className="section-title">User profile (UserInfo)</h3>
+        <pre className="code-block">
+          {profile ? JSON.stringify(profile, null, 2) : "No profile data."}
+        </pre>
       </Card>
     </div>
   );

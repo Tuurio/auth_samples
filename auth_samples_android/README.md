@@ -31,7 +31,7 @@ Then run the `app` configuration on an emulator or device.
 - The app shows:
   - Access token and ID token (raw + decoded claims).
   - Token expiry time and scope.
-  - User profile JSON (decoded from the ID token).
+  - UserInfo JSON (user profile).
   - Logout button that ends the session and returns to the app.
 
 ## Configuration

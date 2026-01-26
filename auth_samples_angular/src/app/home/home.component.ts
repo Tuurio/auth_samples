@@ -26,7 +26,11 @@ import { TokenViewComponent } from "../components/token-view/token-view.componen
           ></app-loading-state>
         </app-card>
       } @else if (auth.user()) {
-        <app-token-view [user]="auth.user()!" (logout)="auth.logout()"></app-token-view>
+        <app-token-view
+          [user]="auth.user()!"
+          [profile]="auth.profile()"
+          (logout)="auth.logout()"
+        ></app-token-view>
       } @else {
         <app-login-view [error]="auth.error()" (login)="auth.login()"></app-login-view>
       }

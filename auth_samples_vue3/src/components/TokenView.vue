@@ -6,6 +6,7 @@ import TokenPanel from './TokenPanel.vue';
 
 const props = defineProps<{
   user: User;
+  profile: Record<string, unknown> | null;
 }>();
 
 const emit = defineEmits<{
@@ -80,8 +81,10 @@ function decodeBase64Url(value: string) {
     </div>
 
     <Card tone="soft">
-      <h3 class="section-title">User profile</h3>
-      <pre class="code-block">{{ JSON.stringify(user.profile, null, 2) }}</pre>
+      <h3 class="section-title">User profile (UserInfo)</h3>
+      <pre class="code-block">
+        {{ profile ? JSON.stringify(profile, null, 2) : "No profile data." }}
+      </pre>
     </Card>
   </div>
 </template>
