@@ -114,6 +114,7 @@ app.get('/logout', async (req, res) => {
     req.session.auth = null;
 
     const params = new URLSearchParams({
+      client_id: config.clientId,
       post_logout_redirect_uri: config.postLogoutRedirectUri,
     });
     if (idToken) {

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import type { User } from "oidc-client-ts";
 import { useAuth } from "./AuthProvider";
+import { runtimeAuthConfig } from "./auth";
 import "./App.css";
 
 function App() {
@@ -95,7 +96,7 @@ function LoginView({ onLogin, error }: { onLogin: () => Promise<void>; error: st
           <button className="button primary" onClick={onLogin}>
             Continue with Tuurio ID
           </button>
-          <span className="helper">You&apos;ll be redirected to test.id.tuurio.com</span>
+          <span className="helper">You&apos;ll be redirected to {runtimeAuthConfig.authorityHost}</span>
         </div>
         {error ? <div className="status status-bad">{error}</div> : null}
       </Card>
@@ -234,7 +235,7 @@ function Shell({
           </p>
           <div className="status-row">
             <span className={`status status-${status.tone}`}>{status.label}</span>
-            <span className="muted">Authority: test.id.tuurio.com</span>
+            <span className="muted">Authority: {runtimeAuthConfig.authorityHost}</span>
           </div>
         </div>
         <div className="side-list">

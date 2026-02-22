@@ -18,6 +18,7 @@ try {
     unset($_SESSION['auth']);
 
     $params = [
+        'client_id' => $config['client_id'],
         'post_logout_redirect_uri' => $config['post_logout_redirect_uri'],
     ];
     if ($idToken) {

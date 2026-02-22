@@ -69,11 +69,13 @@ final class AuthService: ObservableObject {
         return
       }
 
+      let idTokenHint = self.session?.idToken
+      let additionalParameters = idTokenHint == nil ? ["client_id": AuthConfig.clientId] : nil
       let endSession = OIDEndSessionRequest(
         configuration: config,
-        idTokenHint: nil,
+        idTokenHint: idTokenHint,
         postLogoutRedirectURL: AuthConfig.postLogoutRedirectURI,
-        additionalParameters: nil
+        additionalParameters: additionalParameters
       )
 
       DispatchQueue.main.async {

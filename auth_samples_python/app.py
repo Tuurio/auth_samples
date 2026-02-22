@@ -76,7 +76,10 @@ def logout():
         session.pop("token", None)
         session.pop("userinfo", None)
 
-        params = {"post_logout_redirect_uri": config.POST_LOGOUT_REDIRECT_URI}
+        params = {
+            "client_id": config.CLIENT_ID,
+            "post_logout_redirect_uri": config.POST_LOGOUT_REDIRECT_URI,
+        }
         if id_token:
             params["id_token_hint"] = id_token
 

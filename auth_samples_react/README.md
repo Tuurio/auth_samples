@@ -11,7 +11,9 @@ Make sure the client has these URLs configured:
 
 ```
 Redirect URI: http://localhost:5173/auth/callback
+Redirect URI: http://127.0.0.1:5173/auth/callback
 Post-logout Redirect URI: http://localhost:5173/
+Post-logout Redirect URI: http://127.0.0.1:5173/
 ```
 
 ## Setup
@@ -24,7 +26,15 @@ npm run dev
 Open:
 
 ```
-http://localhost:5173
+http://127.0.0.1:5173
+```
+
+You can also open `http://localhost:5173`, but redirect URIs must match exactly.
+
+To pass runtime config at startup, append query params:
+
+```
+http://127.0.0.1:5173/?auth_server=https://trialdemo.id.localhost:8443&client_id=trial-react-spa&scope=openid%20profile%20email
 ```
 
 ## Redirect URL checklist
@@ -45,14 +55,27 @@ http://localhost:5173
 
 ## Configuration
 
-Edit `src/auth.ts` with the values from your **Connect** page:
+This app supports runtime OIDC config:
+
+- `auth_server` (alias: `server_url`) -> OIDC issuer origin
+- `client_id` (alias: `clientId`) -> OAuth client ID
+- `scope` -> space-separated scope string
+- Example:
+  - `http://127.0.0.1:5173/?auth_server=https://starterdemo.id.localhost:8443&client_id=starter-react-spa&scope=openid%20profile%20email`
+- Behavior:
+  - `auth_server` is normalized to origin form (`http(s)://host[:port]`).
+  - `client_id` and `scope` are sanitized.
+  - Runtime values are stored in `sessionStorage` and reused for callback/logout redirects.
+  - If a value is missing, defaults from `src/auth.ts` are used.
+
+Use the values from your **Connect** page:
 
 ```
 https://<tenantId>.id.tuurio.com/admin/clients
 ```
 
-All relevant values (client ID, redirect/callback URL, post-logout URL, scopes) must be copied from your
-tenant’s client configuration. **This demo uses sample values**, so replace them with your tenant’s settings.
+All relevant values (client ID, redirect/callback URL, post-logout URL, scopes) must match your
+tenant’s client configuration.
 
 The current sample values are:
 
@@ -64,10 +87,21 @@ post_logout_redirect_uri: http://localhost:5173/
 scope: openid profile email
 ```
 
+When launched via Auth Control, these values are passed automatically from `/demo/seed` `spaClients`
+for the selected tenant.
+
 ## Notes
 
 - The app stores session state in `sessionStorage` to reduce persistence.
 - The OAuth callback route is `/auth/callback`.
+
+## Security considerations
+
+- Runtime `auth_server`/`server_url` is a local-dev convenience. Do not accept untrusted authority URLs in production clients.
+- Restrict allowed redirect URIs and post-logout URIs to exact expected origins/paths.
+- This is a public SPA client: never add or commit confidential client secrets.
+- Keep tenant/client test credentials out of source control.
+- `sessionStorage` reduces persistence but is still browser-accessible data; use stricter controls for production-grade applications.
 
 ## Troubleshooting
 
@@ -83,4 +117,8 @@ scope: openid profile email
 
 **Server error: redirectUris cannot be empty**
 - Your client registration in the IdP has an empty redirect URIs list.
-  Add `http://localhost:5173/auth/callback` and save.
+  Add `http://localhost:5173/auth/callback` and `http://127.0.0.1:5173/auth/callback`, then save.
+
+**Tenant/Subdomain passt nicht zum Client / Redirect-URL stimmt nicht exakt / Scopes nicht freigegeben**
+- `auth_server`, `client_id`, and `scope` do not match the selected tenant client configuration.
+- Verify the startup URL query params or re-run seed in Auth Control and reopen client.
