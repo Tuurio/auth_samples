@@ -49,6 +49,24 @@ def _sanitize_scope(value: str | None) -> str | None:
     return " ".join(cleaned_parts)
 
 
+def _normalize_webhook_path(value: str | None) -> str | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    if not raw.startswith("/") or " " in raw:
+        return None
+    return raw
+
+
+def _sanitize_header_name(value: str | None) -> str | None:
+    raw = str(value or "").strip()
+    if not raw or len(raw) > 120:
+        return None
+    if not all(ch.isalnum() or ch == "-" for ch in raw):
+        return None
+    return raw
+
+
 AUTHORITY = _normalize_authority(os.getenv("TUURIO_ISSUER")) or "https://test.id.tuurio.com"
 AUTHORIZE_ENDPOINT = f"{AUTHORITY}/oauth2/authorize"
 TOKEN_ENDPOINT = f"{AUTHORITY}/oauth2/token"
@@ -64,3 +82,11 @@ POST_LOGOUT_REDIRECT_URI = (
 SCOPE = _sanitize_scope(os.getenv("TUURIO_SCOPE")) or "openid profile email"
 
 SECRET_KEY = os.getenv("TUURIO_SESSION_SECRET", "tuurio-auth-sample")
+
+WEBHOOK_ID = str(os.getenv("TUURIO_WEBHOOK_ID", "")).strip()
+WEBHOOK_URL = _normalize_url(os.getenv("TUURIO_WEBHOOK_URL")) or ""
+WEBHOOK_EDIT_URL = _normalize_url(os.getenv("TUURIO_WEBHOOK_EDIT_URL")) or ""
+WEBHOOK_SIGNING_SECRET = str(os.getenv("TUURIO_WEBHOOK_SIGNING_SECRET", "")).strip()
+WEBHOOK_LISTEN_PATH = _normalize_webhook_path(os.getenv("TUURIO_WEBHOOK_LISTEN_PATH")) or "/webhooks/tuurio"
+WEBHOOK_API_KEY_HEADER = _sanitize_header_name(os.getenv("TUURIO_WEBHOOK_API_KEY_HEADER")) or "X-Tuurio-Webhook-Key"
+WEBHOOK_API_KEY = str(os.getenv("TUURIO_WEBHOOK_API_KEY", "")).strip()

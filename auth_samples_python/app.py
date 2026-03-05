@@ -89,6 +89,37 @@ def logout():
         return redirect("/")
 
 
+@app.post(config.WEBHOOK_LISTEN_PATH)
+def receive_webhook():
+    provided_api_key = request.headers.get(config.WEBHOOK_API_KEY_HEADER, "")
+    if config.WEBHOOK_API_KEY and provided_api_key != config.WEBHOOK_API_KEY:
+        app.logger.warning("[tuurio-webhook] rejected request with invalid API key header")
+        return {"accepted": False, "error": "invalid_api_key"}, 401
+
+    event_type = request.headers.get("X-Tuurio-Event", "unknown")
+    event_id = request.headers.get("X-Tuurio-Event-Id", "")
+    signature = request.headers.get("X-Tuurio-Signature", "")
+    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = request.get_data(as_text=True) or ""
+
+    app.logger.info(
+        "[tuurio-webhook] event received %s",
+        json.dumps(
+            {
+                "webhookId": config.WEBHOOK_ID or None,
+                "eventType": event_type,
+                "eventId": event_id,
+                "signature": signature,
+                "payload": payload,
+            },
+            indent=2,
+            ensure_ascii=False,
+        ),
+    )
+    return {"accepted": True}, 202
+
+
 @app.errorhandler(404)
 def not_found(_):
     status = {"label": "Route not found", "tone": "neutral"}
@@ -309,4 +340,7 @@ def format_time(unix_seconds: int | None) -> str:
 
 
 if __name__ == "__main__":
+    print(f"[tuurio-webhook] listening on http://localhost:8083{config.WEBHOOK_LISTEN_PATH}")
+    if config.WEBHOOK_EDIT_URL:
+        print(f"[tuurio-webhook] update endpoint URL after deployment at {config.WEBHOOK_EDIT_URL}")
     app.run(port=8083, debug=True)

@@ -154,10 +154,45 @@ app.get('/logout', async (req, res) => {
   }
 });
 
+app.post(config.webhookListenPath, express.json({ limit: '1mb' }), (req, res) => {
+  const providedApiKey = req.get(config.webhookApiKeyHeader) || '';
+  if (config.webhookApiKey && providedApiKey !== config.webhookApiKey) {
+    console.warn('[tuurio-webhook] rejected request with invalid API key header');
+    res.status(401).json({ accepted: false, error: 'invalid_api_key' });
+    return;
+  }
+
+  const eventType = req.get('X-Tuurio-Event') || 'unknown';
+  const eventId = req.get('X-Tuurio-Event-Id') || '';
+  const signature = req.get('X-Tuurio-Signature') || '';
+  const payload = req.body ?? {};
+
+  console.log(
+    '[tuurio-webhook] event received',
+    JSON.stringify(
+      {
+        webhookId: config.webhookId || null,
+        eventType,
+        eventId,
+        signature,
+        payload,
+      },
+      null,
+      2,
+    ),
+  );
+
+  res.status(202).json({ accepted: true });
+});
+
 app.use((req, res) => {
   res.status(404).send(renderPage({ label: 'Route not found', tone: 'neutral' }, renderNotFound()));
 });
 
 app.listen(8082, () => {
   console.log('Tuurio Auth Node demo running on http://localhost:8082');
+  console.log(`[tuurio-webhook] listening on http://localhost:8082${config.webhookListenPath}`);
+  if (config.webhookEditUrl) {
+    console.log(`[tuurio-webhook] update endpoint URL after deployment at ${config.webhookEditUrl}`);
+  }
 });

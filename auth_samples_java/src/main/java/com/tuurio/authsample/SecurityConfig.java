@@ -22,7 +22,14 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth
-                    .requestMatchers("/assets/**", "/", "/login", "/error", "/oauth2/authorization/**", "/auth/callback")
+                    .requestMatchers(
+                        "/assets/**",
+                        "/",
+                        "/login",
+                        "/error",
+                        "/oauth2/authorization/**",
+                        "/auth/callback",
+                        "/webhooks/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

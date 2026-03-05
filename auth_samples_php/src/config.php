@@ -18,6 +18,13 @@ return [
     'redirect_uri' => normalizeUrl(envValue($env, 'TUURIO_REDIRECT_URI')) ?? 'http://localhost:8080/auth/callback',
     'post_logout_redirect_uri' => normalizeUrl(envValue($env, 'TUURIO_POST_LOGOUT_REDIRECT_URI')) ?? 'http://localhost:8080/',
     'scope' => $scope,
+    'webhook_id' => envValue($env, 'TUURIO_WEBHOOK_ID') ?? '',
+    'webhook_url' => normalizeUrl(envValue($env, 'TUURIO_WEBHOOK_URL')) ?? '',
+    'webhook_edit_url' => normalizeUrl(envValue($env, 'TUURIO_WEBHOOK_EDIT_URL')) ?? '',
+    'webhook_signing_secret' => envValue($env, 'TUURIO_WEBHOOK_SIGNING_SECRET') ?? '',
+    'webhook_listen_path' => normalizeWebhookPath(envValue($env, 'TUURIO_WEBHOOK_LISTEN_PATH')) ?? '/webhooks/tuurio',
+    'webhook_api_key_header' => sanitizeHeaderName(envValue($env, 'TUURIO_WEBHOOK_API_KEY_HEADER')) ?? 'X-Tuurio-Webhook-Key',
+    'webhook_api_key' => envValue($env, 'TUURIO_WEBHOOK_API_KEY') ?? '',
 ];
 
 function loadEnv(string $path): array
@@ -146,4 +153,31 @@ function sanitizeScope(?string $value): ?string
     }
 
     return implode(' ', $filtered);
+}
+
+function normalizeWebhookPath(?string $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $raw = trim($value);
+    if ($raw === '' || !str_starts_with($raw, '/') || str_contains($raw, ' ')) {
+        return null;
+    }
+
+    return $raw;
+}
+
+function sanitizeHeaderName(?string $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    if (strlen($value) > 120) {
+        return null;
+    }
+
+    return preg_match('/^[A-Za-z0-9-]+$/', $value) === 1 ? $value : null;
 }

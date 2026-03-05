@@ -31,6 +31,13 @@ type Config struct {
 	RedirectURI           string
 	PostLogoutRedirectURI string
 	Scope                 []string
+	WebhookID             string
+	WebhookURL            string
+	WebhookEditURL        string
+	WebhookSigningSecret  string
+	WebhookListenPath     string
+	WebhookAPIKeyHeader   string
+	WebhookAPIKey         string
 }
 
 var config = loadConfig()
@@ -77,9 +84,14 @@ func main() {
 	mux.HandleFunc("/login", withSession(handleLogin))
 	mux.HandleFunc("/auth/callback", withSession(handleCallback))
 	mux.HandleFunc("/logout", withSession(handleLogout))
+	mux.HandleFunc(config.WebhookListenPath, handleWebhook)
 	mux.HandleFunc("/", withSession(handleHome))
 
 	fmt.Println("Tuurio Auth Go demo running on http://localhost:8084")
+	fmt.Printf("[tuurio-webhook] listening on http://localhost:8084%s\n", config.WebhookListenPath)
+	if config.WebhookEditURL != "" {
+		fmt.Printf("[tuurio-webhook] update endpoint URL after deployment at %s\n", config.WebhookEditURL)
+	}
 	if err := http.ListenAndServe(":8084", mux); err != nil {
 		panic(err)
 	}
@@ -118,6 +130,16 @@ func loadConfig() Config {
 		scopeRaw = "openid profile email"
 	}
 
+	webhookListenPath := normalizeWebhookPath(os.Getenv("TUURIO_WEBHOOK_LISTEN_PATH"))
+	if webhookListenPath == "" {
+		webhookListenPath = "/webhooks/tuurio"
+	}
+
+	webhookAPIKeyHeader := sanitizeHeaderName(os.Getenv("TUURIO_WEBHOOK_API_KEY_HEADER"))
+	if webhookAPIKeyHeader == "" {
+		webhookAPIKeyHeader = "X-Tuurio-Webhook-Key"
+	}
+
 	return Config{
 		Authority:             authority,
 		AuthorizeEndpoint:     authority + "/oauth2/authorize",
@@ -128,6 +150,13 @@ func loadConfig() Config {
 		RedirectURI:           redirectURI,
 		PostLogoutRedirectURI: postLogoutRedirectURI,
 		Scope:                 strings.Fields(scopeRaw),
+		WebhookID:             strings.TrimSpace(os.Getenv("TUURIO_WEBHOOK_ID")),
+		WebhookURL:            normalizeHTTPURL(os.Getenv("TUURIO_WEBHOOK_URL")),
+		WebhookEditURL:        normalizeHTTPURL(os.Getenv("TUURIO_WEBHOOK_EDIT_URL")),
+		WebhookSigningSecret:  strings.TrimSpace(os.Getenv("TUURIO_WEBHOOK_SIGNING_SECRET")),
+		WebhookListenPath:     webhookListenPath,
+		WebhookAPIKeyHeader:   webhookAPIKeyHeader,
+		WebhookAPIKey:         strings.TrimSpace(os.Getenv("TUURIO_WEBHOOK_API_KEY")),
 	}
 }
 
@@ -228,6 +257,31 @@ func sanitizeScope(value string) string {
 		}
 	}
 	return strings.Join(valid, " ")
+}
+
+func normalizeWebhookPath(value string) string {
+	raw := strings.TrimSpace(value)
+	if raw == "" {
+		return ""
+	}
+	if !strings.HasPrefix(raw, "/") || strings.Contains(raw, " ") {
+		return ""
+	}
+	return raw
+}
+
+func sanitizeHeaderName(value string) string {
+	raw := strings.TrimSpace(value)
+	if raw == "" || len(raw) > 120 {
+		return ""
+	}
+	for _, ch := range raw {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-' {
+			continue
+		}
+		return ""
+	}
+	return raw
 }
 
 func withSession(handler func(http.ResponseWriter, *http.Request, *Session)) http.HandlerFunc {
@@ -373,6 +427,59 @@ func handleLogout(w http.ResponseWriter, r *http.Request, session *Session) {
 
 	logoutURL := endSession + "?" + params.Encode()
 	http.Redirect(w, r, logoutURL, http.StatusFound)
+}
+
+func handleWebhook(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if config.WebhookAPIKey != "" {
+		providedAPIKey := r.Header.Get(config.WebhookAPIKeyHeader)
+		if providedAPIKey != config.WebhookAPIKey {
+			fmt.Println("[tuurio-webhook] rejected request with invalid API key header")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(`{"accepted":false,"error":"invalid_api_key"}`))
+			return
+		}
+	}
+
+	bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+
+	eventType := r.Header.Get("X-Tuurio-Event")
+	if eventType == "" {
+		eventType = "unknown"
+	}
+	eventID := r.Header.Get("X-Tuurio-Event-Id")
+	signature := r.Header.Get("X-Tuurio-Signature")
+
+	var payload any
+	if len(bodyBytes) > 0 {
+		if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+			payload = string(bodyBytes)
+		}
+	}
+
+	logRecord := map[string]any{
+		"webhookId": config.WebhookID,
+		"eventType": eventType,
+		"eventId":   eventID,
+		"signature": signature,
+		"payload":   payload,
+	}
+	encoded, _ := json.MarshalIndent(logRecord, "", "  ")
+	fmt.Printf("[tuurio-webhook] event received %s\n", string(encoded))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	_, _ = w.Write([]byte(`{"accepted":true}`))
 }
 
 func handleNotFound(w http.ResponseWriter, _ *http.Request, session *Session) {

@@ -26,6 +26,13 @@ module.exports = {
   sessionSecureCookie,
   sessionSameSite,
   sessionMaxAgeMs: parsePositiveInt(process.env.TUURIO_SESSION_MAX_AGE_MS, 8 * 60 * 60 * 1000),
+  webhookId: sanitizePlain(process.env.TUURIO_WEBHOOK_ID),
+  webhookUrl: normalizeUrl(process.env.TUURIO_WEBHOOK_URL) || '',
+  webhookEditUrl: normalizeUrl(process.env.TUURIO_WEBHOOK_EDIT_URL) || '',
+  webhookSigningSecret: sanitizePlain(process.env.TUURIO_WEBHOOK_SIGNING_SECRET),
+  webhookListenPath: normalizeWebhookPath(process.env.TUURIO_WEBHOOK_LISTEN_PATH) || '/webhooks/tuurio',
+  webhookApiKeyHeader: sanitizeHeaderName(process.env.TUURIO_WEBHOOK_API_KEY_HEADER) || 'X-Tuurio-Webhook-Key',
+  webhookApiKey: sanitizePlain(process.env.TUURIO_WEBHOOK_API_KEY),
 };
 
 function normalizeAuthority(value) {
@@ -120,4 +127,25 @@ function parsePositiveInt(value, fallback) {
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return parsed;
+}
+
+function normalizeWebhookPath(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  if (!raw.startsWith('/')) return null;
+  if (raw.includes(' ')) return null;
+  return raw;
+}
+
+function sanitizeHeaderName(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  if (raw.length > 120) return null;
+  if (!/^[A-Za-z0-9-]+$/.test(raw)) return null;
+  return raw;
+}
+
+function sanitizePlain(value) {
+  const raw = String(value || '').trim();
+  return raw;
 }

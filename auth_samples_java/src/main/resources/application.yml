@@ -26,3 +26,13 @@ spring:
   web:
     resources:
       add-mappings: true
+
+tuurio:
+  webhook:
+    id: ${TUURIO_WEBHOOK_ID:}
+    url: ${TUURIO_WEBHOOK_URL:}
+    edit-url: ${TUURIO_WEBHOOK_EDIT_URL:}
+    signing-secret: ${TUURIO_WEBHOOK_SIGNING_SECRET:}
+    listen-path: ${TUURIO_WEBHOOK_LISTEN_PATH:/webhooks/tuurio}
+    api-key-header: ${TUURIO_WEBHOOK_API_KEY_HEADER:X-Tuurio-Webhook-Key}
+    api-key: ${TUURIO_WEBHOOK_API_KEY:}
