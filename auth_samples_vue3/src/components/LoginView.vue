@@ -4,6 +4,7 @@ import Feature from './Feature.vue';
 
 defineProps<{
   error: string | null;
+  authorityHost: string;
 }>();
 
 const emit = defineEmits<{
@@ -26,7 +27,7 @@ const emit = defineEmits<{
         <button class="button primary" @click="emit('login')">
           Continue with Tuurio ID
         </button>
-        <span class="helper">You'll be redirected to test.id.tuurio.com</span>
+        <span class="helper">You'll be redirected to {{ authorityHost }}</span>
       </div>
       <div v-if="error" class="status status-bad">{{ error }}</div>
     </Card>

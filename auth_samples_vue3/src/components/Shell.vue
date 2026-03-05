@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   status: { label: string; tone: "good" | "neutral" };
+  authorityHost: string;
 }>();
 </script>
 
@@ -20,10 +21,10 @@ defineProps<{
           A minimal Vue client that signs in with OpenID Connect, displays decoded tokens,
           and supports secure logout redirects.
         </p>
-        <div class="status-row">
-          <span class="status" :class="`status-${status.tone}`">{{ status.label }}</span>
-          <span class="muted">Authority: test.id.tuurio.com</span>
-        </div>
+          <div class="status-row">
+            <span class="status" :class="`status-${status.tone}`">{{ status.label }}</span>
+            <span class="muted">Authority: {{ authorityHost }}</span>
+          </div>
       </div>
       <div class="side-list">
         <div>

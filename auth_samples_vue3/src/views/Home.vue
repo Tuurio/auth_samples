@@ -6,6 +6,7 @@ import LoadingState from '../components/LoadingState.vue';
 import LoginView from '../components/LoginView.vue';
 import TokenView from '../components/TokenView.vue';
 import { computed } from 'vue';
+import { authConfig } from '../auth';
 
 const { user, profile, loading, error, login, logout } = useAuth();
 
@@ -17,11 +18,11 @@ const status = computed(() => {
 </script>
 
 <template>
-  <Shell :status="status">
+  <Shell :status="status" :authority-host="authConfig.authorityHost">
     <Card v-if="loading">
       <LoadingState title="Loading session" subtitle="Verifying tokens and session state." />
     </Card>
     <TokenView v-else-if="user" :user="user" :profile="profile" @logout="logout" />
-    <LoginView v-else :error="error" @login="login" />
+    <LoginView v-else :error="error" :authority-host="authConfig.authorityHost" @login="login" />
   </Shell>
 </template>

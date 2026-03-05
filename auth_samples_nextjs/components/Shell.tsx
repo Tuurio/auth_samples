@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { authAuthorityHost } from "../lib/auth";
 
 export type ShellStatus = { label: string; tone: "good" | "neutral" };
 
@@ -23,7 +24,7 @@ export function Shell({ children, status }: { children: ReactNode; status: Shell
           </p>
           <div className="status-row">
             <span className={`status status-${status.tone}`}>{status.label}</span>
-            <span className="muted">Authority: test.id.tuurio.com</span>
+            <span className="muted">Authority: {authAuthorityHost}</span>
           </div>
         </div>
         <div className="side-list">

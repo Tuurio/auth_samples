@@ -3,7 +3,7 @@ import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 const DEFAULT_AUTHORITY = "https://test.id.tuurio.com";
 const DEFAULT_CLIENT_ID = "spa-K53I";
 const DEFAULT_SCOPE = "openid profile email";
-const RUNTIME_CONFIG_STORAGE_KEY = "auth_samples_react:runtime-config";
+const DEFAULT_REDIRECT_PATH = "/auth/callback";
 
 type RuntimeAuthConfig = {
   authority: string;
@@ -60,76 +60,39 @@ export async function fetchUserInfo(accessToken: string) {
 }
 
 function buildRuntimeAppUrl(path: string) {
-  const url = new URL(path, window.location.origin);
+  const origin =
+    typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : "http://localhost:5173";
+  const url = new URL(path, origin);
   return url.toString();
 }
 
 function resolveRuntimeAuthConfig(): RuntimeAuthConfig {
-  const queryOverrides = readRuntimeConfigFromQuery();
-  const storedOverrides = readRuntimeConfigFromSession();
-
   const authority =
-    normalizeAuthority(queryOverrides.authority) ||
-    normalizeAuthority(storedOverrides.authority) ||
+    normalizeAuthority(import.meta.env.VITE_TUURIO_ISSUER) ||
     DEFAULT_AUTHORITY;
   const clientId =
-    normalizeClientId(queryOverrides.clientId) ||
-    normalizeClientId(storedOverrides.clientId) ||
+    normalizeClientId(import.meta.env.VITE_TUURIO_CLIENT_ID) ||
     DEFAULT_CLIENT_ID;
   const scope =
-    normalizeScope(queryOverrides.scope) ||
-    normalizeScope(storedOverrides.scope) ||
+    normalizeScope(import.meta.env.VITE_TUURIO_SCOPE) ||
     DEFAULT_SCOPE;
+  const redirectUri =
+    normalizeUrl(import.meta.env.VITE_TUURIO_REDIRECT_URI) ||
+    buildRuntimeAppUrl(DEFAULT_REDIRECT_PATH);
+  const postLogoutRedirectUri =
+    normalizeUrl(import.meta.env.VITE_TUURIO_POST_LOGOUT_REDIRECT_URI) ||
+    buildRuntimeAppUrl("/");
 
-  const resolved: RuntimeAuthConfig = {
+  return {
     authority,
     authorityHost: new URL(authority).host,
     clientId,
     scope,
-    redirectUri: buildRuntimeAppUrl("/auth/callback"),
-    postLogoutRedirectUri: buildRuntimeAppUrl("/"),
+    redirectUri,
+    postLogoutRedirectUri,
   };
-
-  window.sessionStorage.setItem(
-    RUNTIME_CONFIG_STORAGE_KEY,
-    JSON.stringify({
-      authority: resolved.authority,
-      clientId: resolved.clientId,
-      scope: resolved.scope,
-    }),
-  );
-  return resolved;
-}
-
-function readRuntimeConfigFromQuery() {
-  const search = new URLSearchParams(window.location.search);
-  return {
-    authority:
-      normalizeAuthority(search.get("auth_server")) || normalizeAuthority(search.get("server_url")),
-    clientId: normalizeClientId(search.get("client_id")) || normalizeClientId(search.get("clientId")),
-    scope: normalizeScope(search.get("scope")),
-  };
-}
-
-function readRuntimeConfigFromSession() {
-  const raw = window.sessionStorage.getItem(RUNTIME_CONFIG_STORAGE_KEY);
-  if (!raw) {
-    return { authority: null, clientId: null, scope: null };
-  }
-  try {
-    const parsed = JSON.parse(raw) as {
-      authority?: string;
-      clientId?: string;
-      scope?: string;
-    };
-    return {
-      authority: parsed.authority ?? null,
-      clientId: parsed.clientId ?? null,
-      scope: parsed.scope ?? null,
-    };
-  } catch {
-    return { authority: null, clientId: null, scope: null };
-  }
 }
 
 function normalizeAuthority(value: string | null) {
@@ -155,6 +118,21 @@ function normalizeAuthority(value: string | null) {
   parsed.username = "";
   parsed.password = "";
   return parsed.toString().replace(/\/$/, "");
+}
+
+function normalizeUrl(value: string | null) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
 
 function normalizeClientId(value: string | null) {

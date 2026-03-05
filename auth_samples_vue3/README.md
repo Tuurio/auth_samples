@@ -2,84 +2,55 @@
 
 A Vue 3 + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
 
-## What you need
+## Setup
 
-- A client registered in your Tuurio account (from the id.tuurio.com dashboard).
-- The client configuration snippet copied from the dashboard.
+1. Install dependencies:
 
-Make sure the client has these URLs configured:
-
+```bash
+npm install
 ```
+
+2. Create your local config:
+
+```bash
+cp .env.example .env
+```
+
+3. Update `.env` with your tenant values from:
+
+```text
+https://<tenantId>.id.tuurio.com/admin/clients
+```
+
+4. Start dev server:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+## Required client URLs
+
+Configure your Tuurio client with these redirect URLs (matching your `.env` values):
+
+```text
 Redirect URI: http://localhost:5173/auth/callback
 Post-logout Redirect URI: http://localhost:5173/
 ```
 
-## Setup
+The demo also accepts `/callback` for compatibility.
 
-```
-npm install
-npm run dev
-```
+## `.env` keys
 
-Open:
-
-```
-http://localhost:5173
-```
-
-## Redirect URL checklist
-
-- Redirect URI must match exactly (protocol, host, port, path).
-- Dev server port is `5173`.
-- Callback route is `/auth/callback`.
-
-## What you will see
-
-- A login screen with a “Continue with Tuurio ID” button.
-- After you authenticate, you are redirected back to the app.
-- The app shows:
-  - Access token and ID token (raw + decoded claims).
-  - Token expiry time and scope.
-  - UserInfo JSON (user profile).
-  - Logout button that ends the session and returns to the app.
-
-## Configuration
-
-Edit `src/auth.ts` with the values from your **Connect** page:
-
-```
-https://<tenantId>.id.tuurio.com/admin/clients
+```env
+VITE_TUURIO_ISSUER=https://test.id.tuurio.com
+VITE_TUURIO_CLIENT_ID=spa-K53I
+VITE_TUURIO_REDIRECT_URI=http://localhost:5173/auth/callback
+VITE_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173/
+VITE_TUURIO_SCOPE=openid profile email
 ```
 
-All relevant values (client ID, redirect/callback URL, post-logout URL, scopes) must be copied from your
-tenant’s client configuration. **This demo uses sample values**, so replace them with your tenant’s settings.
-
-The current sample values are:
-
-```
-authority: https://test.id.tuurio.com
-client_id: spa-K53I
-redirect_uri: http://localhost:5173/auth/callback
-post_logout_redirect_uri: http://localhost:5173/
-scope: openid profile email
-```
-
-## Notes
-
-- The app stores session state in `sessionStorage` to reduce persistence.
-- The OAuth callback route is `/auth/callback`.
-
-## Troubleshooting
-
-**Login hangs on “Completing sign-in”**
-- Ensure you only call `signinRedirectCallback()` once per callback. This demo handles this in `src/views/AuthCallback.vue`.
-
-**No matching state found in storage after login**
-- Make sure the origin you open matches the redirect URI exactly
-  (no `127.0.0.1` vs `localhost`, no `https` vs `http`).
-- If your IdP opens the callback in a new tab, `sessionStorage` won’t match.
-  Switch to `localStorage` or keep the flow in the same tab.
-
-**Server error: redirectUris cannot be empty**
-- Your client registration in the IdP has an empty redirect URIs list.
-  Add `http://localhost:5173/auth/callback` and save.
+Notes:
+- This is a public SPA client. Do not use or commit confidential client secrets.
+- Keep redirect URIs and post-logout URIs exact.

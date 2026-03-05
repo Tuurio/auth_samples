@@ -2,85 +2,51 @@
 
 A server-rendered Node.js demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
 
-This version performs the authorization code exchange on the server and stores tokens in memory per session.
+## Setup
 
-## What you need
-
-- A client registered in your Tuurio account (from the id.tuurio.com dashboard).
-- The client configuration snippet copied from the dashboard.
-
-Make sure the client has these URLs configured:
-
+```bash
+cd auth_samples_node
+npm install
+cp .env.example .env
+# edit .env with your tenant/client values
+npm start
 ```
+
+Open `http://localhost:8082`.
+
+## Required client URLs
+
+Configure your Tuurio client with these redirect URLs (matching your `.env` values):
+
+```text
 Redirect URI: http://localhost:8082/auth/callback
 Post-logout Redirect URI: http://localhost:8082/
 ```
 
-## Setup
+## `.env` keys
 
-From the repo root:
-
+```env
+TUURIO_ISSUER=https://test.id.tuurio.com
+TUURIO_CLIENT_ID=spa-K53I
+TUURIO_CLIENT_SECRET=
+TUURIO_REDIRECT_URI=http://localhost:8082/auth/callback
+TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:8082/
+TUURIO_SCOPE=openid profile email
+TUURIO_SESSION_SECRET=tuurio-auth-sample
+TUURIO_SESSION_COOKIE_NAME=tuurio.sid
+TUURIO_SESSION_TRUST_PROXY=false
+TUURIO_SESSION_SECURE_COOKIE=false
+TUURIO_SESSION_SAME_SITE=lax
+TUURIO_SESSION_MAX_AGE_MS=28800000
 ```
-cd auth_samples_node
-npm install
-npm start
-```
 
-Open:
+Values come from your Tuurio **Connect** page:
 
-```
-http://localhost:8082
-```
-
-## Redirect URL checklist
-
-- Redirect URI must match exactly (protocol, host, port, path).
-- Dev server port is `8082`.
-- Callback route is `/auth/callback`.
-
-## What you will see
-
-- A login screen with a “Continue with Tuurio ID” button.
-- After you authenticate, you are redirected back to the app.
-- The app shows:
-  - Access token and ID token (raw + decoded claims).
-  - Token expiry time and scope.
-  - UserInfo JSON (user profile).
-  - Logout button that ends the session and returns to the app.
-
-## Configuration
-
-Edit `src/config.js` with the values from your **Connect** page:
-
-```
+```text
 https://<tenantId>.id.tuurio.com/admin/clients
 ```
 
-The current sample values are:
-
-```
-authority: https://test.id.tuurio.com
-clientId: spa-K53I
-redirectUri: http://localhost:8082/auth/callback
-postLogoutRedirectUri: http://localhost:8082/
-scope: openid profile email
-```
-
-## Notes
-
-- Tokens are stored in memory via `express-session`. Use a real session store for production.
-- Token exchange happens server-side using `fetch` (Node 18+).
-
-## Troubleshooting
-
-**Login hangs on “Completing sign-in”**
-- Ensure the callback URL matches exactly.
-- Check server logs for token exchange errors.
-
-**No matching state found**
-- Confirm the browser session is preserved between authorize and callback.
-- Avoid using multiple tabs with different sessions.
-
-**Server error: redirectUris cannot be empty**
-- Your client registration in the IdP has an empty redirect URIs list.
-  Add `http://localhost:8082/auth/callback` and save.
+Security notes:
+- For production, set `TUURIO_SESSION_SECRET` to a strong value (at least 32 chars, not default).
+- Behind reverse proxies, set `TUURIO_SESSION_TRUST_PROXY=true`.
+- In production, set `TUURIO_SESSION_SECURE_COOKIE=true`.

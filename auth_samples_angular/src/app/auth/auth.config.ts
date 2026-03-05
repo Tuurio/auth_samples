@@ -1,7 +1,12 @@
-export const authConfig = {
-  authority: "https://test.id.tuurio.com",
-  clientId: "spa-K53I",
-  redirectUri: "http://localhost:4200/auth/callback",
-  postLogoutRedirectUri: "http://localhost:4200/",
-  scope: "openid profile email",
+import { generatedAuthConfig } from "./auth.config.generated";
+
+export type AuthConfig = {
+  authority: string;
+  authorityHost: string;
+  clientId: string;
+  redirectUri: string;
+  postLogoutRedirectUri: string;
+  scope: string;
 };
+
+export const authConfig: AuthConfig = generatedAuthConfig;

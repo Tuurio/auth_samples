@@ -30,7 +30,7 @@ export type ShellStatus = { label: string; tone: ShellTone };
             >
               {{ status().label }}
             </span>
-            <span class="muted">Authority: test.id.tuurio.com</span>
+            <span class="muted">Authority: {{ authorityHost() }}</span>
           </div>
         </div>
         <div class="side-list">
@@ -56,4 +56,5 @@ export type ShellStatus = { label: string; tone: ShellTone };
 })
 export class ShellComponent {
   status = input.required<ShellStatus>();
+  authorityHost = input.required<string>();
 }

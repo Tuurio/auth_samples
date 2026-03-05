@@ -5,6 +5,7 @@ import { useAuth } from '../composables/useAuth';
 import Shell from '../components/Shell.vue';
 import Card from '../components/Card.vue';
 import LoadingState from '../components/LoadingState.vue';
+import { authConfig } from '../auth';
 
 const router = useRouter();
 const { handleCallback } = useAuth();
@@ -22,7 +23,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Shell :status="{ label: 'Finalizing login', tone: 'neutral' }">
+  <Shell :status="{ label: 'Finalizing login', tone: 'neutral' }" :authority-host="authConfig.authorityHost">
     <Card>
       <div v-if="error" class="stack">
         <div class="status status-bad">Authentication error</div>

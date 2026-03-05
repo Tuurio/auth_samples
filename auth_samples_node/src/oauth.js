@@ -42,10 +42,15 @@ async function exchangeCodeForTokens(config, code, verifier) {
     client_id: config.clientId,
     code_verifier: verifier,
   });
+  const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  if (config.clientSecret) {
+    const basicToken = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+    headers.Authorization = `Basic ${basicToken}`;
+  }
 
   const response = await fetch(config.tokenEndpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers,
     body,
   });
 

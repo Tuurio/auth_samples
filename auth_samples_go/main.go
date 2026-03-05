@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -11,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -31,17 +33,7 @@ type Config struct {
 	Scope                 []string
 }
 
-var config = Config{
-	Authority:             "https://test.id.tuurio.com",
-	AuthorizeEndpoint:     "https://test.id.tuurio.com/oauth2/authorize",
-	TokenEndpoint:         "https://test.id.tuurio.com/oauth2/token",
-	DiscoveryEndpoint:     "https://test.id.tuurio.com/.well-known/openid-configuration",
-	ClientID:              "php-KQD8",
-	ClientSecret:          "YOUR_CLIENT_SECRET",
-	RedirectURI:           "http://localhost:8084/auth/callback",
-	PostLogoutRedirectURI: "http://localhost:8084/",
-	Scope:                 []string{"openid", "profile", "email"},
-}
+var config = loadConfig()
 
 var oauthConfig = &oauth2.Config{
 	ClientID:     config.ClientID,
@@ -55,16 +47,16 @@ var oauthConfig = &oauth2.Config{
 }
 
 type Session struct {
-	State        string
-	Verifier     string
-	Token        *oauth2.Token
-	IDToken      string
-	ScopeLabel   string
-	ExpiresLabel string
+	State         string
+	Verifier      string
+	Token         *oauth2.Token
+	IDToken       string
+	ScopeLabel    string
+	ExpiresLabel  string
 	AccessDecoded string
 	IDDecoded     string
-	ProfileJSON  string
-	Error        string
+	ProfileJSON   string
+	Error         string
 }
 
 type sessionStore struct {
@@ -91,6 +83,151 @@ func main() {
 	if err := http.ListenAndServe(":8084", mux); err != nil {
 		panic(err)
 	}
+}
+
+func loadConfig() Config {
+	loadDotEnvFile(".env")
+
+	authority := normalizeAuthority(os.Getenv("TUURIO_ISSUER"))
+	if authority == "" {
+		authority = "https://test.id.tuurio.com"
+	}
+
+	clientID := sanitizeClientID(os.Getenv("TUURIO_CLIENT_ID"))
+	if clientID == "" {
+		clientID = "php-KQD8"
+	}
+
+	clientSecret := strings.TrimSpace(os.Getenv("TUURIO_CLIENT_SECRET"))
+	if clientSecret == "" {
+		clientSecret = "YOUR_CLIENT_SECRET"
+	}
+
+	redirectURI := normalizeHTTPURL(os.Getenv("TUURIO_REDIRECT_URI"))
+	if redirectURI == "" {
+		redirectURI = "http://localhost:8084/auth/callback"
+	}
+
+	postLogoutRedirectURI := normalizeHTTPURL(os.Getenv("TUURIO_POST_LOGOUT_REDIRECT_URI"))
+	if postLogoutRedirectURI == "" {
+		postLogoutRedirectURI = "http://localhost:8084/"
+	}
+
+	scopeRaw := sanitizeScope(os.Getenv("TUURIO_SCOPE"))
+	if scopeRaw == "" {
+		scopeRaw = "openid profile email"
+	}
+
+	return Config{
+		Authority:             authority,
+		AuthorizeEndpoint:     authority + "/oauth2/authorize",
+		TokenEndpoint:         authority + "/oauth2/token",
+		DiscoveryEndpoint:     authority + "/.well-known/openid-configuration",
+		ClientID:              clientID,
+		ClientSecret:          clientSecret,
+		RedirectURI:           redirectURI,
+		PostLogoutRedirectURI: postLogoutRedirectURI,
+		Scope:                 strings.Fields(scopeRaw),
+	}
+}
+
+func loadDotEnvFile(filePath string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		separator := strings.Index(line, "=")
+		if separator <= 0 {
+			continue
+		}
+		key := strings.TrimSpace(line[:separator])
+		value := strings.TrimSpace(line[separator+1:])
+		value = strings.Trim(value, "\"'")
+		if key == "" {
+			continue
+		}
+		if _, exists := os.LookupEnv(key); !exists {
+			_ = os.Setenv(key, value)
+		}
+	}
+}
+
+func normalizeAuthority(value string) string {
+	raw := strings.TrimSpace(value)
+	if raw == "" {
+		return ""
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return ""
+	}
+	parsed.Path = ""
+	parsed.RawPath = ""
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
+	return parsed.Scheme + "://" + parsed.Host
+}
+
+func normalizeHTTPURL(value string) string {
+	raw := strings.TrimSpace(value)
+	if raw == "" {
+		return ""
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return ""
+	}
+	return parsed.String()
+}
+
+func sanitizeClientID(value string) string {
+	raw := strings.TrimSpace(value)
+	if raw == "" || len(raw) > 120 {
+		return ""
+	}
+	for _, ch := range raw {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
+			continue
+		}
+		if ch == '.' || ch == '_' || ch == '-' {
+			continue
+		}
+		return ""
+	}
+	return raw
+}
+
+func sanitizeScope(value string) string {
+	raw := strings.TrimSpace(value)
+	if raw == "" {
+		return ""
+	}
+	valid := make([]string, 0)
+	for _, part := range strings.Fields(raw) {
+		ok := true
+		for _, ch := range part {
+			if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
+				continue
+			}
+			if ch == '.' || ch == '_' || ch == ':' || ch == '-' {
+				continue
+			}
+			ok = false
+			break
+		}
+		if ok {
+			valid = append(valid, part)
+		}
+	}
+	return strings.Join(valid, " ")
 }
 
 func withSession(handler func(http.ResponseWriter, *http.Request, *Session)) http.HandlerFunc {

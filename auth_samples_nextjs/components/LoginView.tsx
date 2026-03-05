@@ -2,6 +2,7 @@
 
 import { Card } from "./Card";
 import { Feature } from "./Feature";
+import { authAuthorityHost } from "../lib/auth";
 
 export function LoginView({
   onLogin,
@@ -25,7 +26,7 @@ export function LoginView({
           <button className="button primary" onClick={onLogin}>
             Continue with Tuurio ID
           </button>
-          <span className="helper">You'll be redirected to test.id.tuurio.com</span>
+          <span className="helper">You&apos;ll be redirected to {authAuthorityHost}</span>
         </div>
         {error ? <div className="status status-bad">{error}</div> : null}
       </Card>

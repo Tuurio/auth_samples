@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "ng serve",
-    "build": "ng build"
+    "sync-env": "node ./scripts/sync-env.mjs",
+    "start": "npm run sync-env && ng serve",
+    "build": "npm run sync-env && ng build"
   },
   "dependencies": {
     "@angular/animations": "^18.0.0",

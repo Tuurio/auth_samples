@@ -17,6 +17,11 @@ const router = createRouter({
       component: AuthCallback
     },
     {
+      path: '/callback',
+      name: 'callback',
+      component: AuthCallback
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFound

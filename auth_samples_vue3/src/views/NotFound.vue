@@ -2,12 +2,13 @@
 import { useRouter } from 'vue-router';
 import Shell from '../components/Shell.vue';
 import Card from '../components/Card.vue';
+import { authConfig } from '../auth';
 
 const router = useRouter();
 </script>
 
 <template>
-  <Shell :status="{ label: 'Route not found', tone: 'neutral' }">
+  <Shell :status="{ label: 'Route not found', tone: 'neutral' }" :authority-host="authConfig.authorityHost">
     <Card>
       <div class="stack">
         <div class="status status-bad">404</div>

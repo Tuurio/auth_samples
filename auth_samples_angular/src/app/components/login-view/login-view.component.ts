@@ -21,7 +21,7 @@ import { FeatureComponent } from "../feature/feature.component";
           <button class="button primary" type="button" (click)="login.emit()">
             Continue with Tuurio ID
           </button>
-          <span class="helper">You'll be redirected to test.id.tuurio.com</span>
+          <span class="helper">You'll be redirected to {{ authorityHost() }}</span>
         </div>
         @if (error()) {
           <div class="status status-bad">{{ error() }}</div>
@@ -40,4 +40,5 @@ import { FeatureComponent } from "../feature/feature.component";
 export class LoginViewComponent {
   @Output() login = new EventEmitter<void>();
   error = input<string | null>(null);
+  authorityHost = input.required<string>();
 }

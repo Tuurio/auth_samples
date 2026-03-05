@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
+const MemoryStore = require('memorystore')(session);
 const config = require('./src/config');
 const {
   generateRandomString,
@@ -15,15 +16,40 @@ const { renderPage, renderLoginView, renderTokenView, renderNotFound } = require
 
 const app = express();
 const publicDir = path.join(__dirname, 'public');
+const sessionStore = new MemoryStore({
+  checkPeriod: 24 * 60 * 60 * 1000,
+});
+
+if (config.sessionTrustProxy) {
+  app.set('trust proxy', 1);
+}
+
+if (!config.sessionSecret) {
+  throw new Error(
+    'Invalid TUURIO_SESSION_SECRET. Set a non-default secret (>=32 chars) for production usage.',
+  );
+}
+
+if (config.isProduction) {
+  console.warn(
+    '[auth_samples_node] In-memory session store is active. Use a persistent session store for production deployments.',
+  );
+}
 
 app.use(
   session({
-    secret: 'tuurio-auth-sample',
+    name: config.sessionCookieName,
+    secret: config.sessionSecret,
+    proxy: config.sessionTrustProxy,
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    unset: 'destroy',
     cookie: {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: config.sessionSameSite,
+      secure: config.sessionSecureCookie,
+      maxAge: config.sessionMaxAgeMs,
     },
   }),
 );

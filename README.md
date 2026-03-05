@@ -58,6 +58,8 @@ All samples utilize the **Authorization Code Flow + PKCE** (Proof Key for Code E
     ```bash
     git clone [https://github.com/tuurio/auth-samples.git](https://github.com/tuurio/auth-samples.git)
     cd auth_samples_react
+    cp .env.example .env
+    # edit .env with your issuer/client/redirect values
     npm install
     npm run dev
     ```
