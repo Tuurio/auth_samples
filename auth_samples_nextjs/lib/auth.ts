@@ -18,8 +18,15 @@ export const authConfig = {
 };
 export const authAuthorityHost = new URL(authConfig.authority).host;
 
+type DiscoveryDocument = {
+  userinfo_endpoint?: string;
+  end_session_endpoint?: string;
+};
+
 let manager: UserManager | null = null;
+let discoveryDocument: DiscoveryDocument | null = null;
 let userInfoEndpoint: string | null = null;
+let endSessionEndpoint: string | null = null;
 
 function getManager() {
   if (manager) return manager;
@@ -45,7 +52,17 @@ export async function login() {
 export async function logout() {
   const mgr = getManager();
   if (!mgr) throw new Error("Auth manager not available.");
-  await mgr.signoutRedirect();
+  await mgr.removeUser().catch(() => undefined);
+  const logoutEndpoint = await getEndSessionEndpoint();
+  if (typeof window === "undefined") {
+    throw new Error("Logout redirect requires a browser environment.");
+  }
+  const params = new URLSearchParams({
+    client_id: authConfig.clientId,
+    post_logout_redirect_uri: authConfig.postLogoutRedirectUri,
+    state: createLogoutState(),
+  });
+  window.location.assign(`${logoutEndpoint}?${params.toString()}`);
 }
 
 export async function handleCallback() {
@@ -62,16 +79,35 @@ export async function getUser() {
 
 async function getUserInfoEndpoint() {
   if (userInfoEndpoint) return userInfoEndpoint;
-  const response = await fetch(`${authConfig.authority}/.well-known/openid-configuration`);
-  if (!response.ok) {
-    throw new Error("Failed to load discovery document.");
-  }
-  const data = (await response.json()) as { userinfo_endpoint?: string };
+  const data = await getDiscoveryDocument();
   if (!data.userinfo_endpoint) {
     throw new Error("UserInfo endpoint not available.");
   }
   userInfoEndpoint = data.userinfo_endpoint;
   return userInfoEndpoint;
+}
+
+async function getEndSessionEndpoint() {
+  if (endSessionEndpoint) return endSessionEndpoint;
+  const data = await getDiscoveryDocument();
+  if (!data.end_session_endpoint) {
+    throw new Error("End-session endpoint not available.");
+  }
+  endSessionEndpoint = data.end_session_endpoint;
+  return endSessionEndpoint;
+}
+
+async function getDiscoveryDocument() {
+  if (discoveryDocument) {
+    return discoveryDocument;
+  }
+  const response = await fetch(`${authConfig.authority}/.well-known/openid-configuration`);
+  if (!response.ok) {
+    throw new Error("Failed to load discovery document.");
+  }
+  const data = (await response.json()) as DiscoveryDocument;
+  discoveryDocument = data;
+  return data;
 }
 
 export async function fetchUserInfo(accessToken: string) {
@@ -137,4 +173,11 @@ function normalizeScope(value: string | undefined) {
     .filter((part) => part.length > 0 && /^[A-Za-z0-9._:-]+$/.test(part))
     .join(" ");
   return normalized || null;
+}
+
+function createLogoutState() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}`;
 }

@@ -72,7 +72,6 @@ def logout():
         if not end_session:
             raise RuntimeError("End session endpoint not found.")
 
-        id_token = session.get("token", {}).get("id_token")
         session.pop("token", None)
         session.pop("userinfo", None)
 
@@ -80,8 +79,6 @@ def logout():
             "client_id": config.CLIENT_ID,
             "post_logout_redirect_uri": config.POST_LOGOUT_REDIRECT_URI,
         }
-        if id_token:
-            params["id_token_hint"] = id_token
 
         return redirect(end_session + "?" + urlencode(params))
     except Exception as exc:  # pylint: disable=broad-except

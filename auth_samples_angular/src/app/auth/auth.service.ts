@@ -19,7 +19,9 @@ export class AuthService {
   readonly profile = signal<Record<string, unknown> | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  private discoveryDocument: { userinfo_endpoint?: string; end_session_endpoint?: string } | null = null;
   private userInfoEndpoint: string | null = null;
+  private endSessionEndpoint: string | null = null;
 
   constructor() {
     this.bootstrap();
@@ -33,7 +35,20 @@ export class AuthService {
 
   async logout() {
     this.error.set(null);
-    await this.manager.signoutRedirect();
+    try {
+      await this.manager.removeUser().catch(() => undefined);
+      this.user.set(null);
+      this.profile.set(null);
+      const logoutEndpoint = await this.getEndSessionEndpoint();
+      const params = new URLSearchParams({
+        client_id: authConfig.clientId,
+        post_logout_redirect_uri: authConfig.postLogoutRedirectUri,
+        state: this.createLogoutState(),
+      });
+      window.location.assign(`${logoutEndpoint}?${params.toString()}`);
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : "Logout failed.");
+    }
   }
 
   async handleCallback() {
@@ -120,11 +135,7 @@ export class AuthService {
 
   private async getUserInfoEndpoint() {
     if (this.userInfoEndpoint) return this.userInfoEndpoint;
-    const response = await fetch(`${authConfig.authority}/.well-known/openid-configuration`);
-    if (!response.ok) {
-      throw new Error("Failed to load discovery document.");
-    }
-    const data = (await response.json()) as { userinfo_endpoint?: string };
+    const data = await this.getDiscoveryDocument();
     if (!data.userinfo_endpoint) {
       throw new Error("UserInfo endpoint not available.");
     }
@@ -132,8 +143,36 @@ export class AuthService {
     return this.userInfoEndpoint;
   }
 
+  private async getEndSessionEndpoint() {
+    if (this.endSessionEndpoint) return this.endSessionEndpoint;
+    const data = await this.getDiscoveryDocument();
+    if (!data.end_session_endpoint) {
+      throw new Error("End-session endpoint not available.");
+    }
+    this.endSessionEndpoint = data.end_session_endpoint;
+    return this.endSessionEndpoint;
+  }
+
+  private async getDiscoveryDocument() {
+    if (this.discoveryDocument) return this.discoveryDocument;
+    const response = await fetch(`${authConfig.authority}/.well-known/openid-configuration`);
+    if (!response.ok) {
+      throw new Error("Failed to load discovery document.");
+    }
+    const data = (await response.json()) as { userinfo_endpoint?: string; end_session_endpoint?: string };
+    this.discoveryDocument = data;
+    return data;
+  }
+
   private isUserExpired(currentUser: User) {
     if (!currentUser.expires_at) return false;
     return currentUser.expires_at <= Math.floor(Date.now() / 1000);
+  }
+
+  private createLogoutState() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `${Date.now()}`;
   }
 }

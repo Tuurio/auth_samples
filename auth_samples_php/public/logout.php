@@ -14,16 +14,12 @@ try {
         throw new RuntimeException('End session endpoint not found.');
     }
 
-    $idToken = $_SESSION['auth']['id_token'] ?? null;
     unset($_SESSION['auth']);
 
     $params = [
         'client_id' => $config['client_id'],
         'post_logout_redirect_uri' => $config['post_logout_redirect_uri'],
     ];
-    if ($idToken) {
-        $params['id_token_hint'] = $idToken;
-    }
 
     $url = $endSession . '?' . http_build_query($params);
     header('Location: ' . $url, true, 302);

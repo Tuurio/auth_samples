@@ -415,15 +415,11 @@ func handleLogout(w http.ResponseWriter, r *http.Request, session *Session) {
 		return
 	}
 
-	idToken := session.IDToken
 	resetSession(session)
 
 	params := url.Values{}
 	params.Set("client_id", config.ClientID)
 	params.Set("post_logout_redirect_uri", config.PostLogoutRedirectURI)
-	if idToken != "" {
-		params.Set("id_token_hint", idToken)
-	}
 
 	logoutURL := endSession + "?" + params.Encode()
 	http.Redirect(w, r, logoutURL, http.StatusFound)

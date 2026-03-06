@@ -136,16 +136,12 @@ app.get('/logout', async (req, res) => {
     const endSession = discovery.end_session_endpoint;
     if (!endSession) throw new Error('End session endpoint not found.');
 
-    const idToken = req.session.auth?.id_token;
     req.session.auth = null;
 
     const params = new URLSearchParams({
       client_id: config.clientId,
       post_logout_redirect_uri: config.postLogoutRedirectUri,
     });
-    if (idToken) {
-      params.set('id_token_hint', idToken);
-    }
 
     res.redirect(`${endSession}?${params.toString()}`);
   } catch (err) {
