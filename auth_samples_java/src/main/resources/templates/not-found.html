@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Not Found</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="stylesheet" href="/assets/app.css" />
   </head>
   <body>
@@ -14,42 +15,50 @@
             <div class="logo-mark">tu</div>
             <div>
               <p class="brand-name">Tuurio Auth Studio</p>
-              <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+              <p class="brand-subtitle">OIDC playground for OAuth 2.0</p>
             </div>
           </div>
           <div class="side-card">
-            <h1>Design for secure sign-in.</h1>
+            <h1>Design for<br />secure sign in.</h1>
             <p class="muted">
-              A minimal Java server that signs in with OpenID Connect, displays decoded tokens,
-              and supports secure logout redirects.
+              A minimal Java server that authenticates with OpenID Connect, inspects decoded
+              tokens, and supports logout redirects.
             </p>
             <div class="status-row">
               <span class="status status-neutral">Route not found</span>
-              <span class="muted">Authority: test.id.tuurio.com</span>
+              <span class="muted">[[${authorityHost}]]</span>
             </div>
           </div>
           <div class="side-list">
-            <div>
-              <span class="eyebrow">Architecture</span>
-              <p>Authorization code flow + PKCE</p>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Architecture</span>
+                <span class="side-list-value">Auth code + PKCE</span>
+              </div>
             </div>
-            <div>
-              <span class="eyebrow">Storage</span>
-              <p>Server session storage</p>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Storage</span>
+                <span class="side-list-value">Server session</span>
+              </div>
             </div>
-            <div>
-              <span class="eyebrow">Scope</span>
-              <p>openid profile email</p>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Scope</span>
+                <span class="side-list-value">openid profile email</span>
+              </div>
             </div>
           </div>
         </aside>
         <main class="main-panel">
-          <section class="card">
-            <div class="stack">
-              <div class="status status-bad">404</div>
-              <h2 class="card-title">This route doesn't exist.</h2>
-              <p class="muted">Return to the login page to start a new session.</p>
-              <a class="button ghost" href="/">Go home</a>
+          <section class="card card-hero">
+            <div class="card-header">
+              <span class="badge badge-error">404</span>
+              <h2 class="card-title">Route not found</h2>
+              <p class="muted">This path doesn't match any known endpoint.</p>
+            </div>
+            <div class="button-row">
+              <a class="button ghost" href="/">Go home <span class="btn-arrow">&rarr;</span></a>
             </div>
           </section>
         </main>

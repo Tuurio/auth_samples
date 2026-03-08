@@ -5,7 +5,7 @@ const defaults = {
   TUURIO_ISSUER: "https://test.id.tuurio.com",
   TUURIO_CLIENT_ID: "spa-K53I",
   TUURIO_REDIRECT_URI: "http://localhost:4200/auth/callback",
-  TUURIO_POST_LOGOUT_REDIRECT_URI: "http://localhost:4200/",
+  TUURIO_POST_LOGOUT_REDIRECT_URI: "http://localhost:4200/logout/callback",
   TUURIO_SCOPE: "openid profile email",
 };
 

@@ -121,7 +121,7 @@ function resolveRuntimeAuthConfig(): RuntimeAuthConfig {
     buildRuntimeAppUrl(DEFAULT_REDIRECT_PATH);
   const postLogoutRedirectUri =
     normalizeUrl(import.meta.env.VITE_TUURIO_POST_LOGOUT_REDIRECT_URI) ||
-    buildRuntimeAppUrl("/");
+    buildRuntimeAppUrl("/logout/callback");
 
   return {
     authority,

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tuurio Auth Studio</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="app">
+        <aside class="side-panel">
+          <div class="brand">
+            <div class="logo-mark">tu</div>
+            <div>
+              <p class="brand-name">Tuurio Auth Studio</p>
+              <p class="brand-subtitle">OIDC playground for OAuth 2.0</p>
+            </div>
+          </div>
+          <div class="side-card">
+            <h1>Design for<br />secure sign in.</h1>
+            <p class="muted">
+              A minimal Java server that authenticates with OpenID Connect, inspects decoded
+              tokens, and supports logout redirects.
+            </p>
+            <div class="status-row">
+              <span class="status status-neutral">Signed out</span>
+              <span class="muted">[[${authorityHost}]]</span>
+            </div>
+          </div>
+          <div class="side-list">
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Architecture</span>
+                <span class="side-list-value">Auth code + PKCE</span>
+              </div>
+            </div>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Storage</span>
+                <span class="side-list-value">Server session</span>
+              </div>
+            </div>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Scope</span>
+                <span class="side-list-value">openid profile email</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+        <main class="main-panel">
+          <section class="card card-hero">
+            <div class="card-header">
+              <span class="badge badge-neutral">Session ended</span>
+              <h2 class="card-title">Successfully signed out</h2>
+              <p class="muted">
+                Local session cleared. The identity provider has been notified via RP-Initiated Logout.
+              </p>
+            </div>
+            <div class="button-row">
+              <a class="button primary" href="/login">Sign in again <span class="btn-arrow">&rarr;</span></a>
+              <span class="helper">Redirects to the identity provider.</span>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="section-header">
+              <div class="section-icon">OK</div>
+              <div>
+                <h3 class="section-title">Session state</h3>
+                <p class="muted">Spring Security has cleared the local session before rendering this page.</p>
+              </div>
+            </div>
+            <div class="stack">
+              <div>
+                <span class="eyebrow">Post-logout URI</span>
+                <p class="muted">/logout/callback</p>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

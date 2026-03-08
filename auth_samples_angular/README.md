@@ -1,6 +1,6 @@
 # Tuurio Auth Angular Demo
 
-An Angular demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+An Angular demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
 
 ## Setup
 
@@ -38,7 +38,7 @@ Configure your Tuurio client with these redirect URLs (matching your `.env` valu
 
 ```text
 Redirect URI: http://localhost:4200/auth/callback
-Post-logout Redirect URI: http://localhost:4200/
+Post-logout Redirect URI: http://localhost:4200/logout/callback
 ```
 
 The demo also accepts `/callback` for compatibility.
@@ -49,7 +49,7 @@ The demo also accepts `/callback` for compatibility.
 TUURIO_ISSUER=https://test.id.tuurio.com
 TUURIO_CLIENT_ID=spa-K53I
 TUURIO_REDIRECT_URI=http://localhost:4200/auth/callback
-TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:4200/
+TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:4200/logout/callback
 TUURIO_SCOPE=openid profile email
 ```
 

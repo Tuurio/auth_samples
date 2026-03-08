@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * Tuurio Auth Studio — Webhook receiver.
+ *
+ * Accepts POST requests from Tuurio ID webhook events, validates
+ * the API key header, and logs the event payload to error_log.
+ *
+ * @author  Tuurio GmbH, Berlin
+ * @version 1.0.0 (2026-03-07)
+ * @see     https://id.tuurio.com
+ */
+
 declare(strict_types=1);
 
 $config = require __DIR__ . '/../src/config.php';

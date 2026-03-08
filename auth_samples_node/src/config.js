@@ -18,7 +18,7 @@ module.exports = {
   clientSecret: process.env.TUURIO_CLIENT_SECRET || '',
   redirectUri: normalizeUrl(process.env.TUURIO_REDIRECT_URI) || 'http://localhost:8082/auth/callback',
   postLogoutRedirectUri:
-    normalizeUrl(process.env.TUURIO_POST_LOGOUT_REDIRECT_URI) || 'http://localhost:8082/',
+    normalizeUrl(process.env.TUURIO_POST_LOGOUT_REDIRECT_URI) || 'http://localhost:8082/logout/callback',
   scope: sanitizeScope(process.env.TUURIO_SCOPE) || 'openid profile email',
   sessionSecret: sanitizeSessionSecret(process.env.TUURIO_SESSION_SECRET, isProduction),
   sessionCookieName: sanitizeCookieName(process.env.TUURIO_SESSION_COOKIE_NAME) || 'tuurio.sid',

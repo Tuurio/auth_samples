@@ -84,6 +84,7 @@ func main() {
 	mux.HandleFunc("/login", withSession(handleLogin))
 	mux.HandleFunc("/auth/callback", withSession(handleCallback))
 	mux.HandleFunc("/logout", withSession(handleLogout))
+	mux.HandleFunc("/logout/callback", withSession(handleLogoutCallback))
 	mux.HandleFunc(config.WebhookListenPath, handleWebhook)
 	mux.HandleFunc("/", withSession(handleHome))
 
@@ -122,7 +123,7 @@ func loadConfig() Config {
 
 	postLogoutRedirectURI := normalizeHTTPURL(os.Getenv("TUURIO_POST_LOGOUT_REDIRECT_URI"))
 	if postLogoutRedirectURI == "" {
-		postLogoutRedirectURI = "http://localhost:8084/"
+		postLogoutRedirectURI = "http://localhost:8084/logout/callback"
 	}
 
 	scopeRaw := sanitizeScope(os.Getenv("TUURIO_SCOPE"))
@@ -414,15 +415,28 @@ func handleLogout(w http.ResponseWriter, r *http.Request, session *Session) {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
+	idTokenHint := session.IDToken
 
 	resetSession(session)
 
 	params := url.Values{}
 	params.Set("client_id", config.ClientID)
 	params.Set("post_logout_redirect_uri", config.PostLogoutRedirectURI)
+	if idTokenHint != "" {
+		params.Set("id_token_hint", idTokenHint)
+	}
 
 	logoutURL := endSession + "?" + params.Encode()
 	http.Redirect(w, r, logoutURL, http.StatusFound)
+}
+
+func handleLogoutCallback(w http.ResponseWriter, r *http.Request, session *Session) {
+	if r.URL.Path != "/logout/callback" {
+		handleNotFound(w, r, session)
+		return
+	}
+	status := map[string]string{"label": "Signed out", "tone": "neutral"}
+	renderPage(w, status, renderLogoutCallbackView())
 }
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
@@ -491,7 +505,8 @@ func renderPage(w http.ResponseWriter, status map[string]string, content string)
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tuurio Auth Go Demo</title>
+    <title>Tuurio Auth Studio</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="stylesheet" href="/assets/app.css" />
   </head>
   <body>
@@ -515,140 +530,193 @@ func renderShell(status map[string]string, content string) string {
           <div class="logo-mark">tu</div>
           <div>
             <p class="brand-name">Tuurio Auth Studio</p>
-            <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+            <p class="brand-subtitle">OIDC playground for OAuth 2.0</p>
           </div>
         </div>
         <div class="side-card">
-          <h1>Design for secure sign-in.</h1>
+          <h1>Design for<br>secure sign in.</h1>
           <p class="muted">
-            A minimal Go server that signs in with OpenID Connect, displays decoded tokens,
-            and supports secure logout redirects.
+            A minimal Go server that authenticates with OpenID Connect, inspects decoded tokens,
+            and supports secure logout.
           </p>
           <div class="status-row">
             <span class="status status-%s">%s</span>
-            <span class="muted">Authority: test.id.tuurio.com</span>
+            <span class="muted">%s</span>
           </div>
         </div>
         <div class="side-list">
-          <div>
-            <span class="eyebrow">Architecture</span>
-            <p>Authorization code flow + PKCE</p>
+          <div class="side-list-item">
+            <div>
+              <span class="side-list-label">Architecture</span>
+              <span class="side-list-value">Auth code + PKCE</span>
+            </div>
           </div>
-          <div>
-            <span class="eyebrow">Storage</span>
-            <p>In-memory session</p>
+          <div class="side-list-item">
+            <div>
+              <span class="side-list-label">Storage</span>
+              <span class="side-list-value">In-memory session</span>
+            </div>
           </div>
-          <div>
-            <span class="eyebrow">Scope</span>
-            <p>openid profile email</p>
+          <div class="side-list-item">
+            <div>
+              <span class="side-list-label">Scope</span>
+              <span class="side-list-value">openid profile email</span>
+            </div>
           </div>
         </div>
       </aside>
       <main class="main-panel">%s</main>
     </div>
-`, tone, label, content)
+`, tone, label, html.EscapeString(strings.TrimPrefix(config.Authority, "https://")), content)
 }
 
 func renderLoginView(errorMessage string) string {
 	errorHTML := ""
 	if errorMessage != "" {
-		errorHTML = fmt.Sprintf(`<div class="status status-bad">%s</div>`, html.EscapeString(errorMessage))
+		errorHTML = fmt.Sprintf(`<div class="alert alert-error">%s</div>`, html.EscapeString(errorMessage))
 	}
 
 	return fmt.Sprintf(`
     <div class="stack">
-      <section class="card">
+      <section class="card card-hero">
         <div class="card-header">
-          <span class="eyebrow">OAuth 2.1 + OpenID Connect</span>
+          <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
           <h2 class="card-title">Sign in to continue</h2>
           <p class="muted">
-            This app uses the authorization code flow with PKCE to fetch tokens securely for a
-            browser-based client.
+            Authenticate with the authorization code flow and PKCE.
+            Tokens are exchanged server-side and stored in memory for this demo.
           </p>
         </div>
         <div class="button-row">
-          <a class="button primary" href="/login">Continue with Tuurio ID</a>
-          <span class="helper">You'll be redirected to test.id.tuurio.com</span>
+          <a class="button primary" href="/login">Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></a>
+          <span class="helper">Redirects to %s</span>
         </div>
         %s
       </section>
-      <section class="card card-soft">
-        <div class="feature-grid">
-          <div class="feature">
-            <h3>PKCE by default</h3>
-            <p class="muted">Proof Key for Code Exchange protects the code flow.</p>
-          </div>
-          <div class="feature">
-            <h3>Short-lived tokens</h3>
-            <p class="muted">Access tokens are scoped to openid profile email.</p>
-          </div>
-          <div class="feature">
-            <h3>Session aware</h3>
-            <p class="muted">Token state is persisted in memory.</p>
-          </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>PKCE by default</h3>
+          <p class="muted">Proof Key for Code Exchange prevents authorization code interception attacks.</p>
         </div>
-      </section>
+        <div class="feature-card">
+          <h3>Short-lived tokens</h3>
+          <p class="muted">Access tokens expire quickly, scoped to openid profile email.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Session aware</h3>
+          <p class="muted">Token state lives server-side. Nothing sensitive reaches the browser.</p>
+        </div>
+      </div>
     </div>
-`, errorHTML)
+`, html.EscapeString(strings.TrimPrefix(config.Authority, "https://")), errorHTML)
 }
 
 func renderTokenView(session *Session) string {
+	timingLabel := ""
+	if session.Token != nil && !session.Token.Expiry.IsZero() {
+		remaining := int(time.Until(session.Token.Expiry).Seconds())
+		if remaining > 0 {
+			timingLabel = fmt.Sprintf(" · %s remaining", formatDuration(remaining))
+		}
+	}
+
 	return fmt.Sprintf(`
     <div class="stack">
-      <section class="card">
+      <section class="card card-hero">
         <div class="card-header">
-          <span class="eyebrow">Session ready</span>
-          <h2 class="card-title">You're signed in</h2>
-          <p class="muted">Tokens expire at %s and are scoped for %s.</p>
+          <span class="badge badge-success">Authenticated</span>
+          <h2 class="card-title">Session active</h2>
+          <p class="muted"><code>%s</code>%s</p>
         </div>
         <div class="button-row">
-          <a class="button ghost" href="/logout">Logout</a>
-          <span class="helper">Tokens expire automatically; logout revokes session.</span>
+          <a class="button ghost" href="/logout">Log out and end session</a>
+          <span class="helper">Clears local state and notifies the identity provider.</span>
         </div>
       </section>
 
-      <div class="token-grid">
-        %s
-        %s
-      </div>
-
-      <section class="card card-soft">
-        <h3 class="section-title">User profile (UserInfo)</h3>
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">UI</div>
+          <div>
+            <h3 class="section-title">User profile</h3>
+            <p class="muted">Claims returned by the UserInfo endpoint.</p>
+          </div>
+        </div>
         <pre class="code-block">%s</pre>
+      </section>
+
+      %s
+      %s
+
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">ID</div>
+          <div>
+            <h3 class="section-title">Provider discovery</h3>
+            <p class="muted">OIDC metadata used to resolve endpoints and session management URLs.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div>
+            <span class="eyebrow">Authority</span>
+            <p><a class="link" href="%s" target="_blank" rel="noreferrer">%s</a></p>
+          </div>
+          <div>
+            <span class="eyebrow">Discovery document</span>
+            <p><a class="link" href="%s" target="_blank" rel="noreferrer">%s</a></p>
+          </div>
+        </div>
       </section>
     </div>
 `,
-		html.EscapeString(session.ExpiresLabel),
 		html.EscapeString(session.ScopeLabel),
-		renderTokenPanel("Access Token", session.Token.AccessToken, session.AccessDecoded, "Used to call protected APIs."),
-		renderTokenPanel("ID Token", session.IDToken, session.IDDecoded, "Proves the authenticated user."),
+		timingLabel,
 		html.EscapeString(session.ProfileJSON),
+		renderTokenPanel("Access Token", session.Token.AccessToken, session.AccessDecoded, "Authorizes API requests on behalf of the user.", "AT"),
+		renderTokenPanel("ID Token", session.IDToken, session.IDDecoded, "Cryptographic proof of the authenticated identity.", "ID"),
+		html.EscapeString(config.Authority),
+		html.EscapeString(config.Authority),
+		html.EscapeString(config.DiscoveryEndpoint),
+		html.EscapeString(config.DiscoveryEndpoint),
 	)
 }
 
-func renderTokenPanel(title, token, decoded, description string) string {
+func renderTokenPanel(title, token, decoded, description, iconLabel string) string {
 	tokenLabel := "Not provided"
 	if token != "" {
 		tokenLabel = html.EscapeString(token)
 	}
+	tokenPreview := tokenLabel
+	if token != "" && len(token) > 48 {
+		tokenPreview = html.EscapeString(token[:48]) + "..."
+	}
 
 	return fmt.Sprintf(`
-    <section class="card card-panel">
-      <div class="panel-header">
+    <section class="card">
+      <div class="section-header">
+        <div class="section-icon">%s</div>
         <div>
-          <h3 class="panel-title">%s</h3>
+          <h3 class="section-title">%s</h3>
           <p class="muted">%s</p>
         </div>
       </div>
-      <pre class="token-block">%s</pre>
+      <details class="token-details">
+        <summary class="token-summary">
+          <span class="eyebrow">Raw JWT</span>
+          <code class="token-preview">%s</code>
+        </summary>
+        <pre class="token-block">%s</pre>
+      </details>
       <div class="token-claims">
-        <span class="eyebrow">Decoded claims</span>
+        <span class="eyebrow">Decoded payload</span>
         <pre class="code-block">%s</pre>
       </div>
     </section>
 `,
+		iconLabel,
 		html.EscapeString(title),
 		html.EscapeString(description),
+		tokenPreview,
 		tokenLabel,
 		html.EscapeString(decoded),
 	)
@@ -656,15 +724,77 @@ func renderTokenPanel(title, token, decoded, description string) string {
 
 func renderNotFoundView() string {
 	return `
-    <section class="card">
-      <div class="stack">
-        <div class="status status-bad">404</div>
-        <h2 class="card-title">This route doesn't exist.</h2>
-        <p class="muted">Return to the login page to start a new session.</p>
-        <a class="button ghost" href="/">Go home</a>
+    <section class="card card-hero">
+      <div class="card-header">
+        <span class="badge badge-error">404</span>
+        <h2 class="card-title">Route not found</h2>
+        <p class="muted">This path doesn't match any known endpoint.</p>
+      </div>
+      <div class="button-row">
+        <a class="button ghost" href="/">Go home <span class="btn-arrow">&rarr;</span></a>
       </div>
     </section>
   `
+}
+
+func renderLogoutCallbackView() string {
+	return `
+    <div class="stack">
+      <section class="card card-hero">
+        <div class="card-header">
+          <span class="badge badge-neutral">Session ended</span>
+          <h2 class="card-title">Successfully signed out</h2>
+          <p class="muted">
+            Local session cleared. The identity provider has been notified via RP-Initiated Logout.
+          </p>
+        </div>
+        <div class="button-row">
+          <a class="button primary" href="/login">Sign in again <span class="btn-arrow">&rarr;</span></a>
+          <span class="helper">Redirects to the identity provider.</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">OK</div>
+          <div>
+            <h3 class="section-title">Session state</h3>
+            <p class="muted">Access token, ID token, and local session data have been removed.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div>
+            <span class="eyebrow">Post-logout URI</span>
+            <p class="muted">` + html.EscapeString(config.PostLogoutRedirectURI) + `</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  `
+}
+
+func formatDuration(seconds int) string {
+	abs := seconds
+	if abs < 0 {
+		abs = -abs
+	}
+	if abs < 60 {
+		return fmt.Sprintf("%ds", abs)
+	}
+	if abs < 3600 {
+		minutes := abs / 60
+		remainder := abs % 60
+		if remainder > 0 {
+			return fmt.Sprintf("%dm %ds", minutes, remainder)
+		}
+		return fmt.Sprintf("%dm", minutes)
+	}
+	hours := abs / 3600
+	minutes := (abs % 3600) / 60
+	if minutes > 0 {
+		return fmt.Sprintf("%dh %dm", hours, minutes)
+	}
+	return fmt.Sprintf("%dh", hours)
 }
 
 func resetSession(session *Session) {

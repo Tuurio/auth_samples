@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Tuurio Auth Studio — OAuth callback handler.
+ *
+ * Receives the authorization code from the IdP, validates state,
+ * exchanges the code for tokens, fetches the UserInfo profile,
+ * and stores everything in the PHP session.
+ *
+ * @author  Tuurio GmbH, Berlin
+ * @version 1.0.0 (2026-03-07)
+ * @see     https://id.tuurio.com
+ */
+
 declare(strict_types=1);
 
 session_start();
@@ -42,7 +54,7 @@ try {
     $profileJson = null;
     if ($userInfoEndpoint) {
         $profile = fetch_userinfo($userInfoEndpoint, $accessToken);
-        $profileJson = json_encode($profile, JSON_PRETTY_PRINT);
+        $profileJson = json_encode($profile, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     $_SESSION['auth'] = [
@@ -55,10 +67,10 @@ try {
 
     unset($_SESSION['oauth']);
 
-    header('Location: /', true, 302);
+    header('Location: ' . url('/'), true, 302);
     exit;
 } catch (Throwable $exception) {
     $_SESSION['error'] = $exception->getMessage();
-    header('Location: /', true, 302);
+    header('Location: ' . url('/'), true, 302);
     exit;
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from "@angular/core";
 import { Router } from "@angular/router";
+import { authConfig } from "../auth/auth.config";
 import { AuthService } from "../auth/auth.service";
 import { CardComponent } from "../components/card/card.component";
 import { LoadingStateComponent } from "../components/loading-state/loading-state.component";
@@ -10,7 +11,7 @@ import { ShellComponent } from "../components/shell/shell.component";
   standalone: true,
   imports: [ShellComponent, CardComponent, LoadingStateComponent],
   template: `
-    <app-shell [status]="{ label: 'Finalizing login', tone: 'neutral' }">
+    <app-shell [status]="{ label: 'Finalizing login', tone: 'neutral' }" [authorityHost]="authorityHost">
       <app-card>
         @if (error()) {
           <div class="stack">
@@ -36,6 +37,7 @@ export class AuthCallbackComponent implements OnInit {
   private readonly router = inject(Router);
   private handled = false;
 
+  readonly authorityHost = authConfig.authorityHost;
   error = signal<string | null>(null);
 
   ngOnInit() {

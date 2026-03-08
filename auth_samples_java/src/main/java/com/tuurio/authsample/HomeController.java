@@ -6,6 +6,7 @@ import java.util.Map;
 
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
@@ -24,9 +25,19 @@ public class HomeController {
 
   private final RestClient restClient = RestClient.create();
 
+  @Value("${TUURIO_ISSUER:https://test.id.tuurio.com}")
+  private String authority;
+
   @GetMapping("/login")
   public String login() {
     return "redirect:/oauth2/authorization/tuurio";
+  }
+
+  @GetMapping("/logout/callback")
+  public String logoutCallback(Model model) {
+    model.addAttribute("authority", authority);
+    model.addAttribute("authorityHost", authority.replaceFirst("^https?://", ""));
+    return "logout-callback";
   }
 
   @GetMapping("/")
@@ -43,6 +54,9 @@ public class HomeController {
     model.addAttribute("statusLabel", statusLabel);
     model.addAttribute("statusTone", statusTone);
     model.addAttribute("authenticated", authenticated);
+    model.addAttribute("authority", authority);
+    model.addAttribute("authorityHost", authority.replaceFirst("^https?://", ""));
+    model.addAttribute("discoveryUrl", authority + "/.well-known/openid-configuration");
 
     String error = (String) session.getAttribute("auth_error");
     session.removeAttribute("auth_error");

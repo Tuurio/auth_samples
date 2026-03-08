@@ -13,14 +13,14 @@ export type ShellStatus = { label: string; tone: ShellTone };
           <div class="logo-mark">tu</div>
           <div>
             <p class="brand-name">Tuurio Auth Studio</p>
-            <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+            <p class="brand-subtitle">OIDC playground for OAuth 2.0</p>
           </div>
         </div>
         <div class="side-card">
-          <h1>Design for secure sign-in.</h1>
+          <h1>Design for<br />secure sign in.</h1>
           <p class="muted">
-            A minimal Angular client that signs in with OpenID Connect, displays decoded tokens,
-            and supports secure logout redirects.
+            A minimal Angular client that authenticates with OpenID Connect, inspects decoded
+            tokens, and supports logout redirects.
           </p>
           <div class="status-row">
             <span
@@ -30,21 +30,27 @@ export type ShellStatus = { label: string; tone: ShellTone };
             >
               {{ status().label }}
             </span>
-            <span class="muted">Authority: {{ authorityHost() }}</span>
+            <span class="muted">{{ authorityHost() }}</span>
           </div>
         </div>
         <div class="side-list">
-          <div>
-            <span class="eyebrow">Architecture</span>
-            <p>Authorization code flow + PKCE</p>
+          <div class="side-list-item">
+            <div>
+              <span class="side-list-label">Architecture</span>
+              <span class="side-list-value">Auth code + PKCE</span>
+            </div>
           </div>
-          <div>
-            <span class="eyebrow">Storage</span>
-            <p>Session storage for tokens</p>
+          <div class="side-list-item">
+            <div>
+              <span class="side-list-label">Storage</span>
+              <span class="side-list-value">Session storage</span>
+            </div>
           </div>
-          <div>
-            <span class="eyebrow">Scope</span>
-            <p>openid profile email</p>
+          <div class="side-list-item">
+            <div>
+              <span class="side-list-label">Scope</span>
+              <span class="side-list-value">openid profile email</span>
+            </div>
           </div>
         </div>
       </aside>

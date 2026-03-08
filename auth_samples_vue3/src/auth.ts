@@ -4,7 +4,7 @@ const DEFAULT_AUTHORITY = "https://test.id.tuurio.com";
 const DEFAULT_CLIENT_ID = "spa-K53I";
 const DEFAULT_SCOPE = "openid profile email";
 const DEFAULT_REDIRECT_URI = "http://localhost:5173/auth/callback";
-const DEFAULT_POST_LOGOUT_REDIRECT_URI = "http://localhost:5173/";
+const DEFAULT_POST_LOGOUT_REDIRECT_URI = "http://localhost:5173/logout/callback";
 
 export type AuthConfig = {
   authority: string;

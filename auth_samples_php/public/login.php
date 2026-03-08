@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * Tuurio Auth Studio — Login initiator.
+ *
+ * Generates PKCE verifier + state, stores them in the session,
+ * and redirects to the authorization endpoint.
+ *
+ * @author  Tuurio GmbH, Berlin
+ * @version 1.0.0 (2026-03-07)
+ * @see     https://id.tuurio.com
+ */
+
 declare(strict_types=1);
 
 session_start();

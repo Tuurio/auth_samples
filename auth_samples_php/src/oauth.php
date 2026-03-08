@@ -1,6 +1,20 @@
 <?php
 
+/**
+ * Tuurio Auth Studio — OAuth 2.1 / OpenID Connect helpers.
+ *
+ * Pure-PHP functions for PKCE generation, authorization URL building,
+ * token exchange, discovery fetching, UserInfo calls, and JWT decoding.
+ * No external dependencies required.
+ *
+ * @author  Tuurio GmbH, Berlin
+ * @version 1.0.0 (2026-03-07)
+ * @see     https://id.tuurio.com
+ */
+
 declare(strict_types=1);
+
+require_once __DIR__ . '/helpers.php';
 
 function base64url_encode(string $data): string
 {
@@ -155,10 +169,38 @@ function decode_jwt(string $token): ?array
     return is_array($payload) ? $payload : null;
 }
 
-function format_time(?int $unixSeconds): string
+/**
+ * Build the OIDC RP-Initiated Logout URL.
+ *
+ * Fetches the end_session_endpoint from the discovery document and
+ * appends the recommended parameters. Falls back to the post-logout
+ * redirect URI directly if the IdP endpoint is unavailable.
+ *
+ * @see https://openid.net/specs/openid-connect-rpinitiated-1_0.html
+ */
+function build_end_session_url(array $config, ?string $idTokenHint = null): string
 {
-    if (!$unixSeconds) {
-        return 'unknown time';
+    $postLogoutRedirectUri = $config['post_logout_redirect_uri'] ?? url('/');
+
+    try {
+        $discovery = fetch_discovery($config);
+        $endSessionEndpoint = $discovery['end_session_endpoint'] ?? null;
+    } catch (Throwable) {
+        return $postLogoutRedirectUri;
     }
-    return date('Y-m-d H:i:s', $unixSeconds);
+
+    if ($endSessionEndpoint === null) {
+        return $postLogoutRedirectUri;
+    }
+
+    $params = [
+        'client_id' => $config['client_id'],
+        'post_logout_redirect_uri' => $postLogoutRedirectUri,
+    ];
+
+    if ($idTokenHint !== null && $idTokenHint !== '') {
+        $params['id_token_hint'] = $idTokenHint;
+    }
+
+    return $endSessionEndpoint . '?' . http_build_query($params);
 }

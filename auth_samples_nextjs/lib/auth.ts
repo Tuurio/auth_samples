@@ -3,7 +3,7 @@ import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 const DEFAULT_AUTHORITY = "https://test.id.tuurio.com";
 const DEFAULT_CLIENT_ID = "spa-K53I";
 const DEFAULT_REDIRECT_URI = "http://localhost:3000/auth/callback";
-const DEFAULT_POST_LOGOUT_REDIRECT_URI = "http://localhost:3000/";
+const DEFAULT_POST_LOGOUT_REDIRECT_URI = "http://localhost:3000/logout/callback";
 const DEFAULT_SCOPE = "openid profile email";
 
 export const authConfig = {
@@ -52,6 +52,7 @@ export async function login() {
 export async function logout() {
   const mgr = getManager();
   if (!mgr) throw new Error("Auth manager not available.");
+  const currentUser = await mgr.getUser().catch(() => null);
   await mgr.removeUser().catch(() => undefined);
   const logoutEndpoint = await getEndSessionEndpoint();
   if (typeof window === "undefined") {
@@ -62,6 +63,9 @@ export async function logout() {
     post_logout_redirect_uri: authConfig.postLogoutRedirectUri,
     state: createLogoutState(),
   });
+  if (currentUser?.id_token) {
+    params.set("id_token_hint", currentUser.id_token);
+  }
   window.location.assign(`${logoutEndpoint}?${params.toString()}`);
 }
 
@@ -69,6 +73,13 @@ export async function handleCallback() {
   const mgr = getManager();
   if (!mgr) throw new Error("Auth manager not available.");
   return await mgr.signinRedirectCallback();
+}
+
+export async function handleLogoutCallback() {
+  const mgr = getManager();
+  if (!mgr) throw new Error("Auth manager not available.");
+  await mgr.signoutRedirectCallback().catch(() => undefined);
+  await mgr.removeUser().catch(() => undefined);
 }
 
 export async function getUser() {

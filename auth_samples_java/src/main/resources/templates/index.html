@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tuurio Auth Java Demo</title>
+    <title>Tuurio Auth Studio</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="stylesheet" href="/assets/app.css" />
   </head>
   <body>
@@ -14,122 +15,165 @@
             <div class="logo-mark">tu</div>
             <div>
               <p class="brand-name">Tuurio Auth Studio</p>
-              <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+              <p class="brand-subtitle">OIDC playground for OAuth 2.0</p>
             </div>
           </div>
           <div class="side-card">
-            <h1>Design for secure sign-in.</h1>
+            <h1>Design for<br />secure sign in.</h1>
             <p class="muted">
-              A minimal Java server that signs in with OpenID Connect, displays decoded tokens,
-              and supports secure logout redirects.
+              A minimal Java server that authenticates with OpenID Connect, inspects decoded
+              tokens, and supports logout redirects.
             </p>
             <div class="status-row">
               <span class="status" th:classappend="' status-' + ${statusTone}">[[${statusLabel}]]</span>
-              <span class="muted">Authority: test.id.tuurio.com</span>
+              <span class="muted">[[${authorityHost}]]</span>
             </div>
           </div>
           <div class="side-list">
-            <div>
-              <span class="eyebrow">Architecture</span>
-              <p>Authorization code flow + PKCE</p>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Architecture</span>
+                <span class="side-list-value">Auth code + PKCE</span>
+              </div>
             </div>
-            <div>
-              <span class="eyebrow">Storage</span>
-              <p>Server session storage</p>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Storage</span>
+                <span class="side-list-value">Server session</span>
+              </div>
             </div>
-            <div>
-              <span class="eyebrow">Scope</span>
-              <p>openid profile email</p>
+            <div class="side-list-item">
+              <div>
+                <span class="side-list-label">Scope</span>
+                <span class="side-list-value">openid profile email</span>
+              </div>
             </div>
           </div>
         </aside>
         <main class="main-panel">
           <div th:if="${authenticated}">
             <div class="stack">
-              <section class="card">
+              <section class="card card-hero">
                 <div class="card-header">
-                  <span class="eyebrow">Session ready</span>
-                  <h2 class="card-title">You're signed in</h2>
+                  <span class="badge badge-success">Authenticated</span>
+                  <h2 class="card-title">Session active</h2>
                   <p class="muted">
-                    Tokens expire at [[${expiresLabel}]] and are scoped for [[${scopeLabel}]].
+                    <code>[[${scopeLabel}]]</code> · expires at [[${expiresLabel}]]
                   </p>
                 </div>
                 <div class="button-row">
-                  <a class="button ghost" href="/logout">Logout</a>
-                  <span class="helper">Tokens expire automatically; logout revokes session.</span>
+                  <a class="button ghost" href="/logout">Log out and end session</a>
+                  <span class="helper">Clears local state and redirects through the identity provider.</span>
                 </div>
               </section>
 
-              <div class="token-grid">
-                <section class="card card-panel">
-                  <div class="panel-header">
-                    <div>
-                      <h3 class="panel-title">Access Token</h3>
-                      <p class="muted">Used to call protected APIs.</p>
-                    </div>
+              <section class="card">
+                <div class="section-header">
+                  <div class="section-icon">UI</div>
+                  <div>
+                    <h3 class="section-title">User profile</h3>
+                    <p class="muted">Claims returned by the UserInfo endpoint.</p>
                   </div>
-                  <pre class="token-block">[[${accessToken}]]</pre>
-                  <div class="token-claims">
-                    <span class="eyebrow">Decoded claims</span>
-                    <pre class="code-block">[[${accessDecoded}]]</pre>
-                  </div>
-                </section>
-
-                <section class="card card-panel">
-                  <div class="panel-header">
-                    <div>
-                      <h3 class="panel-title">ID Token</h3>
-                      <p class="muted">Proves the authenticated user.</p>
-                    </div>
-                  </div>
-                  <pre class="token-block">[[${idToken}]]</pre>
-                  <div class="token-claims">
-                    <span class="eyebrow">Decoded claims</span>
-                    <pre class="code-block">[[${idDecoded}]]</pre>
-                  </div>
-                </section>
-              </div>
-
-              <section class="card card-soft">
-                <h3 class="section-title">User profile (UserInfo)</h3>
+                </div>
                 <pre class="code-block">[[${profileJson}]]</pre>
+              </section>
+
+              <section class="card">
+                <div class="section-header">
+                  <div class="section-icon">AT</div>
+                  <div>
+                    <h3 class="section-title">Access Token</h3>
+                    <p class="muted">Authorizes API requests on behalf of the user.</p>
+                  </div>
+                </div>
+                <details class="token-details">
+                  <summary class="token-summary">
+                    <span class="eyebrow">Raw JWT</span>
+                    <code class="token-preview">[[${accessToken}]]</code>
+                  </summary>
+                  <pre class="token-block">[[${accessToken}]]</pre>
+                </details>
+                <div class="token-claims">
+                  <span class="eyebrow">Decoded payload</span>
+                  <pre class="code-block">[[${accessDecoded}]]</pre>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="section-header">
+                  <div class="section-icon">ID</div>
+                  <div>
+                    <h3 class="section-title">ID Token</h3>
+                    <p class="muted">Cryptographic proof of the authenticated identity.</p>
+                  </div>
+                </div>
+                <details class="token-details">
+                  <summary class="token-summary">
+                    <span class="eyebrow">Raw JWT</span>
+                    <code class="token-preview">[[${idToken}]]</code>
+                  </summary>
+                  <pre class="token-block">[[${idToken}]]</pre>
+                </details>
+                <div class="token-claims">
+                  <span class="eyebrow">Decoded payload</span>
+                  <pre class="code-block">[[${idDecoded}]]</pre>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="section-header">
+                  <div class="section-icon">ID</div>
+                  <div>
+                    <h3 class="section-title">Provider discovery</h3>
+                    <p class="muted">OIDC metadata used to resolve endpoints and session management URLs.</p>
+                  </div>
+                </div>
+                <div class="stack">
+                  <div>
+                    <span class="eyebrow">Authority</span>
+                    <p><a class="link" th:href="${authority}" target="_blank" rel="noreferrer">[[${authority}]]</a></p>
+                  </div>
+                  <div>
+                    <span class="eyebrow">Discovery document</span>
+                    <p><a class="link" th:href="${discoveryUrl}" target="_blank" rel="noreferrer">[[${discoveryUrl}]]</a></p>
+                  </div>
+                </div>
               </section>
             </div>
           </div>
 
           <div th:unless="${authenticated}">
             <div class="stack">
-              <section class="card">
+              <section class="card card-hero">
                 <div class="card-header">
-                  <span class="eyebrow">OAuth 2.1 + OpenID Connect</span>
+                  <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
                   <h2 class="card-title">Sign in to continue</h2>
                   <p class="muted">
-                    This app uses the authorization code flow with PKCE to fetch tokens securely for a
-                    browser-based client.
+                    Authenticate with the authorization code flow and PKCE. Tokens are exchanged
+                    server-side and stored in the HTTP session for this demo.
                   </p>
                 </div>
                 <div class="button-row">
-                  <a class="button primary" href="/login">Continue with Tuurio ID</a>
-                  <span class="helper">You'll be redirected to test.id.tuurio.com</span>
+                  <a class="button primary" href="/login">Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></a>
+                  <span class="helper">Redirects to [[${authorityHost}]]</span>
                 </div>
-                <div class="status status-bad" th:if="${error}" th:text="${error}"></div>
+                <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
               </section>
-              <section class="card card-soft">
-                <div class="feature-grid">
-                  <div class="feature">
+
+              <div class="feature-grid">
+                  <div class="feature-card">
                     <h3>PKCE by default</h3>
-                    <p class="muted">Proof Key for Code Exchange protects the code flow.</p>
+                    <p class="muted">Proof Key for Code Exchange prevents authorization code interception attacks.</p>
                   </div>
-                  <div class="feature">
+                  <div class="feature-card">
                     <h3>Short-lived tokens</h3>
-                    <p class="muted">Access tokens are scoped to openid profile email.</p>
+                    <p class="muted">Access tokens expire quickly, scoped to openid profile email.</p>
                   </div>
-                  <div class="feature">
+                  <div class="feature-card">
                     <h3>Session aware</h3>
-                    <p class="muted">Token state is persisted in server session storage.</p>
+                    <p class="muted">Token state lives server-side. Nothing sensitive reaches the browser.</p>
                   </div>
-                </div>
-              </section>
+              </div>
             </div>
           </div>
         </main>

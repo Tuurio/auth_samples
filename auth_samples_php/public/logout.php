@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Tuurio Auth Studio — Logout handler.
+ *
+ * Captures the id_token for the logout hint, destroys the local
+ * session completely, then redirects to the IdP end_session_endpoint
+ * for RP-Initiated Logout (OpenID Connect).
+ *
+ * @author  Tuurio GmbH, Berlin
+ * @version 1.0.0 (2026-03-07)
+ * @see     https://id.tuurio.com
+ */
+
 declare(strict_types=1);
 
 session_start();
@@ -7,25 +19,31 @@ session_start();
 $config = require __DIR__ . '/../src/config.php';
 require __DIR__ . '/../src/oauth.php';
 
-try {
-    $discovery = fetch_discovery($config);
-    $endSession = $discovery['end_session_endpoint'] ?? null;
-    if (!$endSession) {
-        throw new RuntimeException('End session endpoint not found.');
-    }
+// Capture id_token BEFORE destroying the session.
+// The OIDC spec recommends id_token_hint so the IdP can identify
+// which session to terminate without requiring user interaction.
+$idTokenHint = $_SESSION['auth']['id_token'] ?? null;
 
-    unset($_SESSION['auth']);
+// ── Destroy local session completely ────────────────────────
+$_SESSION = [];
 
-    $params = [
-        'client_id' => $config['client_id'],
-        'post_logout_redirect_uri' => $config['post_logout_redirect_uri'],
-    ];
-
-    $url = $endSession . '?' . http_build_query($params);
-    header('Location: ' . $url, true, 302);
-    exit;
-} catch (Throwable $exception) {
-    $_SESSION['error'] = $exception->getMessage();
-    header('Location: /', true, 302);
-    exit;
+if (ini_get('session.use_cookies')) {
+    $p = session_get_cookie_params();
+    setcookie(
+        session_name(),
+        '',
+        time() - 42000,
+        $p['path'],
+        $p['domain'],
+        $p['secure'],
+        $p['httponly'],
+    );
 }
+
+session_destroy();
+
+// ── Redirect to IdP for SSO logout ─────────────────────────
+$logoutUrl = build_end_session_url($config, $idTokenHint);
+
+header('Location: ' . $logoutUrl, true, 302);
+exit;

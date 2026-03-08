@@ -1,6 +1,6 @@
 import { Component, input } from "@angular/core";
 
-export type CardTone = "solid" | "soft" | "panel";
+export type CardTone = "solid" | "soft" | "panel" | "hero";
 
 @Component({
   selector: "app-card",

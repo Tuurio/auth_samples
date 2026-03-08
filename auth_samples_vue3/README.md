@@ -1,6 +1,6 @@
 # Tuurio Auth Vue Demo
 
-A Vue 3 + Vite demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+A Vue 3 + Vite demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
 
 ## Setup
 
@@ -36,7 +36,7 @@ Configure your Tuurio client with these redirect URLs (matching your `.env` valu
 
 ```text
 Redirect URI: http://localhost:5173/auth/callback
-Post-logout Redirect URI: http://localhost:5173/
+Post-logout Redirect URI: http://localhost:5173/logout/callback
 ```
 
 The demo also accepts `/callback` for compatibility.
@@ -47,7 +47,7 @@ The demo also accepts `/callback` for compatibility.
 VITE_TUURIO_ISSUER=https://test.id.tuurio.com
 VITE_TUURIO_CLIENT_ID=spa-K53I
 VITE_TUURIO_REDIRECT_URI=http://localhost:5173/auth/callback
-VITE_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173/
+VITE_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173/logout/callback
 VITE_TUURIO_SCOPE=openid profile email
 ```
 

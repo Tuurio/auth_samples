@@ -36,7 +36,7 @@ Configure your Tuurio client with these redirect URLs (matching your `.env.local
 
 ```text
 Redirect URI: http://localhost:3000/auth/callback
-Post-logout Redirect URI: http://localhost:3000/
+Post-logout Redirect URI: http://localhost:3000/logout/callback
 ```
 
 ## `.env.local` keys
@@ -45,7 +45,7 @@ Post-logout Redirect URI: http://localhost:3000/
 NEXT_PUBLIC_TUURIO_ISSUER=https://test.id.tuurio.com
 NEXT_PUBLIC_TUURIO_CLIENT_ID=spa-K53I
 NEXT_PUBLIC_TUURIO_REDIRECT_URI=http://localhost:3000/auth/callback
-NEXT_PUBLIC_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:3000/
+NEXT_PUBLIC_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:3000/logout/callback
 NEXT_PUBLIC_TUURIO_SCOPE=openid profile email
 ```
 

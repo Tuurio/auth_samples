@@ -3,8 +3,9 @@ from __future__ import annotations
 import base64
 import json
 import html
+import re
 from datetime import datetime
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, redirect, request, session, url_for
@@ -29,8 +30,16 @@ def index():
     token = session.get("token")
     error = session.pop("error", None)
 
-    status = {"label": "Authenticated", "tone": "good"} if token else {"label": "Signed out", "tone": "neutral"}
-    content = render_token_view(token) if token else render_login_view(error)
+    status = (
+        {"label": "Authenticated", "tone": "good", "authority": config.AUTHORITY}
+        if token
+        else {"label": "Signed out", "tone": "neutral", "authority": config.AUTHORITY}
+    )
+    content = (
+        render_token_view(token, config.AUTHORITY, config.DISCOVERY_ENDPOINT)
+        if token
+        else render_login_view(error, authority_host(config.AUTHORITY))
+    )
     return render_page(status, content)
 
 
@@ -71,19 +80,28 @@ def logout():
         end_session = metadata.get("end_session_endpoint")
         if not end_session:
             raise RuntimeError("End session endpoint not found.")
+        token = session.get("token") or {}
+        id_token_hint = token.get("id_token")
 
-        session.pop("token", None)
-        session.pop("userinfo", None)
+        session.clear()
 
         params = {
             "client_id": config.CLIENT_ID,
             "post_logout_redirect_uri": config.POST_LOGOUT_REDIRECT_URI,
         }
+        if id_token_hint:
+            params["id_token_hint"] = id_token_hint
 
         return redirect(end_session + "?" + urlencode(params))
     except Exception as exc:  # pylint: disable=broad-except
         session["error"] = str(exc) or "Logout failed."
         return redirect("/")
+
+
+@app.route("/logout/callback")
+def logout_callback():
+    status = {"label": "Signed out", "tone": "neutral", "authority": config.AUTHORITY}
+    return render_page(status, render_logout_callback())
 
 
 @app.post(config.WEBHOOK_LISTEN_PATH)
@@ -119,17 +137,8 @@ def receive_webhook():
 
 @app.errorhandler(404)
 def not_found(_):
-    status = {"label": "Route not found", "tone": "neutral"}
-    content = (
-        "<section class=\"card\">"
-        "<div class=\"stack\">"
-        "<div class=\"status status-bad\">404</div>"
-        "<h2 class=\"card-title\">This route doesn't exist.</h2>"
-        "<p class=\"muted\">Return to the login page to start a new session.</p>"
-        "<a class=\"button ghost\" href=\"/\">Go home</a>"
-        "</div>"
-        "</section>"
-    )
+    status = {"label": "Route not found", "tone": "neutral", "authority": config.AUTHORITY}
+    content = render_not_found()
     return render_page(status, content), 404
 
 
@@ -140,11 +149,13 @@ def render_page(status: dict, content: str) -> str:
         "<head>"
         "<meta charset=\"utf-8\" />"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />"
-        "<title>Tuurio Auth Python Demo</title>"
+        "<title>Tuurio Auth Studio</title>"
+        "<link rel=\"icon\" type=\"image/svg+xml\" href=\"/static/assets/favicon.svg\" />"
         "<link rel=\"stylesheet\" href=\"/static/assets/app.css\" />"
         "</head>"
         "<body>"
         f"<div id=\"app\">{render_shell(status, content)}</div>"
+        f"{render_copy_script()}"
         "</body>"
         "</html>"
     )
@@ -153,6 +164,7 @@ def render_page(status: dict, content: str) -> str:
 def render_shell(status: dict, content: str) -> str:
     tone = html.escape(status.get("tone", "neutral"))
     label = html.escape(status.get("label", ""))
+    host = html.escape(authority_host(status.get("authority", "")))
 
     return f"""
     <div class="app">
@@ -161,32 +173,41 @@ def render_shell(status: dict, content: str) -> str:
           <div class="logo-mark">tu</div>
           <div>
             <p class="brand-name">Tuurio Auth Studio</p>
-            <p class="brand-subtitle">OIDC playground for OAuth 2.1</p>
+            <p class="brand-subtitle">OIDC playground for OAuth 2.0</p>
           </div>
         </div>
         <div class="side-card">
-          <h1>Design for secure sign-in.</h1>
+          <h1>Design for<br>secure sign in.</h1>
           <p class="muted">
-            A minimal Python server that signs in with OpenID Connect, displays decoded tokens,
-            and supports secure logout redirects.
+            A minimal Python server that authenticates with OpenID Connect,
+            inspects decoded tokens, and handles secure logout.
           </p>
           <div class="status-row">
             <span class="status status-{tone}">{label}</span>
-            <span class="muted">Authority: test.id.tuurio.com</span>
+            <span class="muted">{host}</span>
           </div>
         </div>
         <div class="side-list">
-          <div>
-            <span class="eyebrow">Architecture</span>
-            <p>Authorization code flow + PKCE</p>
+          <div class="side-list-item">
+            <span class="side-list-icon">{icon("code", 16)}</span>
+            <div>
+              <span class="side-list-label">Architecture</span>
+              <span class="side-list-value">Auth code + PKCE</span>
+            </div>
           </div>
-          <div>
-            <span class="eyebrow">Storage</span>
-            <p>Server session storage</p>
+          <div class="side-list-item">
+            <span class="side-list-icon">{icon("server", 16)}</span>
+            <div>
+              <span class="side-list-label">Storage</span>
+              <span class="side-list-value">Server session</span>
+            </div>
           </div>
-          <div>
-            <span class="eyebrow">Scope</span>
-            <p>openid profile email</p>
+          <div class="side-list-item">
+            <span class="side-list-icon">{icon("layers", 16)}</span>
+            <div>
+              <span class="side-list-label">Scope</span>
+              <span class="side-list-value">openid profile email</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -195,47 +216,52 @@ def render_shell(status: dict, content: str) -> str:
     """
 
 
-def render_login_view(error: str | None) -> str:
-    error_html = f"<div class=\"status status-bad\">{html.escape(error)}</div>" if error else ""
+def render_login_view(error: str | None, authority_host_label: str) -> str:
+    error_html = f"<div class=\"alert alert-error\">{html.escape(error)}</div>" if error else ""
 
     return f"""
     <div class="stack">
-      <section class="card">
+      <section class="card card-hero">
         <div class="card-header">
-          <span class="eyebrow">OAuth 2.1 + OpenID Connect</span>
+          <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
           <h2 class="card-title">Sign in to continue</h2>
           <p class="muted">
-            This app uses the authorization code flow with PKCE to fetch tokens securely for a
-            browser-based client.
+            Authenticate with the authorization code flow and PKCE.
+            Tokens are exchanged server-side and stored in the Flask session.
           </p>
         </div>
         <div class="button-row">
-          <a class="button primary" href="/login">Continue with Tuurio ID</a>
-          <span class="helper">You'll be redirected to test.id.tuurio.com</span>
+          <a class="button primary" href="/login">
+            Continue with Tuurio ID
+            <span class="btn-arrow">&rarr;</span>
+          </a>
+          <span class="helper">Redirects to {html.escape(authority_host_label)}</span>
         </div>
         {error_html}
       </section>
-      <section class="card card-soft">
-        <div class="feature-grid">
-          <div class="feature">
-            <h3>PKCE by default</h3>
-            <p class="muted">Proof Key for Code Exchange protects the code flow.</p>
-          </div>
-          <div class="feature">
-            <h3>Short-lived tokens</h3>
-            <p class="muted">Access tokens are scoped to openid profile email.</p>
-          </div>
-          <div class="feature">
-            <h3>Session aware</h3>
-            <p class="muted">Token state is persisted in server session storage.</p>
-          </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">{icon("shield", 18)}</div>
+          <h3>PKCE by default</h3>
+          <p class="muted">Proof Key for Code Exchange prevents authorization code interception attacks.</p>
         </div>
-      </section>
+        <div class="feature-card">
+          <div class="feature-icon">{icon("clock", 18)}</div>
+          <h3>Short-lived tokens</h3>
+          <p class="muted">Access tokens expire quickly, scoped to openid&nbsp;profile&nbsp;email.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">{icon("server", 18)}</div>
+          <h3>Session aware</h3>
+          <p class="muted">Token state lives server-side. Nothing sensitive reaches the browser.</p>
+        </div>
+      </div>
     </div>
     """
 
 
-def render_token_view(token: dict) -> str:
+def render_token_view(token: dict, authority: str, discovery_endpoint: str) -> str:
     access_token = token.get("access_token", "")
     id_token = token.get("id_token", "")
     scope_label = token.get("scope") or config.SCOPE
@@ -246,69 +272,275 @@ def render_token_view(token: dict) -> str:
     access_decoded = decode_jwt(access_token)
     id_decoded = decode_jwt(id_token)
 
-    access_decoded_text = json.dumps(access_decoded, indent=2) if access_decoded else "Not a JWT or unable to decode."
-    id_decoded_text = json.dumps(id_decoded, indent=2) if id_decoded else "Not a JWT or unable to decode."
     userinfo = session.get("userinfo")
     profile_json = json.dumps(userinfo, indent=2) if userinfo else "No profile data."
+
+    now = int(datetime.utcnow().timestamp())
+    timing_parts: list[str] = []
+    if access_decoded and isinstance(access_decoded.get("iat"), int):
+        timing_parts.append(f"Issued {format_duration(now - int(access_decoded['iat']))} ago")
+    if expires_at is not None:
+        remaining = int(expires_at) - now
+        timing_parts.append(
+            f"{format_duration(remaining)} remaining"
+            if remaining > 0
+            else f"expired {format_duration(abs(remaining))} ago"
+        )
+    expiry_line = (
+        f"<code>{html.escape(scope_label)}</code> &middot; {' &middot; '.join(timing_parts)}"
+        if timing_parts
+        else f"<code>{html.escape(scope_label)}</code>"
+    )
 
     access_panel = render_token_panel(
         "Access Token",
         access_token,
-        access_decoded_text,
-        "Used to call protected APIs.",
+        access_decoded,
+        "Authorizes API requests on behalf of the user.",
+        "key",
     )
     id_panel = render_token_panel(
         "ID Token",
         id_token,
-        id_decoded_text,
-        "Proves the authenticated user.",
+        id_decoded,
+        "Cryptographic proof of the authenticated identity.",
+        "id-card",
     )
 
     return f"""
     <div class="stack">
-      <section class="card">
+      <section class="card card-hero">
         <div class="card-header">
-          <span class="eyebrow">Session ready</span>
-          <h2 class="card-title">You're signed in</h2>
-          <p class="muted">Tokens expire at {format_time(expires_at)} and are scoped for {html.escape(scope_label)}.</p>
+          <span class="badge badge-success">{icon("check-circle", 14)} Authenticated</span>
+          <h2 class="card-title">Session active</h2>
+          <p class="muted">{expiry_line}</p>
         </div>
         <div class="button-row">
-          <a class="button ghost" href="/logout">Logout</a>
-          <span class="helper">Tokens expire automatically; logout revokes session.</span>
+          <a class="button ghost" href="/logout">Log out and end session</a>
+          <span class="helper">Clears local state and notifies the identity provider.</span>
         </div>
       </section>
 
-      <div class="token-grid">
-        {access_panel}
-        {id_panel}
-      </div>
-
-      <section class="card card-soft">
-        <h3 class="section-title">User profile (UserInfo)</h3>
-        <pre class="code-block">{html.escape(profile_json)}</pre>
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">{icon("user", 18)}</div>
+          <div>
+            <h3 class="section-title">User profile</h3>
+            <p class="muted">Claims returned by the UserInfo endpoint.</p>
+          </div>
+        </div>
+        <pre class="code-block">{highlight_json_html(html.escape(profile_json))}</pre>
       </section>
+
+      {access_panel}
+      {id_panel}
+
+      {render_discovery_section(authority, discovery_endpoint)}
     </div>
     """
 
 
-def render_token_panel(title: str, token: str, decoded: str, description: str) -> str:
+def render_token_panel(
+    title: str,
+    token: str,
+    decoded: dict | None,
+    description: str,
+    icon_name: str,
+) -> str:
     token_label = html.escape(token) if token else "Not provided"
-    decoded_label = html.escape(decoded)
+    decoded_text = json.dumps(decoded, indent=2) if decoded else "Not a JWT or unable to decode."
+    token_preview = f"{html.escape(token[:48])}&hellip;" if token else "Not provided"
     return f"""
-    <section class="card card-panel">
-      <div class="panel-header">
+    <section class="card">
+      <div class="section-header">
+        <div class="section-icon">{icon(icon_name, 18)}</div>
         <div>
-          <h3 class="panel-title">{html.escape(title)}</h3>
+          <h3 class="section-title">{html.escape(title)}</h3>
           <p class="muted">{html.escape(description)}</p>
         </div>
       </div>
-      <pre class="token-block">{token_label}</pre>
+      <details class="token-details">
+        <summary class="token-summary">
+          <span class="eyebrow">Raw JWT</span>
+          <code class="token-preview">{token_preview}</code>
+        </summary>
+        <pre class="token-block">{token_label}</pre>
+      </details>
       <div class="token-claims">
-        <span class="eyebrow">Decoded claims</span>
-        <pre class="code-block">{decoded_label}</pre>
+        <span class="eyebrow">Decoded payload</span>
+        <pre class="code-block">{highlight_json_html(html.escape(decoded_text))}</pre>
       </div>
     </section>
     """
+
+
+def render_discovery_section(authority: str, discovery_endpoint: str) -> str:
+    safe_authority = html.escape(authority)
+    safe_discovery_endpoint = html.escape(discovery_endpoint)
+    return f"""
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">{icon("globe", 18)}</div>
+          <div>
+            <h3 class="section-title">Provider discovery</h3>
+            <p class="muted">OIDC metadata used to resolve endpoints and session management URLs.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div>
+            <span class="eyebrow">Authority</span>
+            <p><a class="link" href="{safe_authority}" target="_blank" rel="noreferrer">{safe_authority}</a></p>
+          </div>
+          <div>
+            <span class="eyebrow">Discovery document</span>
+            <p><a class="link" href="{safe_discovery_endpoint}" target="_blank" rel="noreferrer">{safe_discovery_endpoint}</a></p>
+          </div>
+        </div>
+      </section>
+    """
+
+
+def render_not_found() -> str:
+    return f"""
+      <section class="card card-hero">
+        <div class="card-header">
+          <span class="badge badge-error">{icon("x-circle", 14)} 404</span>
+          <h2 class="card-title">Route not found</h2>
+          <p class="muted">This path doesn't match any known endpoint.</p>
+        </div>
+        <div class="button-row">
+          <a class="button ghost" href="/">
+            Go home
+            <span class="btn-arrow">&rarr;</span>
+          </a>
+        </div>
+      </section>
+    """
+
+
+def render_logout_callback() -> str:
+    return f"""
+      <div class="stack">
+        <section class="card card-hero">
+          <div class="card-header">
+            <span class="badge badge-neutral">{icon("check-circle", 14)} Session ended</span>
+            <h2 class="card-title">Successfully signed out</h2>
+            <p class="muted">
+              Local session destroyed. The identity provider has been notified via RP-Initiated Logout.
+            </p>
+          </div>
+          <div class="button-row">
+            <a class="button primary" href="/login">
+              Sign in again
+              <span class="btn-arrow">&rarr;</span>
+            </a>
+            <span class="helper">Redirects to the identity provider.</span>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-header">
+            <div class="section-icon">{icon("server", 18)}</div>
+            <div>
+              <h3 class="section-title">Session state</h3>
+              <p class="muted">Flask session storage has been cleared before returning to this page.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <div>
+              <span class="eyebrow">Session</span>
+              <p class="muted">Access token, ID token, and UserInfo data removed.</p>
+            </div>
+            <div>
+              <span class="eyebrow">Post-logout URI</span>
+              <p class="muted">{html.escape(config.POST_LOGOUT_REDIRECT_URI)}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    """
+
+
+def render_copy_script() -> str:
+    return """
+    <script>
+    document.querySelectorAll('.token-block, .code-block').forEach(function(pre) {
+      var wrap = document.createElement('div');
+      wrap.className = 'copy-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', function() {
+        navigator.clipboard.writeText(pre.textContent).then(function() {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.textContent = 'Copy';
+            btn.classList.remove('copied');
+          }, 1500);
+        });
+      });
+      wrap.appendChild(btn);
+    });
+    </script>
+    """
+
+
+def authority_host(authority: str) -> str:
+    parsed = urlparse(authority)
+    return parsed.netloc or "id.tuurio.com"
+
+
+def icon(name: str, size: int = 18) -> str:
+    paths = {
+        "shield": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+        "clock": '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        "user": '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        "key": '<path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+        "id-card": '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+        "globe": '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+        "code": '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+        "server": '<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>',
+        "layers": '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+        "check-circle": '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+        "x-circle": '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+    }
+    inner = paths.get(name, "")
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" '
+        f'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{inner}</svg>'
+    )
+
+
+def highlight_json_html(escaped_html: str) -> str:
+    highlighted = re.sub(
+        r'(&quot;)((?:(?!&quot;).)*?)(&quot;)(\s*:)',
+        r'<span class="hl-key">\1\2\3</span>\4',
+        escaped_html,
+    )
+    highlighted = re.sub(
+        r'(:\s*)(&quot;)((?:(?!&quot;).)*?)(&quot;)',
+        r'\1<span class="hl-str">\2\3\4</span>',
+        highlighted,
+    )
+    highlighted = re.sub(
+        r'([\[,]\s*)(&quot;)((?:(?!&quot;).)*?)(&quot;)',
+        r'\1<span class="hl-str">\2\3\4</span>',
+        highlighted,
+    )
+    highlighted = re.sub(
+        r'(:\s*)(-?\d+(?:\.\d+)?)([,\s\n\r}])',
+        r'\1<span class="hl-num">\2</span>\3',
+        highlighted,
+    )
+    highlighted = re.sub(
+        r'(:\s*)(true|false|null)\b',
+        r'\1<span class="hl-bool">\2</span>',
+        highlighted,
+    )
+    return highlighted
 
 
 def decode_jwt(token: str) -> dict | None:
@@ -330,10 +562,17 @@ def base64url_decode(value: str) -> str:
     return data.decode('utf-8')
 
 
-def format_time(unix_seconds: int | None) -> str:
-    if not unix_seconds:
-        return "unknown time"
-    return datetime.fromtimestamp(int(unix_seconds)).strftime("%Y-%m-%d %H:%M:%S")
+def format_duration(seconds: int) -> str:
+    seconds = abs(int(seconds))
+    if seconds < 60:
+        return f"{seconds}s"
+    if seconds < 3600:
+        minutes = seconds // 60
+        remainder = seconds % 60
+        return f"{minutes}m {remainder}s" if remainder else f"{minutes}m"
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    return f"{hours}h {minutes}m" if minutes else f"{hours}h"
 
 
 if __name__ == "__main__":

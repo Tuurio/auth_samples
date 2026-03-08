@@ -1,0 +1,295 @@
+<?php
+
+/**
+ * Tuurio Auth Studio — Home page.
+ *
+ * Renders the login view (unauthenticated) or the token inspection
+ * dashboard (authenticated) with decoded JWT payloads and provider
+ * endpoint discovery information.
+ *
+ * @author  Tuurio GmbH, Berlin
+ * @version 1.0.0 (2026-03-07)
+ * @see     https://id.tuurio.com
+ */
+
+declare(strict_types=1);
+
+session_start();
+
+$config = require __DIR__ . '/../src/config.php';
+require __DIR__ . '/../src/oauth.php';
+require __DIR__ . '/../src/view.php';
+
+$session = $_SESSION['auth'] ?? null;
+$error = $_SESSION['error'] ?? null;
+unset($_SESSION['error']);
+
+$authority = $config['authority'];
+
+if ($session) {
+    $status = ['label' => 'Authenticated', 'tone' => 'good', 'authority' => $authority];
+    $content = render_token_view($session, $config);
+} else {
+    $status = ['label' => 'Signed out', 'tone' => 'neutral', 'authority' => $authority];
+    $content = render_login_view($error, $config);
+}
+
+render_page($status, $content);
+
+// ── Login view ───────────────────────────────────────────
+
+function render_login_view(?string $error, array $config): string
+{
+    $errorHtml = $error
+        ? '<div class="alert alert-error">' . escape_html($error) . '</div>'
+        : '';
+
+    $loginUrl = url('/login');
+    $authorityHost = escape_html(
+        parse_url($config['authority'], PHP_URL_HOST) ?? 'id.tuurio.com'
+    );
+
+    $shieldIcon = icon('shield', 18);
+    $clockIcon = icon('clock', 18);
+    $serverIcon = icon('server', 18);
+
+    return <<<HTML
+    <div class="stack">
+      <section class="card card-hero">
+        <div class="card-header">
+          <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
+          <h2 class="card-title">Sign in to continue</h2>
+          <p class="muted">
+            Authenticate with the authorization code flow and PKCE.
+            Tokens are exchanged server-side and stored in the PHP session.
+          </p>
+        </div>
+        <div class="button-row">
+          <a class="button primary" href="{$loginUrl}">
+            Continue with Tuurio ID
+            <span class="btn-arrow">&rarr;</span>
+          </a>
+          <span class="helper">Redirects to {$authorityHost}</span>
+        </div>
+        {$errorHtml}
+      </section>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">{$shieldIcon}</div>
+          <h3>PKCE by default</h3>
+          <p class="muted">Proof Key for Code Exchange prevents authorization code interception attacks.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">{$clockIcon}</div>
+          <h3>Short-lived tokens</h3>
+          <p class="muted">Access tokens expire quickly, scoped to openid&nbsp;profile&nbsp;email.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">{$serverIcon}</div>
+          <h3>Session aware</h3>
+          <p class="muted">Token state lives server-side. Nothing sensitive reaches the browser.</p>
+        </div>
+      </div>
+    </div>
+HTML;
+}
+
+// ── Authenticated view ───────────────────────────────────
+
+function render_token_view(array $session, array $config): string
+{
+    $accessToken = $session['access_token'] ?? '';
+    $idToken = $session['id_token'] ?? '';
+    $scopeLabel = $session['scope'] ?? 'openid profile email';
+    $profileJson = $session['profile_json'] ?? 'No profile data.';
+    $logoutUrl = url('/logout');
+
+    $accessDecoded = decode_jwt($accessToken);
+    $idDecoded = decode_jwt($idToken);
+
+    // ── Token timing ─────────────────────────────────────
+    $now = time();
+    $expiresAt = $session['expires_at'] ?? null;
+    $iat = $accessDecoded['iat'] ?? null;
+
+    $timingParts = [];
+    if ($iat !== null) {
+        $timingParts[] = 'Issued ' . format_duration($now - (int) $iat) . ' ago';
+    }
+    if ($expiresAt !== null) {
+        $remaining = (int) $expiresAt - $now;
+        $timingParts[] = $remaining > 0
+            ? format_duration($remaining) . ' remaining'
+            : 'expired ' . format_duration(abs($remaining)) . ' ago';
+    }
+    $timingLabel = $timingParts !== [] ? implode(' &middot; ', $timingParts) : '';
+    $expiryLine = $timingLabel !== ''
+        ? "<code>{$scopeLabel}</code> &middot; {$timingLabel}"
+        : "<code>{$scopeLabel}</code>";
+
+    // ── Prepare panels ───────────────────────────────────
+    $accessDecodedText = $accessDecoded
+        ? json_encode($accessDecoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        : 'Not a JWT or unable to decode.';
+    $idDecodedText = $idDecoded
+        ? json_encode($idDecoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        : 'Not a JWT or unable to decode.';
+
+    $keyIcon = icon('key', 18);
+    $idIcon = icon('id-card', 18);
+    $userIcon = icon('user', 18);
+    $checkIcon = icon('check-circle', 14);
+
+    $accessPanel = render_token_panel(
+        'Access Token', $accessToken, $accessDecodedText,
+        'Authorizes API requests on behalf of the user.', $keyIcon
+    );
+    $idPanel = render_token_panel(
+        'ID Token', $idToken, $idDecodedText,
+        'Cryptographic proof of the authenticated identity.', $idIcon
+    );
+
+    $profileHighlighted = highlight_json_html(escape_html($profileJson));
+
+    // ── Discovery ────────────────────────────────────────
+    $authority = escape_html($config['authority']);
+    $discoveryUrl = escape_html($config['discovery_endpoint']);
+    $discoverySection = render_discovery_section($authority, $discoveryUrl);
+
+    return <<<HTML
+    <div class="stack">
+      <section class="card card-hero">
+        <div class="card-header">
+          <span class="badge badge-success">{$checkIcon} Authenticated</span>
+          <h2 class="card-title">Session active</h2>
+          <p class="muted">{$expiryLine}</p>
+        </div>
+        <div class="button-row">
+          <a class="button ghost" href="{$logoutUrl}">Log out and end session</a>
+          <span class="helper">Destroys tokens and notifies the identity provider.</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">{$userIcon}</div>
+          <div>
+            <h3 class="section-title">User profile</h3>
+            <p class="muted">Claims returned by the UserInfo endpoint.</p>
+          </div>
+        </div>
+        <pre class="code-block">{$profileHighlighted}</pre>
+      </section>
+
+      {$accessPanel}
+      {$idPanel}
+
+      {$discoverySection}
+    </div>
+HTML;
+}
+
+// ── Token panel ──────────────────────────────────────────
+
+function render_token_panel(
+    string $title,
+    string $token,
+    string $decoded,
+    string $description,
+    string $iconSvg = ''
+): string {
+    $titleLabel = escape_html($title);
+    $descriptionLabel = escape_html($description);
+    $tokenEscaped = $token !== '' ? escape_html($token) : '';
+    $decodedHighlighted = highlight_json_html(escape_html($decoded));
+
+    $preview = $token !== ''
+        ? escape_html(substr($token, 0, 48)) . '&hellip;'
+        : 'Not provided';
+
+    return <<<HTML
+    <section class="card">
+      <div class="section-header">
+        <div class="section-icon">{$iconSvg}</div>
+        <div>
+          <h3 class="section-title">{$titleLabel}</h3>
+          <p class="muted">{$descriptionLabel}</p>
+        </div>
+      </div>
+      <details class="token-details">
+        <summary class="token-summary">
+          <span class="eyebrow">Raw JWT</span>
+          <code class="token-preview">{$preview}</code>
+        </summary>
+        <pre class="token-block">{$tokenEscaped}</pre>
+      </details>
+      <div class="token-claims">
+        <span class="eyebrow">Decoded payload</span>
+        <pre class="code-block">{$decodedHighlighted}</pre>
+      </div>
+    </section>
+HTML;
+}
+
+// ── Duration formatter ───────────────────────────────────
+
+function format_duration(int $seconds): string
+{
+    $seconds = abs($seconds);
+    if ($seconds < 60) {
+        return "{$seconds}s";
+    }
+    if ($seconds < 3600) {
+        $m = intdiv($seconds, 60);
+        $s = $seconds % 60;
+        return $s > 0 ? "{$m}m {$s}s" : "{$m}m";
+    }
+    $h = intdiv($seconds, 3600);
+    $m = intdiv($seconds % 3600, 60);
+    return $m > 0 ? "{$h}h {$m}m" : "{$h}h";
+}
+
+// ── Discovery endpoints ──────────────────────────────────
+
+function render_discovery_section(string $authority, string $discoveryUrl): string
+{
+    $globeIcon = icon('globe', 18);
+
+    return <<<HTML
+      <section class="card">
+        <div class="section-header">
+          <div class="section-icon">{$globeIcon}</div>
+          <div>
+            <h3 class="section-title">Provider endpoints</h3>
+            <p class="muted">
+              Published at
+              <a href="{$discoveryUrl}" target="_blank" rel="noopener" class="link">{$discoveryUrl}</a>
+            </p>
+          </div>
+        </div>
+        <div class="endpoint-grid">
+          <div class="endpoint-item">
+            <span class="endpoint-label">Authorization</span>
+            <code class="endpoint-value">{$authority}/oauth2/authorize</code>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-label">Token</span>
+            <code class="endpoint-value">{$authority}/oauth2/token</code>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-label">UserInfo</span>
+            <code class="endpoint-value">{$authority}/userinfo</code>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-label">End Session</span>
+            <code class="endpoint-value">{$authority}/oauth2/logout</code>
+          </div>
+          <div class="endpoint-item">
+            <span class="endpoint-label">JWKS</span>
+            <code class="endpoint-value">{$authority}/jwks</code>
+          </div>
+        </div>
+      </section>
+HTML;
+}

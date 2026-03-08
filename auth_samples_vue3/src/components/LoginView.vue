@@ -14,24 +14,39 @@ const emit = defineEmits<{
 
 <template>
   <div class="stack">
-    <Card>
+    <Card tone="hero">
       <div class="card-header">
-        <span class="eyebrow">OAuth 2.1 + OpenID Connect</span>
+        <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
         <h2 class="card-title">Sign in to continue</h2>
         <p class="muted">
-          This app uses the authorization code flow with PKCE to fetch tokens securely for a
-          browser-based client.
+          Authenticate with the authorization code flow and PKCE. Tokens are exchanged in the
+          browser and stored in session storage for this demo.
         </p>
       </div>
       <div class="button-row">
         <button class="button primary" @click="emit('login')">
           Continue with Tuurio ID
+          <span class="btn-arrow">&rarr;</span>
         </button>
-        <span class="helper">You'll be redirected to {{ authorityHost }}</span>
+        <span class="helper">Redirects to {{ authorityHost }}</span>
       </div>
-      <div v-if="error" class="status status-bad">{{ error }}</div>
+      <div v-if="error" class="alert alert-error">{{ error }}</div>
     </Card>
-    <Card tone="soft">
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>PKCE by default</h3>
+        <p class="muted">Proof Key for Code Exchange prevents authorization code interception attacks.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Short-lived tokens</h3>
+        <p class="muted">Access tokens expire quickly, scoped to openid profile email.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Session aware</h3>
+        <p class="muted">Token state stays in session storage and can be cleared with logout.</p>
+      </div>
+    </div>
+    <Card v-if="false" tone="soft">
       <div class="feature-grid">
         <Feature title="PKCE by default" body="Proof Key for Code Exchange protects the code flow." />
         <Feature title="Short-lived tokens" body="Access tokens are scoped to openid profile email." />

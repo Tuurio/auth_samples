@@ -5,6 +5,6 @@ export const generatedAuthConfig: AuthConfig = {
   authorityHost: "test.id.tuurio.com",
   clientId: "spa-K53I",
   redirectUri: "http://localhost:4200/auth/callback",
-  postLogoutRedirectUri: "http://localhost:4200/",
+  postLogoutRedirectUri: "http://localhost:4200/logout/callback",
   scope: "openid profile email",
 };

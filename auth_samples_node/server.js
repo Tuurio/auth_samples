@@ -12,7 +12,13 @@ const {
   decodeJwt,
   formatTime,
 } = require('./src/oauth');
-const { renderPage, renderLoginView, renderTokenView, renderNotFound } = require('./src/view');
+const {
+  renderPage,
+  renderLoginView,
+  renderTokenView,
+  renderLogoutCallback,
+  renderNotFound,
+} = require('./src/view');
 
 const app = express();
 const publicDir = path.join(__dirname, 'public');
@@ -62,12 +68,15 @@ app.get('/', (req, res) => {
   req.session.error = null;
 
   const status = auth
-    ? { label: 'Authenticated', tone: 'good' }
-    : { label: 'Signed out', tone: 'neutral' };
+    ? { label: 'Authenticated', tone: 'good', authority: config.authority }
+    : { label: 'Signed out', tone: 'neutral', authority: config.authority };
 
   const content = auth
-    ? renderTokenView(auth, auth.accessDecoded, auth.idDecoded, auth.profileJson)
-    : renderLoginView(error);
+    ? renderTokenView(auth, {
+        authority: config.authority,
+        discoveryEndpoint: config.discoveryEndpoint,
+      })
+    : renderLoginView({ error, authorityHost: new URL(config.authority).host });
 
   res.status(200).send(renderPage(status, content));
 });
@@ -115,11 +124,12 @@ app.get('/auth/callback', async (req, res) => {
     req.session.auth = {
       access_token: tokens.access_token,
       id_token: tokens.id_token || '',
-      scopeLabel: tokens.scope || config.scope,
+      scope: tokens.scope || config.scope,
+      expiresAt,
       expiresLabel: formatTime(expiresAt),
       profileJson: userInfo ? JSON.stringify(userInfo, null, 2) : 'No profile data.',
-      accessDecoded: accessDecoded ? JSON.stringify(accessDecoded, null, 2) : 'Not a JWT or unable to decode.',
-      idDecoded: idDecoded ? JSON.stringify(idDecoded, null, 2) : 'Not a JWT or unable to decode.',
+      accessClaims: accessDecoded,
+      idClaims: idDecoded,
     };
 
     req.session.oauth = null;
@@ -130,19 +140,40 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
+app.get('/logout/callback', (req, res) => {
+  res.status(200).send(
+    renderPage(
+      { label: 'Signed out', tone: 'neutral', authority: config.authority },
+      renderLogoutCallback({ sessionCookieName: config.sessionCookieName }),
+    ),
+  );
+});
+
 app.get('/logout', async (req, res) => {
   try {
     const discovery = await fetchDiscovery(config);
     const endSession = discovery.end_session_endpoint;
     if (!endSession) throw new Error('End session endpoint not found.');
-
-    req.session.auth = null;
+    const idTokenHint = req.session.auth?.id_token || '';
 
     const params = new URLSearchParams({
       client_id: config.clientId,
       post_logout_redirect_uri: config.postLogoutRedirectUri,
     });
+    if (idTokenHint) {
+      params.set('id_token_hint', idTokenHint);
+    }
 
+    await new Promise((resolve, reject) => {
+      req.session.destroy((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(undefined);
+      });
+    });
+    res.clearCookie(config.sessionCookieName);
     res.redirect(`${endSession}?${params.toString()}`);
   } catch (err) {
     req.session.error = err instanceof Error ? err.message : 'Logout failed.';
@@ -182,7 +213,14 @@ app.post(config.webhookListenPath, express.json({ limit: '1mb' }), (req, res) =>
 });
 
 app.use((req, res) => {
-  res.status(404).send(renderPage({ label: 'Route not found', tone: 'neutral' }, renderNotFound()));
+  res
+    .status(404)
+    .send(
+      renderPage(
+        { label: 'Route not found', tone: 'neutral', authority: config.authority },
+        renderNotFound(),
+      ),
+    );
 });
 
 app.listen(8082, () => {

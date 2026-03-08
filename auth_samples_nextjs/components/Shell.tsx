@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { authAuthorityHost } from "../lib/auth";
 
-export type ShellStatus = { label: string; tone: "good" | "neutral" };
+export type ShellStatus = { label: string; tone: "good" | "neutral" | "bad" };
 
 export function Shell({ children, status }: { children: ReactNode; status: ShellStatus }) {
   return (

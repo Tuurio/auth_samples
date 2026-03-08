@@ -77,7 +77,7 @@ CLIENT_SECRET = os.getenv("TUURIO_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
 
 REDIRECT_URI = _normalize_url(os.getenv("TUURIO_REDIRECT_URI")) or "http://localhost:8083/auth/callback"
 POST_LOGOUT_REDIRECT_URI = (
-    _normalize_url(os.getenv("TUURIO_POST_LOGOUT_REDIRECT_URI")) or "http://localhost:8083/"
+    _normalize_url(os.getenv("TUURIO_POST_LOGOUT_REDIRECT_URI")) or "http://localhost:8083/logout/callback"
 )
 SCOPE = _sanitize_scope(os.getenv("TUURIO_SCOPE")) or "openid profile email"
 

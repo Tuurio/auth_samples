@@ -1,6 +1,6 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
-  tone?: "solid" | "soft" | "panel";
+  tone?: "solid" | "soft" | "panel" | "hero";
 }>(), {
   tone: "solid"
 });
