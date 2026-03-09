@@ -38,13 +38,20 @@ def index():
     content = (
         render_token_view(token, config.AUTHORITY, config.DISCOVERY_ENDPOINT)
         if token
-        else render_login_view(error, authority_host(config.AUTHORITY))
+        else render_login_view(error, authority_host(config.AUTHORITY), not config.HAS_APP_CONFIG)
     )
     return render_page(status, content)
 
 
 @app.route("/login")
 def login():
+    if not config.HAS_APP_CONFIG:
+        session["error"] = (
+            "Configuration missing. Copy .env.example to .env or provide the TUURIO_* "
+            "environment variables before signing in."
+        )
+        return redirect("/")
+
     redirect_uri = url_for("auth_callback", _external=True)
     return oauth.tuurio.authorize_redirect(redirect_uri)
 
@@ -216,11 +223,28 @@ def render_shell(status: dict, content: str) -> str:
     """
 
 
-def render_login_view(error: str | None, authority_host_label: str) -> str:
+def render_login_view(error: str | None, authority_host_label: str, config_missing: bool) -> str:
     error_html = f"<div class=\"alert alert-error\">{html.escape(error)}</div>" if error else ""
+    warning_html = (
+        "<div class=\"alert alert-error\">"
+        f"<strong>{icon('x-circle', 16)} Configuration missing</strong><br>"
+        "Copy <code>.env.example</code> to <code>.env</code> or provide the required "
+        "<code>TUURIO_*</code> environment variables before signing in."
+        "</div>"
+        if config_missing
+        else ""
+    )
+    button_html = (
+        "<button class=\"button primary\" type=\"button\" disabled>"
+        "Continue with Tuurio ID <span class=\"btn-arrow\">&rarr;</span></button>"
+        if config_missing
+        else "<a class=\"button primary\" href=\"/login\">"
+        "Continue with Tuurio ID <span class=\"btn-arrow\">&rarr;</span></a>"
+    )
 
     return f"""
     <div class="stack">
+      {warning_html}
       <section class="card card-hero">
         <div class="card-header">
           <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
@@ -231,10 +255,7 @@ def render_login_view(error: str | None, authority_host_label: str) -> str:
           </p>
         </div>
         <div class="button-row">
-          <a class="button primary" href="/login">
-            Continue with Tuurio ID
-            <span class="btn-arrow">&rarr;</span>
-          </a>
+          {button_html}
           <span class="helper">Redirects to {html.escape(authority_host_label)}</span>
         </div>
         {error_html}

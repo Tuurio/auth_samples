@@ -5,6 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+HAS_APP_CONFIG = any(
+    str(os.getenv(key, "")).strip()
+    for key in ("TUURIO_ISSUER", "TUURIO_CLIENT_ID", "TUURIO_CLIENT_SECRET", "TUURIO_REDIRECT_URI")
+)
+
 
 def _normalize_authority(value: str | None) -> str | None:
     raw = str(value or "").strip()

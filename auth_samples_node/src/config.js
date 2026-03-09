@@ -1,6 +1,12 @@
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+
+const envPath = path.join(__dirname, '..', '.env');
+require('dotenv').config({ path: envPath });
 
 const isProduction = process.env.NODE_ENV === 'production';
+const hasAppConfig = ['TUURIO_ISSUER', 'TUURIO_CLIENT_ID', 'TUURIO_CLIENT_SECRET', 'TUURIO_REDIRECT_URI']
+  .some((key) => String(process.env[key] || '').trim().length > 0);
 const authority = normalizeAuthority(process.env.TUURIO_ISSUER) || 'https://test.id.tuurio.com';
 const sessionSameSite = sanitizeSameSite(process.env.TUURIO_SESSION_SAME_SITE) || 'lax';
 const sessionSecureCookie = toBoolean(
@@ -10,6 +16,8 @@ const sessionSecureCookie = toBoolean(
 
 module.exports = {
   isProduction,
+  envExists: fs.existsSync(envPath),
+  hasAppConfig,
   authority,
   authorizeEndpoint: `${authority}/oauth2/authorize`,
   tokenEndpoint: `${authority}/oauth2/token`,

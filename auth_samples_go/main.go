@@ -26,6 +26,7 @@ type Config struct {
 	AuthorizeEndpoint     string
 	TokenEndpoint         string
 	DiscoveryEndpoint     string
+	HasAppConfig          bool
 	ClientID              string
 	ClientSecret          string
 	RedirectURI           string
@@ -146,6 +147,7 @@ func loadConfig() Config {
 		AuthorizeEndpoint:     authority + "/oauth2/authorize",
 		TokenEndpoint:         authority + "/oauth2/token",
 		DiscoveryEndpoint:     authority + "/.well-known/openid-configuration",
+		HasAppConfig:          hasConfiguredValues("TUURIO_ISSUER", "TUURIO_CLIENT_ID", "TUURIO_CLIENT_SECRET", "TUURIO_REDIRECT_URI"),
 		ClientID:              clientID,
 		ClientSecret:          clientSecret,
 		RedirectURI:           redirectURI,
@@ -159,6 +161,15 @@ func loadConfig() Config {
 		WebhookAPIKeyHeader:   webhookAPIKeyHeader,
 		WebhookAPIKey:         strings.TrimSpace(os.Getenv("TUURIO_WEBHOOK_API_KEY")),
 	}
+}
+
+func hasConfiguredValues(keys ...string) bool {
+	for _, key := range keys {
+		if strings.TrimSpace(os.Getenv(key)) != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func loadDotEnvFile(filePath string) {
@@ -326,7 +337,7 @@ func handleHome(w http.ResponseWriter, r *http.Request, session *Session) {
 	}
 
 	status := statusForSession(session)
-	content := renderLoginView(session.Error)
+	content := renderLoginView(session.Error, !config.HasAppConfig)
 	if session.Token != nil {
 		content = renderTokenView(session)
 	}
@@ -335,6 +346,12 @@ func handleHome(w http.ResponseWriter, r *http.Request, session *Session) {
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
+	if !config.HasAppConfig {
+		session.Error = "Configuration missing. Copy .env.example to .env or provide the TUURIO_* environment variables before signing in."
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
 	state := randomString(32)
 	verifier := randomString(64)
 	session.State = state
@@ -570,14 +587,23 @@ func renderShell(status map[string]string, content string) string {
 `, tone, label, html.EscapeString(strings.TrimPrefix(config.Authority, "https://")), content)
 }
 
-func renderLoginView(errorMessage string) string {
+func renderLoginView(errorMessage string, configMissing bool) string {
 	errorHTML := ""
 	if errorMessage != "" {
 		errorHTML = fmt.Sprintf(`<div class="alert alert-error">%s</div>`, html.EscapeString(errorMessage))
 	}
+	warningHTML := ""
+	if configMissing {
+		warningHTML = `<div class="alert alert-error"><strong>Configuration missing</strong><br>Copy <code>.env.example</code> to <code>.env</code> or provide the required <code>TUURIO_*</code> environment variables before signing in.</div>`
+	}
+	buttonHTML := `<a class="button primary" href="/login">Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></a>`
+	if configMissing {
+		buttonHTML = `<button class="button primary" type="button" disabled>Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></button>`
+	}
 
 	return fmt.Sprintf(`
     <div class="stack">
+      %s
       <section class="card card-hero">
         <div class="card-header">
           <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
@@ -588,7 +614,7 @@ func renderLoginView(errorMessage string) string {
           </p>
         </div>
         <div class="button-row">
-          <a class="button primary" href="/login">Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></a>
+          %s
           <span class="helper">Redirects to %s</span>
         </div>
         %s
@@ -608,7 +634,7 @@ func renderLoginView(errorMessage string) string {
         </div>
       </div>
     </div>
-`, html.EscapeString(strings.TrimPrefix(config.Authority, "https://")), errorHTML)
+`, warningHTML, buttonHTML, html.EscapeString(strings.TrimPrefix(config.Authority, "https://")), errorHTML)
 }
 
 func renderTokenView(session *Session) string {

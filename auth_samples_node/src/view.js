@@ -153,11 +153,18 @@ function renderShell(status, content) {
   `;
 }
 
-function renderLoginView({ error, authorityHost: host }) {
+function renderLoginView({ error, authorityHost: host, configMissing = false }) {
   const errorHtml = error ? `<div class="alert alert-error">${escapeHtml(error)}</div>` : '';
+  const warningHtml = configMissing
+    ? `<div class="alert alert-error"><strong>${icon('x-circle', 16)} Configuration missing</strong><br />Copy <code>.env.example</code> to <code>.env</code> or provide the required <code>TUURIO_*</code> environment variables before signing in.</div>`
+    : '';
+  const buttonHtml = configMissing
+    ? `<button class="button primary" type="button" disabled>Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></button>`
+    : `<a class="button primary" href="/login">Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></a>`;
 
   return `
     <div class="stack">
+      ${warningHtml}
       <section class="card card-hero">
         <div class="card-header">
           <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
@@ -168,10 +175,7 @@ function renderLoginView({ error, authorityHost: host }) {
           </p>
         </div>
         <div class="button-row">
-          <a class="button primary" href="/login">
-            Continue with Tuurio ID
-            <span class="btn-arrow">&rarr;</span>
-          </a>
+          ${buttonHtml}
           <span class="helper">Redirects to ${escapeHtml(host)}</span>
         </div>
         ${errorHtml}

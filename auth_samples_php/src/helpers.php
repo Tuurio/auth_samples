@@ -37,12 +37,12 @@ function base_path(): string
     }
 
     // SCRIPT_NAME reflects the URL path to the front controller.
-    // Apache rewrite: /test2/anything → /test2/index.php
-    //   → dirname('/test2/index.php') = '/test2'
-    // Webroot:        /anything       → /index.php
-    //   → dirname('/index.php')       = '/'
-    $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php');
-    $base = rtrim(str_replace('\\', '/', $scriptDir), '/');
+    // When the whole package is web-accessible, requests are internally routed
+    // through /public/index.php. Strip that internal segment so generated URLs
+    // stay aligned with the externally visible app path.
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
+    $scriptName = preg_replace('#/public/index\.php$#', '/index.php', $scriptName);
+    $base = rtrim(dirname($scriptName), '/');
 
     return $base;
 }

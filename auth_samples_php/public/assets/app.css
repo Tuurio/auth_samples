@@ -612,6 +612,28 @@ button {
   border: 1px solid rgba(248, 113, 113, 0.2);
 }
 
+.alert-block {
+  line-height: 1.6;
+}
+
+.alert-block strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alert-block code {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.alert-warning {
+  background: rgba(251, 191, 36, 0.08);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
 /* ── Feature grid ──────────────────────────────────────── */
 
 .feature-grid {

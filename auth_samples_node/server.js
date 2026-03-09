@@ -76,12 +76,23 @@ app.get('/', (req, res) => {
         authority: config.authority,
         discoveryEndpoint: config.discoveryEndpoint,
       })
-    : renderLoginView({ error, authorityHost: new URL(config.authority).host });
+    : renderLoginView({
+        error,
+        authorityHost: new URL(config.authority).host,
+        configMissing: !config.hasAppConfig,
+      });
 
   res.status(200).send(renderPage(status, content));
 });
 
 app.get('/login', (req, res) => {
+  if (!config.hasAppConfig) {
+    req.session.error =
+      'Configuration missing. Copy .env.example to .env or provide the TUURIO_* environment variables before signing in.';
+    res.redirect('/');
+    return;
+  }
+
   const state = generateRandomString(32);
   const verifier = generateRandomString(64);
   req.session.oauth = { state, verifier };

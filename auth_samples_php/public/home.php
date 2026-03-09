@@ -44,10 +44,52 @@ function render_login_view(?string $error, array $config): string
         ? '<div class="alert alert-error">' . escape_html($error) . '</div>'
         : '';
 
+    $alertsHtml = '';
+    $loginDisabled = false;
+    $xIcon = icon('x-circle', 16);
+    $expectedCallbackPath = url('/auth/callback');
+    $hasAppConfig = (bool) ($config['_has_app_config'] ?? false);
+
+    if (!$hasAppConfig) {
+        $loginDisabled = true;
+        $alertsHtml .= <<<WARN
+        <div class="alert alert-error alert-block">
+          <strong>{$xIcon} Configuration missing</strong><br>
+          No local <code>.env</code> file or explicit <code>TUURIO_*</code> environment variables were found.<br><br>
+          Copy <code>.env.example</code> to <code>.env</code> and fill in your tenant values before signing in.
+        </div>
+WARN;
+    }
+
+    if (!$loginDisabled) {
+        $configuredRedirectUri = $config['redirect_uri'] ?? '';
+        $configuredPath = parse_url($configuredRedirectUri, PHP_URL_PATH) ?: '';
+
+        if ($configuredPath !== '' && $configuredPath !== $expectedCallbackPath) {
+            $loginDisabled = true;
+            $safeConfigured = escape_html($configuredPath);
+            $safeExpected = escape_html($expectedCallbackPath);
+            $safeFullUri = escape_html($configuredRedirectUri);
+            $alertsHtml .= <<<WARN
+            <div class="alert alert-warning alert-block">
+              <strong>{$xIcon} Redirect URI mismatch</strong><br>
+              The configured <code>TUURIO_REDIRECT_URI</code> path does not match this deployment.<br><br>
+              <strong>Configured:</strong> <code>{$safeConfigured}</code><br>
+              <strong>Expected:</strong> <code>{$safeExpected}</code><br><br>
+              Update the configured redirect URI so it matches this app path:<br>
+              <code>{$safeFullUri}</code>
+            </div>
+WARN;
+        }
+    }
+
     $loginUrl = url('/login');
     $authorityHost = escape_html(
         parse_url($config['authority'], PHP_URL_HOST) ?? 'id.tuurio.com'
     );
+    $buttonHtml = $loginDisabled
+        ? '<button class="button primary" type="button" disabled>Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></button>'
+        : '<a class="button primary" href="' . $loginUrl . '">Continue with Tuurio ID <span class="btn-arrow">&rarr;</span></a>';
 
     $shieldIcon = icon('shield', 18);
     $clockIcon = icon('clock', 18);
@@ -55,6 +97,7 @@ function render_login_view(?string $error, array $config): string
 
     return <<<HTML
     <div class="stack">
+      {$alertsHtml}
       <section class="card card-hero">
         <div class="card-header">
           <span class="eyebrow">OAuth 2.0 + OpenID Connect</span>
@@ -65,10 +108,7 @@ function render_login_view(?string $error, array $config): string
           </p>
         </div>
         <div class="button-row">
-          <a class="button primary" href="{$loginUrl}">
-            Continue with Tuurio ID
-            <span class="btn-arrow">&rarr;</span>
-          </a>
+          {$buttonHtml}
           <span class="helper">Redirects to {$authorityHost}</span>
         </div>
         {$errorHtml}

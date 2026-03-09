@@ -13,6 +13,8 @@ php -S localhost:8080 -t public router.php
 
 Open `http://localhost:8080`.
 
+For Apache/Plesk deployments, `public/` is still the preferred document root. If the whole package is web-accessible instead, the bundled root `.htaccess` forwards requests into `public/` and blocks direct access to internal files.
+
 ## Required client URLs
 
 Configure your Tuurio client with these redirect URLs (matching your `.env` values):

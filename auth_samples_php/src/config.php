@@ -15,7 +15,16 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/env.php';
 
-$env = loadEnv(__DIR__ . '/../.env');
+$envFile = __DIR__ . '/../.env';
+$env = loadEnv($envFile);
+$envExists = is_file($envFile);
+$hasAppConfig = false;
+foreach (['TUURIO_ISSUER', 'TUURIO_CLIENT_ID', 'TUURIO_CLIENT_SECRET', 'TUURIO_REDIRECT_URI'] as $key) {
+    if (envValue($env, $key) !== null) {
+        $hasAppConfig = true;
+        break;
+    }
+}
 
 $authority = normalizeAuthority(envValue($env, 'TUURIO_ISSUER')) ?? 'https://test.id.tuurio.com';
 $clientId = sanitizeClientId(envValue($env, 'TUURIO_CLIENT_ID')) ?? 'php-KQD8';
@@ -38,4 +47,6 @@ return [
     'webhook_listen_path' => normalizeWebhookPath(envValue($env, 'TUURIO_WEBHOOK_LISTEN_PATH')) ?? '/webhooks/tuurio',
     'webhook_api_key_header' => sanitizeHeaderName(envValue($env, 'TUURIO_WEBHOOK_API_KEY_HEADER')) ?? 'X-Tuurio-Webhook-Key',
     'webhook_api_key' => envValue($env, 'TUURIO_WEBHOOK_API_KEY') ?? '',
+    '_env_exists' => $envExists,
+    '_has_app_config' => $hasAppConfig,
 ];
