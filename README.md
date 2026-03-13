@@ -2,7 +2,7 @@
 
 **The fastest way to integrate secure, modern identity into your organization.**
 
-This repository contains production-ready sample clients for [Tuurio ID](https://id.tuurio.com). Whether you are building a React SPA for a sports club, a mobile app for a kindergarten, or securing a legacy business intranet, these samples provide the blueprint for a secure **OAuth 2.1** integration.
+This repository contains production-ready sample clients for [Tuurio ID](https://id.tuurio.com). Whether you are building a React SPA for a sports club, a mobile app for a kindergarten, or securing a legacy business intranet, these samples provide the blueprint for a secure **OAuth 2.0 / OpenID Connect** integration.
 
 [![Open in Gitpod](https://img.shields.io/badge/Gitpod-Ready-blue?logo=gitpod)](https://gitpod.io/#https://github.com/tuurio/auth-samples)
 [![Tuurio ID](https://img.shields.io/badge/Powered%20by-Tuurio%20ID-blue)](https://id.tuurio.com)
@@ -46,7 +46,8 @@ All samples utilize the **Authorization Code Flow + PKCE** (Proof Key for Code E
 | **Python** | Flask | Flask Session |
 | **Go** | net/http | Secure Cookie |
 | **Java** | Spring Boot 3 | HTTP Session |
-| **PHP** | Vanilla / Laravel | PHP Session |
+| **PHP** | Vanilla PHP | PHP Session |
+| **Laravel** | Laravel 12 | Laravel Session |
 
 ---
 
