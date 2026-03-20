@@ -2,6 +2,11 @@
 
 A server-rendered PHP demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
 
+## Integration guide
+
+- Detailed integration guide: [PHP example page](https://id.tuurio.com/public/developers/examples/php)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
+
 ## Setup
 
 ```bash

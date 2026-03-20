@@ -2,6 +2,11 @@
 
 A React + Vite demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
 
+## Integration guide
+
+- Detailed integration guide: [React example page](https://id.tuurio.com/public/developers/examples/react)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
+
 ## Setup
 
 1. Install dependencies:

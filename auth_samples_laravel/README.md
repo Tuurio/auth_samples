@@ -2,6 +2,11 @@
 
 A server-rendered Laravel sample that signs in with OIDC, stores tokens in the Laravel session, renders decoded claims, supports RP-initiated logout, and exposes a webhook endpoint with API key header validation.
 
+## Integration guide
+
+- Detailed integration guide: [Laravel example page](https://id.tuurio.com/public/developers/examples/laravel)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
+
 ## Setup
 
 ```bash
@@ -56,3 +61,10 @@ TUURIO_WEBHOOK_API_KEY=
 - Incoming webhook payloads are logged to `storage/logs/laravel.log`
 - The sample validates the configured API key header before accepting the event
 - If provisioning generated a live webhook for you, the `.env` already contains the endpoint metadata
+
+## Webhook deployment notes
+
+- If your deployed app already has a stable public URL, set `TUURIO_WEBHOOK_URL` to that final endpoint and keep `TUURIO_WEBHOOK_LISTEN_PATH` aligned with your Laravel route.
+- If you provisioned the sample before deployment and only had a placeholder domain, update the webhook endpoint in the Tuurio admin after the final URL is known.
+- Keep `TUURIO_WEBHOOK_EDIT_URL` if provisioning filled it in. It points back to the webhook configuration you may need to adjust later.
+- Do not expose the webhook route without checking the configured API key header. This sample expects `TUURIO_WEBHOOK_API_KEY_HEADER` and `TUURIO_WEBHOOK_API_KEY` to be set consistently with the tenant webhook configuration.

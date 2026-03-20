@@ -1,6 +1,11 @@
 # Tuurio Auth iOS Demo
 
-An iOS (SwiftUI) demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+An iOS (SwiftUI) demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+
+## Integration guide
+
+- Detailed integration guide: [iOS example page](https://id.tuurio.com/public/developers/examples/ios)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
 
 ## What you need
 
@@ -86,6 +91,15 @@ Add a URL type to `Info.plist`:
 ```
 
 Or in Xcode: **Runner target → Info → URL Types** → add `com.example.app`.
+
+## Redirect strategy
+
+This sample uses a custom URL scheme because it is the simplest way to get a native iOS OIDC flow running quickly.
+
+- Use a custom URL scheme when you want the fastest local setup and control both the app and the client configuration.
+- Use Universal Links only if you already operate an associated domain and want the redirect to stay on an HTTPS URL you control.
+- If you switch from a custom scheme to Universal Links later, update the redirect URI in both `AuthConfig.swift` and the Tuurio client, and add the required Associated Domains capability in Xcode.
+- Keep one redirect strategy active per client. Mixing multiple redirect strategies for the same native app often makes callback debugging harder than necessary.
 
 ## Troubleshooting
 

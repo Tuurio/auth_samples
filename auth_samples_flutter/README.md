@@ -1,6 +1,11 @@
 # Tuurio Auth Flutter Demo
 
-A Flutter demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+A Flutter demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+
+## Integration guide
+
+- Detailed integration guide: [Flutter example page](https://id.tuurio.com/public/developers/examples/flutter)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
 
 ## What you need
 

@@ -2,6 +2,11 @@
 
 A Vue 3 + Vite demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
 
+## Integration guide
+
+- Detailed integration guide: [Vue example page](https://id.tuurio.com/public/developers/examples/vue)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
+
 ## Setup
 
 1. Install dependencies:

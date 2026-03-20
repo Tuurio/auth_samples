@@ -1,93 +1,71 @@
-# 🛡️ Tuurio Auth Samples
+# Tuurio Auth Samples
 
-**The fastest way to integrate secure, modern identity into your organization.**
+Sample integrations for [Tuurio ID](https://id.tuurio.com) across SPA, mobile, and server-side stacks.
 
-This repository contains production-ready sample clients for [Tuurio ID](https://id.tuurio.com). Whether you are building a React SPA for a sports club, a mobile app for a kindergarten, or securing a legacy business intranet, these samples provide the blueprint for a secure **OAuth 2.0 / OpenID Connect** integration.
+## Docs
 
-[![Open in Gitpod](https://img.shields.io/badge/Gitpod-Ready-blue?logo=gitpod)](https://gitpod.io/#https://github.com/tuurio/auth-samples)
-[![Tuurio ID](https://img.shields.io/badge/Powered%20by-Tuurio%20ID-blue)](https://id.tuurio.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Detailed integration guidance now lives on `id.tuurio.com`. This GitHub repository remains the code host for the runnable examples.
 
----
+- General developer docs: [https://id.tuurio.com/public/developers](https://id.tuurio.com/public/developers)
+- Sample-specific guides: use the example pages linked in the tables below
+- Platform overview: [Features](https://id.tuurio.com/public/features)
+- Managed profile and master-data context: [Vault](https://id.tuurio.com/public/vault)
+- Security guidance: [Security](https://id.tuurio.com/public/security)
 
-## 🚀 Why Tuurio ID?
+## Included Samples
 
-Tuurio is more than just a "Login Button." It is an **Identity-as-a-Service (IDaaS)** platform built for the specific needs of clubs, social institutions, and SMEs.
+The samples in this repository show practical Tuurio ID client integrations for public and confidential applications. Web samples use the Authorization Code flow, with PKCE where appropriate for public clients.
 
-* **Tuurio Vault:** Securely store and manage sensitive member data (IBAN, emergency contacts, custom attributes) directly within the identity layer.
-* **Legacy Shield:** Add MFA, Passkeys, and modern SSO to your existing "old" software without changing a single line of code.
-* **Privacy First:** European-hosted, GDPR-compliant, and designed for high-trust environments.
+### Web SPAs
 
----
+| Framework | Tech Stack | Guide | Code |
+| :--- | :--- | :--- | :--- |
+| React | Vite + `oidc-client-ts` | [React guide](https://id.tuurio.com/public/developers/examples/react) | [auth_samples_react](./auth_samples_react) |
+| Vue 3 | Vite + Composition API | [Vue guide](https://id.tuurio.com/public/developers/examples/vue) | [auth_samples_vue3](./auth_samples_vue3) |
+| Angular | Standalone Components | [Angular guide](https://id.tuurio.com/public/developers/examples/angular) | [auth_samples_angular](./auth_samples_angular) |
+| Next.js | App Router + Auth.js | [Next.js guide](https://id.tuurio.com/public/developers/examples/nextjs) | [auth_samples_nextjs](./auth_samples_nextjs) |
 
-## 📦 Included Demos
+### Mobile and Native
 
-All samples utilize the **Authorization Code Flow + PKCE** (Proof Key for Code Exchange) to ensure maximum security for both public and confidential clients.
+| Platform | Tech Stack | Guide | Code |
+| :--- | :--- | :--- | :--- |
+| Android | Jetpack Compose | [Android guide](https://id.tuurio.com/public/developers/examples/android) | [auth_samples_android](./auth_samples_android) |
+| iOS | SwiftUI + AppAuth | [iOS guide](https://id.tuurio.com/public/developers/examples/ios) | [auth_samples_ios](./auth_samples_ios) |
+| Flutter | `flutter_appauth` | [Flutter guide](https://id.tuurio.com/public/developers/examples/flutter) | [auth_samples_flutter](./auth_samples_flutter) |
 
-### Web SPAs (Public Clients)
-| Framework | Tech Stack | Setup Guide |
-| :--- | :--- | :--- |
-| **React** | Vite + `oidc-client-ts` | [Explore](./auth_samples_react) |
-| **Vue 3** | Vite + Composition API | [Explore](./auth_samples_vue3) |
-| **Angular** | Standalone Components | [Explore](./auth_samples_angular) |
-| **Next.js** | App Router + Auth.js | [Explore](./auth_samples_nextjs) |
+### Server-Side Applications
 
-### Mobile & Native
-| Platform | Tech Stack | Auth Method |
-| :--- | :--- | :--- |
-| **Android** | Jetpack Compose | App Links / Custom Scheme |
-| **iOS** | SwiftUI + AppAuth | Universal Links |
-| **Flutter** | `flutter_appauth` | Secure Deep-linking |
+| Language | Framework | Guide | Code |
+| :--- | :--- | :--- | :--- |
+| Node.js | Express | [Node.js guide](https://id.tuurio.com/public/developers/examples/node) | [auth_samples_node](./auth_samples_node) |
+| Python | Flask | [Python guide](https://id.tuurio.com/public/developers/examples/python) | [auth_samples_python](./auth_samples_python) |
+| Go | `net/http` | [Go guide](https://id.tuurio.com/public/developers/examples/go) | [auth_samples_go](./auth_samples_go) |
+| Java | Spring Boot 3 | [Spring Boot guide](https://id.tuurio.com/public/developers/examples/spring-boot) | [auth_samples_java](./auth_samples_java) |
+| PHP | Vanilla PHP | [PHP guide](https://id.tuurio.com/public/developers/examples/php) | [auth_samples_php](./auth_samples_php) |
+| Laravel | Laravel 12 | [Laravel guide](https://id.tuurio.com/public/developers/examples/laravel) | [auth_samples_laravel](./auth_samples_laravel) |
 
-### Server-Side (Confidential Clients)
-| Language | Framework | Token Storage |
-| :--- | :--- | :--- |
-| **Node.js** | Express | Session / Redis |
-| **Python** | Flask | Flask Session |
-| **Go** | net/http | Secure Cookie |
-| **Java** | Spring Boot 3 | HTTP Session |
-| **PHP** | Vanilla PHP | PHP Session |
-| **Laravel** | Laravel 12 | Laravel Session |
+## Getting Started
 
----
+1. Create a tenant and application in Tuurio ID.
+2. Open the matching example page on `id.tuurio.com` for integration context and client setup.
+3. Clone this repository and open the sample folder for your stack.
+4. Copy the sample environment file and fill in your tenant-specific values.
+5. Register the exact redirect and post-logout redirect URIs shown in that sample.
+6. Run the sample locally.
 
-## 🛠️ Quick Start
+Example:
 
-1.  **Create a Tenant:** Sign up at [Tuurio ID](https://id.tuurio.com) and create your organization's tenant (e.g., `my-club.id.tuurio.com`).
-2.  **Register your Client:** In the Developer Console, create a new application and whitelist your redirect URIs (e.g., `http://localhost:5173`).
-3.  **Run a Sample:**
-    ```bash
-    git clone [https://github.com/tuurio/auth-samples.git](https://github.com/tuurio/auth-samples.git)
-    cd auth_samples_react
-    cp .env.example .env
-    # edit .env with your issuer/client/redirect values
-    npm install
-    npm run dev
-    ```
+```bash
+git clone https://github.com/Tuurio/auth_samples.git
+cd auth_samples/auth_samples_react
+cp .env.example .env
+# edit .env with your issuer/client/redirect values
+npm install
+npm run dev
+```
 
----
+## Notes
 
-## 💎 The Tuurio Ecosystem
-
-Tuurio ID scales with your organization. Choose the module that fits your needs:
-
-### 🛡️ Legacy Shield
-Protect your intranet, admin tools, or legacy servers. Tuurio Shield acts as a modern security gatekeeper (Proxy) in front of your old software. **No VPN required.**
-
-### 🗝️ Tuurio Vault (Premium)
-The "Smart Profile" for your members.
-* **Self-Service:** Members update their own IBAN and address.
-* **Custom Attributes:** Add fields like "Allergies" or "Emergency Contact".
-* **SEPA-Ready:** Generate valid direct debit mandates directly from verified profile data.
-
----
-
-## 💡 Developer Features
-
-* **SSO Hub Support:** These samples demonstrate how to use `prompt=none` and `sso=auto` for a seamless "One-Click" login experience.
-* **Account Chooser:** Support for the Tuurio Account Chooser, allowing users to switch between multiple club identities easily.
-* **Claims Inspection:** Every sample includes a "Debug View" to inspect decoded ID and Access Tokens.
-
----
-
-**Built with ❤️ for a secure community.** [Tuurio ID](https://id.tuurio.com)
+- Sample environment values are placeholders. Replace them with values from your own Tuurio tenant.
+- SPA and mobile samples are public clients and should not use confidential client secrets.
+- Server-side samples show confidential-client setups where a client secret is expected.

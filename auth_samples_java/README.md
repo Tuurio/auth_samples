@@ -2,6 +2,11 @@
 
 A server-rendered Spring Boot demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
 
+## Integration guide
+
+- Detailed integration guide: [Spring Boot example page](https://id.tuurio.com/public/developers/examples/spring-boot)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
+
 ## Setup
 
 ```bash

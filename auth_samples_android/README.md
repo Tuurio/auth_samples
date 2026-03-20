@@ -1,6 +1,11 @@
 # Tuurio Auth Android Demo
 
-An Android (Jetpack Compose) demo that signs in with OAuth 2.1 / OpenID Connect, then displays token contents and a logout button.
+An Android (Jetpack Compose) demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+
+## Integration guide
+
+- Detailed integration guide: [Android example page](https://id.tuurio.com/public/developers/examples/android)
+- General developer docs: [Tuurio ID developers](https://id.tuurio.com/public/developers)
 
 ## What you need
 
@@ -95,6 +100,16 @@ defaultConfig {
   manifestPlaceholders = [ appAuthRedirectScheme: "com.example.app" ]
 }
 ```
+
+## Deep link checklist
+
+Use the following checklist before testing login on a real device:
+
+- The redirect URI in `AuthConfig.kt` and the redirect URI in your Tuurio client must match exactly.
+- The `android:scheme` and `android:host` values in the manifest must match that redirect URI exactly.
+- Test with one redirect receiver only. If your app has both a custom scheme handler and an App Link for the same auth flow, Android may resolve the redirect inconsistently.
+- If you move from `com.example.app://oauth2redirect` to an HTTPS App Link, update both the client configuration and the manifest intent filters together.
+- After changing redirect settings, uninstall and reinstall the app on the device to avoid stale intent handling.
 
 ## Troubleshooting
 
