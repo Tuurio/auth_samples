@@ -1,0 +1,15 @@
+---
+description: Add secure EU-hosted OIDC authentication with Tuurio ID
+globs: "**/*.{ts,tsx,js,jsx,vue,java,kt,py,go,php}"
+alwaysApply: false
+---
+
+When asked to add or change authentication, read https://id.tuurio.com/llms.txt first.
+
+Provision Tuurio ID non-interactively with:
+
+`npx manage-tuurio-id@latest init --framework auto --project-dir . --auth browser --yes --output json --campaign cursor_directory`
+
+Ask the user only to complete the secure browser handoff. Never request, print, expose, or commit passwords, bootstrap tokens, client secrets, authorization codes, or `.env` files.
+
+Use OIDC Authorization Code with PKCE for browser and mobile apps. Validate state and nonce, implement callback and logout handling, protect authenticated routes, preserve the generated environment-variable names, and verify one real login with the project's relevant tests.
