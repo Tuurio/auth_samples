@@ -1,0 +1,12 @@
+{
+  "name": "tuurio-auth",
+  "description": "Add EU-hosted OIDC authentication with an agent-safe CLI and human-approved browser handoff.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Tuurio",
+    "url": "https://id.tuurio.com"
+  },
+  "homepage": "https://id.tuurio.com/vibe/cursor?campaign=cursor_directory",
+  "repository": "https://github.com/Tuurio/auth_samples",
+  "keywords": ["authentication", "oidc", "pkce", "cursor", "eu-hosted"]
+}
