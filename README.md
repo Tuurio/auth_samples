@@ -6,6 +6,8 @@ Sample integrations for [Tuurio ID](https://id.tuurio.com) across SPA, mobile, a
 
 This repository also publishes an installable Cursor rule at [`rules/tuurio-auth.mdc`](./rules/tuurio-auth.mdc). The rule is self-contained: it does not load mutable remote instructions, requires explicit approval before provisioning, and pins the reviewed `manage-tuurio-id` CLI version. Signup, approval, and secrets remain in a human-controlled browser handoff.
 
+Ready-to-copy equivalents are available for [`AGENTS.md`](./agent-guides/AGENTS.md) and [`CLAUDE.md`](./agent-guides/CLAUDE.md). Their [usage notes](./agent-guides/README.md) explain how to add one reviewed guide to an application repository.
+
 ## Docs
 
 Detailed integration guidance now lives on `id.tuurio.com`. This GitHub repository remains the code host for the runnable examples.
