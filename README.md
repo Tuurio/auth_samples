@@ -21,6 +21,7 @@ The samples in this repository show practical Tuurio ID client integrations for 
 | Framework | Tech Stack | Guide | Code |
 | :--- | :--- | :--- | :--- |
 | React | Vite + `oidc-client-ts` | [React guide](https://id.tuurio.com/public/developers/examples/react) | [auth_samples_react](./auth_samples_react) |
+| Lovable | React + Vite + `oidc-client-ts` | [Lovable guide](https://id.tuurio.com/vibe/lovable) | [auth_samples_lovable](./auth_samples_lovable) |
 | Vue 3 | Vite + Composition API | [Vue guide](https://id.tuurio.com/public/developers/examples/vue) | [auth_samples_vue3](./auth_samples_vue3) |
 | Angular | Standalone Components | [Angular guide](https://id.tuurio.com/public/developers/examples/angular) | [auth_samples_angular](./auth_samples_angular) |
 | Next.js | App Router + Auth.js | [Next.js guide](https://id.tuurio.com/public/developers/examples/nextjs) | [auth_samples_nextjs](./auth_samples_nextjs) |
