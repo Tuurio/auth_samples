@@ -4,9 +4,7 @@ Sample integrations for [Tuurio ID](https://id.tuurio.com) across SPA, mobile, a
 
 ## Cursor and AI coding agents
 
-This repository also publishes an installable Cursor rule at [`rules/tuurio-auth.mdc`](./rules/tuurio-auth.mdc). It gives coding agents a deterministic, non-interactive Tuurio ID setup while keeping signup, approval, and secrets in a human-controlled browser handoff.
-
-Machine-readable integration guidance is available at [https://id.tuurio.com/llms.txt](https://id.tuurio.com/llms.txt).
+This repository also publishes an installable Cursor rule at [`rules/tuurio-auth.mdc`](./rules/tuurio-auth.mdc). The rule is self-contained: it does not load mutable remote instructions, requires explicit approval before provisioning, and pins the reviewed `manage-tuurio-id` CLI version. Signup, approval, and secrets remain in a human-controlled browser handoff.
 
 ## Docs
 
