@@ -15,7 +15,7 @@ Paste this prompt into your Lovable project:
 Add EU-hosted Tuurio ID login to this React/Vite app using OIDC Authorization Code with PKCE.
 
 Run this non-interactive setup command:
-npx manage-tuurio-id@1.1.1 init --framework react --project-dir . --base-url http://localhost:5173 --auth browser --yes --output json --campaign lovable_starter --no-open
+npx manage-tuurio-id@1.1.2 init --framework react --project-dir . --base-url http://localhost:5173 --auth browser --yes --output json --campaign lovable_starter --no-open
 
 Show me the browser verification URL and wait for approval. Then use auth_samples_lovable in https://github.com/Tuurio/auth_samples as the implementation reference. Add sign-in, /auth/callback, authenticated state, sign-out, and /logout/callback. Never create, request, or expose a client secret in browser code or VITE_ variables.
 ```
@@ -35,7 +35,7 @@ npm install
 2. Provision a public Tuurio ID client and write `.env.local`:
 
 ```bash
-npx manage-tuurio-id@1.1.1 init \
+npx manage-tuurio-id@1.1.2 init \
   --framework react \
   --project-dir . \
   --base-url http://localhost:5173 \
