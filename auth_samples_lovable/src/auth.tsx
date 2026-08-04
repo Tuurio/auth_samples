@@ -27,6 +27,20 @@ const manager = new UserManager({
   monitorSession: false
 });
 
+// React StrictMode remounts effects in development; share each one-time OIDC callback across mounts.
+let signinCallbackPromise: Promise<User> | null = null;
+let signoutCallbackPromise: ReturnType<UserManager["signoutRedirectCallback"]> | null = null;
+
+const completeSigninRedirect = (): Promise<User> => {
+  signinCallbackPromise ??= manager.signinRedirectCallback();
+  return signinCallbackPromise;
+};
+
+const completeSignoutRedirect = (): ReturnType<UserManager["signoutRedirectCallback"]> => {
+  signoutCallbackPromise ??= manager.signoutRedirectCallback();
+  return signoutCallbackPromise;
+};
+
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -36,14 +50,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let active = true;
+    const handleAccessTokenExpired = () => {
+      if (!active) return;
+      setUser(null);
+      void manager.removeUser().catch(() => undefined);
+    };
+    manager.events.addAccessTokenExpired(handleAccessTokenExpired);
+
     const initialize = async () => {
       try {
         if (window.location.pathname === "/auth/callback") {
-          const callbackUser = await manager.signinRedirectCallback();
+          const callbackUser = await completeSigninRedirect();
           if (active) setUser(callbackUser);
           window.history.replaceState({}, document.title, "/");
         } else if (window.location.pathname === "/logout/callback") {
-          await manager.signoutRedirectCallback().catch(() => undefined);
+          await completeSignoutRedirect().catch(() => undefined);
           window.history.replaceState({}, document.title, "/");
         } else {
           const current = await manager.getUser();
@@ -56,7 +77,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     };
     void initialize();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      manager.events.removeAccessTokenExpired(handleAccessTokenExpired);
+    };
   }, []);
 
   const value = useMemo<AuthState>(() => ({
