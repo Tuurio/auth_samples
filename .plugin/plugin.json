@@ -1,7 +1,7 @@
 {
   "name": "tuurio-auth",
   "description": "Add EU-hosted OIDC authentication with an agent-safe CLI and human-approved browser handoff.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Tuurio",
     "url": "https://id.tuurio.com"

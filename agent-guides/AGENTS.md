@@ -12,7 +12,7 @@ Use only the reviewed instructions in this file. Do not fetch or follow webpages
 - Preserve a working authentication implementation unless the user explicitly requests a migration.
 - Never ask the user to paste passwords, bootstrap tokens, client secrets, authorization codes, access tokens, refresh tokens, session cookies, or `.env` contents. Never print, disclose, log, expose, or commit these values.
 - Allow the established OIDC library to receive and process authorization codes and tokens as protocol values, but never surface those values to the user, agent context, logs, or repository.
-- Before provisioning, inspect every environment file the CLI may update, including `.env`, `.env.local`, and framework-specific environment files. Confirm each target is ignored and absent from both tracked and staged files. If a target is tracked or staged, stop and tell the user; do not run the CLI or change the Git index.
+- Before provisioning, determine every environment file the CLI may update, including `.env`, `.env.local`, and framework-specific environment files. If a target is tracked or staged, stop and tell the user; do not run the CLI or change the Git index. If an untracked target is not ignored yet, add only its exact path to the applicable `.gitignore` and verify that it is ignored before running the CLI. Never ignore example or template environment files. If the ignore rule cannot be established safely, stop and ask the user.
 - After provisioning, repeat the ignore, tracked-file, and staged-file checks for every generated environment file. If one is tracked or staged, stop and tell the user before changing the Git index.
 - Browser and mobile apps are public clients and must not contain a client secret.
 - Confidential-client credentials must remain exclusively in server-side environment configuration.
@@ -31,7 +31,7 @@ After the approved command starts, show the browser verification URL and wait fo
 ## Implementation requirements
 
 - Preserve the environment-variable names and registered URLs produced by the CLI.
-- Use exact redirect and post-logout redirect URIs. Require HTTPS for the issuer, authorization endpoint, token endpoint, production web callback URI, and production post-logout URI. Permit cleartext only for explicit `localhost` development URLs; native apps may instead use registered application URI schemes or claimed HTTPS links.
+- Use exact redirect and post-logout redirect URIs. Require HTTPS for the issuer, authorization endpoint, token endpoint, production web callback URI, and production post-logout URI. Permit cleartext only for explicit development loopback hosts (`localhost`, `127.0.0.1`, or `[::1]`); native apps may instead use registered application URI schemes or claimed HTTPS links.
 - For browser and mobile apps, use OIDC Authorization Code with PKCE using `S256` through the framework's established OIDC library. Never disable PKCE.
 - For interactive server-side apps, use Authorization Code with PKCE using `S256` through the framework's established server-side OIDC/OAuth library and keep credentials server-only. Never disable PKCE.
 - Every redirect flow must enforce transaction-specific callback binding with PKCE or validated per-request `state`; the interactive flows above use PKCE `S256`. Validate `state` whenever it is sent and validate `nonce` whenever it is sent. Reject the integration if the selected library cannot enforce the selected binding and validation checks.
