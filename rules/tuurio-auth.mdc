@@ -1,6 +1,6 @@
 ---
 description: Add secure EU-hosted OIDC authentication with Tuurio ID
-globs: "**/*.{ts,tsx,js,jsx,vue,java,kt,py,go,php}"
+globs: "**/*.{ts,tsx,js,jsx,vue,java,kt,kts,py,go,php,swift,dart,json,yaml,yml,xml,plist,properties,toml,gradle,groovy,html}"
 alwaysApply: false
 ---
 
@@ -12,12 +12,14 @@ Before running provisioning tooling, show the user the exact command and wait fo
 
 If version `1.1.1` is unavailable or a different version is required, stop and ask the user instead of changing the command. After the approved command starts, show the browser verification URL and ask the user to complete the secure browser handoff.
 
-Never request, print, expose, or commit passwords, bootstrap tokens, client secrets, authorization codes, access tokens, refresh tokens, or `.env` files. Confirm that generated environment files are ignored by version control before continuing.
+Never ask the user to paste passwords, bootstrap tokens, client secrets, authorization codes, access tokens, refresh tokens, session cookies, or `.env` contents. Never print, disclose, log, expose, or commit these values. Allow the established OIDC library to receive and process authorization codes and tokens as protocol values, but never surface them to the user, agent context, logs, or repository.
+
+After provisioning, confirm generated environment files are ignored and are absent from both tracked and staged files. If one is already tracked or staged, stop and tell the user before changing the Git index.
 
 For browser and mobile apps:
 - Treat the application as a public client and never add a client secret.
-- Use OIDC Authorization Code with PKCE through the framework's established OIDC library.
-- Validate state and nonce, process each callback only once, and clear authenticated state when tokens expire.
+- Use OIDC Authorization Code with PKCE using `S256` through the framework's established OIDC library. Never disable PKCE.
+- Require transaction-bound callback validation: validate `state` whenever it is sent, validate `nonce` whenever it is sent, and rely on PKCE for authorization-code binding. Reject the integration if the library cannot enforce the checks applicable to its flow.
 
 For server-side apps:
 - Keep confidential-client credentials exclusively in server-side environment configuration.
@@ -27,6 +29,8 @@ For every integration:
 - Preserve the environment-variable names produced by the CLI.
 - Register and use exact redirect and post-logout redirect URIs.
 - Implement callback, logout, protected-route, loading, and error states.
+- Process each authorization callback only once, including under development remount behavior.
+- Use library-managed token renewal only when the provider and application explicitly support and configure it. Validate renewed tokens, avoid retry loops, and clear authenticated client or server session state when renewal is unavailable, fails, or logout policy requires it.
 - Avoid custom token parsing or hand-written OAuth flows when the established library supports them.
 - Run the project's typecheck, tests, and production build where available.
 - Ask the user to verify one real sign-in and sign-out before declaring the work complete.
