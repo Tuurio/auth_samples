@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
+import publicConfigJson from "./tuurio.public.json";
 
 type AuthState = {
   user: User | null;
@@ -9,35 +10,85 @@ type AuthState = {
   logout: () => Promise<void>;
 };
 
-const required = (name: keyof ImportMetaEnv): string => {
-  const value = import.meta.env[name]?.trim();
-  if (!value) throw new Error(`Missing ${name}. Run manage-tuurio-id init first.`);
-  return value;
+type PublicClientTarget = {
+  role: "deployment" | "preview";
+  deploymentBaseUrl: string;
+  redirectUri: string;
+  postLogoutRedirectUri: string;
 };
 
-const manager = new UserManager({
-  authority: required("VITE_TUURIO_ISSUER"),
-  client_id: required("VITE_TUURIO_CLIENT_ID"),
-  redirect_uri: required("VITE_TUURIO_REDIRECT_URI"),
-  post_logout_redirect_uri: required("VITE_TUURIO_POST_LOGOUT_REDIRECT_URI"),
-  response_type: "code",
-  scope: import.meta.env.VITE_TUURIO_SCOPE || "openid profile email",
-  userStore: new WebStorageStateStore({ store: window.sessionStorage }),
-  automaticSilentRenew: false,
-  monitorSession: false
-});
+type PublicClientConfig = {
+  version: 1;
+  issuer: string;
+  clientId: string;
+  scope: string;
+  targets: PublicClientTarget[];
+};
+
+const publicConfig = publicConfigJson as PublicClientConfig;
+
+const runtimeTarget = (config: PublicClientConfig): PublicClientTarget => {
+  if (config.version !== 1 || !config.issuer || !config.clientId || !Array.isArray(config.targets)) {
+    throw new Error("Invalid Tuurio public-client configuration. Run manage-tuurio-id init first.");
+  }
+
+  const currentOrigin = window.location.origin;
+  const matches = config.targets.filter((target) => {
+    try {
+      return new URL(target.deploymentBaseUrl).origin === currentOrigin;
+    } catch {
+      return false;
+    }
+  });
+  if (matches.length !== 1) {
+    throw new Error(`No unique Tuurio client target is registered for ${currentOrigin}. Re-run provisioning with this exact origin.`);
+  }
+
+  const target = matches[0];
+  if (
+    new URL(target.redirectUri).origin !== currentOrigin ||
+    new URL(target.postLogoutRedirectUri).origin !== currentOrigin
+  ) {
+    throw new Error(`Tuurio callback URLs do not match the current origin ${currentOrigin}.`);
+  }
+  return target;
+};
+
+let manager: UserManager | null = null;
+let configurationError: Error | null = null;
+try {
+  const selectedTarget = runtimeTarget(publicConfig);
+  manager = new UserManager({
+    authority: publicConfig.issuer,
+    client_id: publicConfig.clientId,
+    redirect_uri: selectedTarget.redirectUri,
+    post_logout_redirect_uri: selectedTarget.postLogoutRedirectUri,
+    response_type: "code",
+    scope: publicConfig.scope || "openid profile email",
+    userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+    automaticSilentRenew: false,
+    monitorSession: false
+  });
+} catch (cause) {
+  configurationError = cause instanceof Error ? cause : new Error("Invalid Tuurio public-client configuration");
+}
+
+const requireManager = (): UserManager => {
+  if (!manager) throw configurationError ?? new Error("Tuurio authentication is not configured");
+  return manager;
+};
 
 // React StrictMode remounts effects in development; share each one-time OIDC callback across mounts.
 let signinCallbackPromise: Promise<User> | null = null;
 let signoutCallbackPromise: ReturnType<UserManager["signoutRedirectCallback"]> | null = null;
 
 const completeSigninRedirect = (): Promise<User> => {
-  signinCallbackPromise ??= manager.signinRedirectCallback();
+  signinCallbackPromise ??= requireManager().signinRedirectCallback();
   return signinCallbackPromise;
 };
 
 const completeSignoutRedirect = (): ReturnType<UserManager["signoutRedirectCallback"]> => {
-  signoutCallbackPromise ??= manager.signoutRedirectCallback();
+  signoutCallbackPromise ??= requireManager().signoutRedirectCallback();
   return signoutCallbackPromise;
 };
 
@@ -50,12 +101,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let active = true;
+    const oidc = manager;
+    if (!oidc) {
+      setError(configurationError?.message ?? "Tuurio authentication is not configured");
+      setLoading(false);
+      return () => { active = false; };
+    }
     const handleAccessTokenExpired = () => {
       if (!active) return;
       setUser(null);
-      void manager.removeUser().catch(() => undefined);
+      void oidc.removeUser().catch(() => undefined);
     };
-    manager.events.addAccessTokenExpired(handleAccessTokenExpired);
+    oidc.events.addAccessTokenExpired(handleAccessTokenExpired);
 
     const initialize = async () => {
       try {
@@ -67,7 +124,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           await completeSignoutRedirect().catch(() => undefined);
           window.history.replaceState({}, document.title, "/");
         } else {
-          const current = await manager.getUser();
+          const current = await oidc.getUser();
           if (active) setUser(current && !current.expired ? current : null);
         }
       } catch (cause) {
@@ -79,7 +136,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     void initialize();
     return () => {
       active = false;
-      manager.events.removeAccessTokenExpired(handleAccessTokenExpired);
+      oidc.events.removeAccessTokenExpired(handleAccessTokenExpired);
     };
   }, []);
 
@@ -87,8 +144,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     user,
     loading,
     error,
-    login: () => manager.signinRedirect(),
-    logout: () => manager.signoutRedirect({ id_token_hint: user?.id_token })
+    login: () => requireManager().signinRedirect(),
+    logout: () => requireManager().signoutRedirect({ id_token_hint: user?.id_token })
   }), [user, loading, error]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
