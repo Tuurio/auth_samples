@@ -14,10 +14,16 @@ Paste this prompt into your Lovable project:
 ```text
 Add EU-hosted Tuurio ID login to this React/Vite app using OIDC Authorization Code with PKCE.
 
-Run this non-interactive setup command:
-npx manage-tuurio-id@1.1.2 init --framework react --project-dir . --base-url http://localhost:5173 --auth browser --yes --output json --campaign lovable_starter --no-open
+First identify both exact HTTPS origins:
+- `LOVABLE_DEPLOYMENT_ORIGIN`: the stable standalone preview, published app, or custom-domain origin users can open outside the editor. This is the primary deployment target.
+- `LOVABLE_EDITOR_PREVIEW_ORIGIN`: the embedded editor preview origin, normally `https://<project-id>.lovableproject.com`.
 
-Show me the browser verification URL and wait for approval. Then use auth_samples_lovable in https://github.com/Tuurio/auth_samples as the implementation reference. Add sign-in, /auth/callback, authenticated state, sign-out, and /logout/callback. Never create, request, or expose a client secret in browser code or VITE_ variables.
+Never use Lovable's internal dev-server URL or localhost as the deployment origin. If the stable origin is not available yet, stop and ask me to publish the app or provide it.
+
+After replacing both placeholders, run this non-interactive setup command exactly:
+npx manage-tuurio-id@1.1.4 init --framework react --project-dir . --base-url LOVABLE_DEPLOYMENT_ORIGIN --redirect-uri LOVABLE_DEPLOYMENT_ORIGIN/auth/callback --post-logout-redirect-uri LOVABLE_DEPLOYMENT_ORIGIN/logout/callback --additional-origin LOVABLE_EDITOR_PREVIEW_ORIGIN --public-config src/tuurio.public.json --auth browser --yes --output json --campaign lovable_starter --no-open
+
+Show me the browser verification URL and wait for approval. Then use auth_samples_lovable in https://github.com/Tuurio/auth_samples as the implementation reference. Import the generated `src/tuurio.public.json`, select only the target whose exact `deploymentBaseUrl` origin equals `window.location.origin`, and fail closed if none or more than one matches. Add sign-in, /auth/callback, authenticated state, sign-out, and /logout/callback. Never create, request, or expose a client secret. Never deploy `.env.local`.
 ```
 
 Lovable currently creates projects inside Lovable and can export them to GitHub. This sample is a reference implementation for the agent; it is not intended to be imported into Lovable as an existing repository.
@@ -32,13 +38,15 @@ Requires Node.js 20.19 or newer.
 npm install
 ```
 
-2. Provision a public Tuurio ID client and write `.env.local`:
+2. For a local-only test, provision a public Tuurio ID client and replace the checked-in placeholder config:
 
 ```bash
-npx manage-tuurio-id@1.1.2 init \
+npx manage-tuurio-id@1.1.4 init \
   --framework react \
   --project-dir . \
   --base-url http://localhost:5173 \
+  --public-config src/tuurio.public.json \
+  --overwrite-public-config \
   --auth browser \
   --yes \
   --output json \
@@ -61,14 +69,8 @@ Redirect URI: http://localhost:5173/auth/callback
 Post-logout Redirect URI: http://localhost:5173/logout/callback
 ```
 
-## `.env.local` keys
+## Deployable public-client configuration
 
-```env
-VITE_TUURIO_ISSUER=https://your-tenant.id.tuurio.com
-VITE_TUURIO_CLIENT_ID=replace-after-browser-handoff
-VITE_TUURIO_REDIRECT_URI=http://localhost:5173/auth/callback
-VITE_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173/logout/callback
-VITE_TUURIO_SCOPE=openid profile email
-```
+`src/tuurio.public.json` contains the issuer, public client ID, scope, and every exact deployment/preview target. It is deliberately safe to commit and deploy. Runtime selection is based on an exact `window.location.origin` match; there is no wildcard or fallback to another target.
 
-This is a public SPA client. Never add a client secret to browser code, a `VITE_` variable, a prompt, or a commit. Keep redirect URIs exact and use HTTPS outside local development.
+This is a public SPA client. Never add a client secret to browser code, configuration, a prompt, or a commit. Keep redirect URIs exact and use HTTPS outside local development. `.env.local` remains local-only and must never be deployed as an alternative production configuration.
