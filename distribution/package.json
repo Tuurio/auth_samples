@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate-manifest.mjs"
+    "test": "node --test scripts/*.test.mjs",
+    "validate": "npm test && node scripts/validate-manifest.mjs"
   },
   "devDependencies": {
     "yaml": "2.9.0"
