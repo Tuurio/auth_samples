@@ -7,6 +7,7 @@ sourceMetadata:
   topics: [authentication, oidc, oauth2, pkce, openid-connect, react, nextjs, spring-boot, flutter, tuurio, starter-template, eu-hosted]
 templates:
   - id: react-vite
+    displayName: React Vite OIDC Starter
     status: ready
     source: auth_samples_react
     repository: Tuurio/react-vite-oidc-starter
@@ -18,6 +19,7 @@ templates:
     topics: [react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
     verify: [npm install, npm run lint, npm run build]
   - id: lovable
+    displayName: Lovable Auth Starter
     status: ready
     source: auth_samples_lovable
     repository: Tuurio/lovable-auth-starter
@@ -29,6 +31,7 @@ templates:
     topics: [lovable, react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, eu-hosted]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: vue
+    displayName: Vue OIDC Auth Starter
     status: ready
     source: auth_samples_vue3
     repository: Tuurio/vue-oidc-auth-starter
@@ -40,6 +43,7 @@ templates:
     topics: [vue, vue3, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template]
     verify: [npm ci, npm run build]
   - id: angular
+    displayName: Angular OIDC Auth Starter
     status: ready
     source: auth_samples_angular
     repository: Tuurio/angular-oidc-auth-starter
@@ -51,6 +55,7 @@ templates:
     topics: [angular, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
     verify: [npm install, npm run build]
   - id: nextjs
+    displayName: Next.js Auth Starter
     status: ready
     source: auth_samples_nextjs
     repository: Tuurio/nextjs-auth-starter
@@ -62,6 +67,7 @@ templates:
     topics: [nextjs, react, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
     verify: [npm install, npm run build]
   - id: android
+    displayName: Android OIDC Auth Starter
     status: ready
     source: auth_samples_android
     repository: Tuurio/android-oidc-auth-starter
@@ -73,6 +79,7 @@ templates:
     topics: [android, kotlin, jetpack-compose, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
     verify: [./gradlew assembleDebug]
   - id: ios
+    displayName: iOS OIDC Auth Starter
     status: ready
     source: auth_samples_ios
     repository: Tuurio/ios-oidc-auth-starter
@@ -84,6 +91,7 @@ templates:
     topics: [ios, swift, swiftui, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
     verify: [swiftc -parse TuurioAuthSample/*.swift]
   - id: flutter
+    displayName: Flutter OIDC Auth Starter
     status: ready
     source: auth_samples_flutter
     repository: Tuurio/flutter-oidc-auth-starter
@@ -95,6 +103,7 @@ templates:
     topics: [flutter, dart, authentication, oidc, oauth2, pkce, appauth, mobile, tuurio, starter-template]
     verify: [flutter pub get, flutter analyze]
   - id: express
+    displayName: Express OIDC Auth Starter
     status: ready
     source: auth_samples_node
     repository: Tuurio/express-oidc-auth-starter
@@ -106,6 +115,7 @@ templates:
     topics: [nodejs, express, javascript, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [npm install, node --check server.js, node --check src/oauth.js]
   - id: flask
+    displayName: Flask OIDC Auth Starter
     status: ready
     source: auth_samples_python
     repository: Tuurio/flask-oidc-auth-starter
@@ -117,6 +127,7 @@ templates:
     topics: [python, flask, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [python3 -m compileall -q .]
   - id: go
+    displayName: Go OIDC Auth Starter
     status: ready
     source: auth_samples_go
     repository: Tuurio/go-oidc-auth-starter
@@ -128,6 +139,7 @@ templates:
     topics: [go, golang, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [go test ./..., go build ./...]
   - id: spring-boot
+    displayName: Spring Boot OIDC Starter
     status: ready
     source: auth_samples_java
     repository: Tuurio/spring-boot-oidc-starter
@@ -139,6 +151,7 @@ templates:
     topics: [java, spring-boot, spring-security, authentication, oidc, oauth2, openid-connect, tuurio, starter-template]
     verify: [gradle test, gradle bootJar]
   - id: php
+    displayName: PHP OIDC Auth Starter
     status: ready
     source: auth_samples_php
     repository: Tuurio/php-oidc-auth-starter
@@ -150,6 +163,7 @@ templates:
     topics: [php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [find . -name '*.php' -print0 | xargs -0 -n1 php -l]
   - id: laravel
+    displayName: Laravel OIDC Auth Starter
     status: ready
     source: auth_samples_laravel
     repository: Tuurio/laravel-oidc-auth-starter
@@ -161,6 +175,7 @@ templates:
     topics: [laravel, php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [composer install --no-interaction, php artisan test]
   - id: sveltekit
+    displayName: SvelteKit OIDC Auth Starter
     status: planned
     source: auth_samples_sveltekit
     repository: Tuurio/sveltekit-oidc-auth-starter
@@ -172,6 +187,7 @@ templates:
     topics: [svelte, sveltekit, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run check, npm run build]
   - id: nuxt
+    displayName: Nuxt OIDC Auth Starter
     status: planned
     source: auth_samples_nuxt
     repository: Tuurio/nuxt-oidc-auth-starter
@@ -183,6 +199,7 @@ templates:
     topics: [nuxt, vue, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: astro
+    displayName: Astro OIDC Auth Starter
     status: planned
     source: auth_samples_astro
     repository: Tuurio/astro-oidc-auth-starter
@@ -194,6 +211,7 @@ templates:
     topics: [astro, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
     verify: [npm ci, npm run check, npm run build]
   - id: react-router
+    displayName: React Router Auth Starter
     status: planned
     source: auth_samples_react_router
     repository: Tuurio/react-router-auth-starter
@@ -205,6 +223,7 @@ templates:
     topics: [react, react-router, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: django
+    displayName: Django OIDC Auth Starter
     status: planned
     source: auth_samples_django
     repository: Tuurio/django-oidc-auth-starter
@@ -216,6 +235,7 @@ templates:
     topics: [python, django, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
     verify: [python3 manage.py check, python3 manage.py test]
   - id: fastapi
+    displayName: FastAPI OIDC Auth Starter
     status: planned
     source: auth_samples_fastapi
     repository: Tuurio/fastapi-oidc-auth-starter

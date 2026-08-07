@@ -55,6 +55,9 @@ for (const template of templates) {
   if (!template.repository?.startsWith("Tuurio/")) {
     errors.push(`${prefix}: repository must belong to Tuurio`);
   }
+  if (!template.displayName || template.displayName.length > 80) {
+    errors.push(`${prefix}: displayName must contain 1-80 characters`);
+  }
   if (!template.description || template.description.length > 350) {
     errors.push(`${prefix}: description must contain 1-350 characters`);
   }
