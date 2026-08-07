@@ -1,7 +1,7 @@
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 
-const DEFAULT_AUTHORITY = "https://test.id.tuurio.com";
-const DEFAULT_CLIENT_ID = "spa-K53I";
+const DEFAULT_AUTHORITY = "https://configuration-required.invalid";
+const DEFAULT_CLIENT_ID = "configuration-required";
 const DEFAULT_REDIRECT_URI = "http://localhost:3000/auth/callback";
 const DEFAULT_POST_LOGOUT_REDIRECT_URI = "http://localhost:3000/logout/callback";
 const DEFAULT_SCOPE = "openid profile email";
@@ -17,6 +17,10 @@ export const authConfig = {
   scope: normalizeScope(process.env.NEXT_PUBLIC_TUURIO_SCOPE) ?? DEFAULT_SCOPE,
 };
 export const authAuthorityHost = new URL(authConfig.authority).host;
+export const authConfigurationError =
+  authConfig.authority === DEFAULT_AUTHORITY || authConfig.clientId === DEFAULT_CLIENT_ID
+    ? "Tuurio ID is not configured. Run the pinned manage-tuurio-id command from the README first."
+    : null;
 
 type DiscoveryDocument = {
   userinfo_endpoint?: string;
@@ -44,6 +48,7 @@ function getManager() {
 }
 
 export async function login() {
+  if (authConfigurationError) throw new Error(authConfigurationError);
   const mgr = getManager();
   if (!mgr) throw new Error("Auth manager not available.");
   await mgr.signinRedirect();

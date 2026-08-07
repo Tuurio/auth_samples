@@ -4,6 +4,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,8 +24,13 @@ public class HomeController {
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
   private final RestClient restClient = RestClient.create();
+  private final ObjectMapper objectMapper;
 
-  @Value("${TUURIO_ISSUER:https://test.id.tuurio.com}")
+  HomeController(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
+
+  @Value("${TUURIO_ISSUER}")
   private String authority;
 
   @GetMapping("/login")
@@ -71,8 +76,6 @@ public class HomeController {
 
   private void populateTokenModel(OidcUser user, OAuth2AuthorizedClient client, Model model) {
     OAuth2AccessToken accessToken = client.getAccessToken();
-    OidcIdToken idToken = user.getIdToken();
-
     String scopeLabel = accessToken.getScopes().isEmpty()
         ? "openid profile email"
         : String.join(" ", accessToken.getScopes());
@@ -80,17 +83,10 @@ public class HomeController {
         ? "unknown time"
         : TIME_FORMAT.format(accessToken.getExpiresAt());
 
-    String accessDecoded = JwtUtils.decode(accessToken.getTokenValue());
-    String idDecoded = idToken == null ? "Not a JWT or unable to decode." : JwtUtils.decode(idToken.getTokenValue());
-
     String profileJson = fetchUserInfo(client, accessToken);
 
     model.addAttribute("expiresLabel", expiresLabel);
     model.addAttribute("scopeLabel", scopeLabel);
-    model.addAttribute("accessToken", accessToken.getTokenValue());
-    model.addAttribute("idToken", idToken == null ? "" : idToken.getTokenValue());
-    model.addAttribute("accessDecoded", accessDecoded);
-    model.addAttribute("idDecoded", idDecoded);
     model.addAttribute("profileJson", profileJson);
   }
 
@@ -111,7 +107,7 @@ public class HomeController {
         return "No profile data.";
       }
 
-      return JwtUtils.prettyJson(data);
+      return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(data);
     } catch (Exception ex) {
       return "No profile data.";
     }

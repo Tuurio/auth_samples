@@ -8,7 +8,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @ControllerAdvice
 public class NotFoundAdvice {
-  @Value("${TUURIO_ISSUER:https://test.id.tuurio.com}")
+  @Value("${TUURIO_ISSUER}")
   private String authority;
 
   @ExceptionHandler(NoHandlerFoundException.class)

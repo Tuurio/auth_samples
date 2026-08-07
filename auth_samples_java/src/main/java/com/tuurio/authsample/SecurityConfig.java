@@ -3,12 +3,12 @@ package com.tuurio.authsample;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 public class SecurityConfig {
@@ -21,6 +21,10 @@ public class SecurityConfig {
     OidcClientInitiatedLogoutSuccessHandler oidcLogout =
         new OidcClientInitiatedLogoutSuccessHandler(registrations);
     oidcLogout.setPostLogoutRedirectUri(postLogoutRedirectUri);
+    DefaultOAuth2AuthorizationRequestResolver authorizationRequestResolver =
+        new DefaultOAuth2AuthorizationRequestResolver(registrations, "/oauth2/authorization");
+    authorizationRequestResolver.setAuthorizationRequestCustomizer(
+        OAuth2AuthorizationRequestCustomizers.withPkce());
 
     http
         .authorizeHttpRequests(
@@ -42,18 +46,16 @@ public class SecurityConfig {
             oauth ->
                 oauth
                     .loginPage("/login")
+                    .authorizationEndpoint(endpoint ->
+                        endpoint.authorizationRequestResolver(authorizationRequestResolver))
                     .redirectionEndpoint(
                         redirection -> redirection.baseUri("/auth/callback"))
                     .failureHandler((request, response, exception) -> {
                       request.getSession().setAttribute("auth_error", exception.getMessage());
                       response.sendRedirect("/");
                     }))
-        .logout(
-            logout ->
-                logout
-                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
-                    .logoutSuccessHandler(oidcLogout))
-        .csrf(csrf -> csrf.disable());
+        .logout(logout -> logout.logoutSuccessHandler(oidcLogout))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/webhooks/**"));
 
     return http.build();
   }

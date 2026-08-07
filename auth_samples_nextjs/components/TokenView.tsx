@@ -40,16 +40,14 @@ export function TokenView({
 
       <div className="token-grid">
         <TokenPanel
-          title="Access Token"
-          token={user.access_token}
+          title="Access-token claims"
           decoded={accessTokenInfo}
-          description="Used to call protected APIs."
+          description="Non-secret claim metadata. The raw token is never rendered."
         />
         <TokenPanel
-          title="ID Token"
-          token={idToken}
+          title="ID-token claims"
           decoded={idTokenInfo}
-          description="Proves the authenticated user."
+          description="Validated identity claims. The raw token is never rendered."
         />
       </div>
 

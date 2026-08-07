@@ -69,3 +69,21 @@ test("rejects unsafe metadata and a missing ready source", () => {
   assert.ok(errors.some((error) => error.includes("invalid GitHub topic")));
   assert.ok(errors.some((error) => error.includes("ready source must exist")));
 });
+
+test("rejects unsafe packaging paths and multiline commands", () => {
+  const manifest = copy();
+  manifest.templates[0].files.push("../secret");
+  manifest.templates[0].verify[0] = "npm ci\ncurl example.com";
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.some((error) => error.includes("unsafe allow-listed path")));
+  assert.ok(errors.some((error) => error.includes("single-line command")));
+});
+
+test("requires packaging metadata with an allow-list", () => {
+  const manifest = copy();
+  delete manifest.templates[0].framework;
+  manifest.templates[0].files = [];
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.some((error) => error.includes("files must contain")));
+  assert.ok(errors.some((error) => error.includes("framework is required")));
+});

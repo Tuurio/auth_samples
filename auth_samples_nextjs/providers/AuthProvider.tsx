@@ -99,7 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error,
       login: async () => {
         setError(null);
-        await login();
+        try {
+          await login();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Unable to start sign-in.");
+        }
       },
       logout: async () => {
         setError(null);
