@@ -103,11 +103,11 @@ struct SidePanel: View {
         VStack(alignment: .leading, spacing: 12) {
           Text("Design for secure sign-in.")
             .font(.system(size: 28, weight: .bold, design: .serif))
-          Text("A minimal iOS client that signs in with OpenID Connect, displays decoded tokens, and supports secure logout redirects.")
+          Text("A minimal iOS client that signs in with OpenID Connect and supports secure logout redirects.")
             .foregroundColor(AppTheme.muted)
           HStack(spacing: 12) {
             StatusPill(status: status)
-            Text("Authority: test.id.tuurio.com")
+            Text("Authority: configured tenant")
               .font(.system(size: 13))
               .foregroundColor(AppTheme.muted)
           }
@@ -215,7 +215,7 @@ struct LoginView: View {
               .foregroundColor(.white)
               .cornerRadius(999)
           }
-          Text("You'll be redirected to test.id.tuurio.com")
+          Text("You'll be redirected to your configured Tuurio tenant.")
             .font(.system(size: 13))
             .foregroundColor(AppTheme.muted)
         }
@@ -270,59 +270,10 @@ struct TokenView: View {
         }
       }
 
-      VStack(spacing: 16) {
-        TokenPanel(title: "Access Token", token: session.accessToken, description: "Used to call protected APIs.")
-        TokenPanel(title: "ID Token", token: session.idToken ?? "", description: "Proves the authenticated user.")
-      }
-
       CardView(tone: .soft) {
         Text("User profile (UserInfo)")
           .font(.system(size: 16, weight: .semibold))
         CodeBlock(text: session.profileJson ?? "No profile data.")
-      }
-    }
-  }
-}
-
-struct TokenPanel: View {
-  let title: String
-  let token: String
-  let description: String
-
-  @State private var copied = false
-
-  var body: some View {
-    let decoded = decodeJwt(token)
-    CardView(tone: .panel) {
-      HStack(alignment: .top) {
-        VStack(alignment: .leading, spacing: 6) {
-          Text(title)
-            .font(.system(size: 16, weight: .semibold))
-          Text(description)
-            .font(.system(size: 13))
-            .foregroundColor(AppTheme.muted)
-        }
-        Spacer()
-        Button(action: {
-          UIPasteboard.general.string = token
-          copied = true
-        }) {
-          Text(copied ? "Copied" : "Copy")
-            .font(.system(size: 13, weight: .semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .overlay(
-              Capsule().stroke(AppTheme.line, lineWidth: 1)
-            )
-        }
-      }
-      CodeBlock(text: token.isEmpty ? "Not provided" : token)
-      VStack(alignment: .leading, spacing: 8) {
-        Text("Decoded claims")
-          .font(.system(size: 12, weight: .semibold))
-          .foregroundColor(AppTheme.accentStrong)
-          .tracking(1.2)
-        CodeBlock(text: decoded ?? "Not a JWT or unable to decode.")
       }
     }
   }

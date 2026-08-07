@@ -68,7 +68,7 @@ class AuthController extends ChangeNotifier {
         ),
       );
 
-      if (result == null || result.accessToken == null) {
+      if (result.accessToken == null) {
         error = 'Login failed.';
         notifyListeners();
         return;
@@ -79,9 +79,12 @@ class AuthController extends ChangeNotifier {
         accessToken: result.accessToken!,
         idToken: result.idToken,
         scope: result.scopes?.join(' '),
-        expiresAt: result.accessTokenExpirationDateTime?.millisecondsSinceEpoch == null
-            ? null
-            : result.accessTokenExpirationDateTime!.millisecondsSinceEpoch ~/ 1000,
+        expiresAt:
+            result.accessTokenExpirationDateTime?.millisecondsSinceEpoch == null
+                ? null
+                : result.accessTokenExpirationDateTime!
+                        .millisecondsSinceEpoch ~/
+                    1000,
         profileJson: userInfo,
       );
 
@@ -121,7 +124,9 @@ class AuthController extends ChangeNotifier {
       try {
         final data = json.decode(raw) as Map<String, dynamic>;
         final stored = AuthSession.fromJson(data);
-        if (stored.expiresAt != null && stored.expiresAt! <= DateTime.now().millisecondsSinceEpoch ~/ 1000) {
+        if (stored.expiresAt != null &&
+            stored.expiresAt! <=
+                DateTime.now().millisecondsSinceEpoch ~/ 1000) {
           await _clearSession();
         } else {
           session = stored;

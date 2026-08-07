@@ -20,7 +20,6 @@ class TuurioAuthController extends Controller
     public function home(Request $request): View
     {
         $config = $this->oidc->config();
-        $tokens = $request->session()->get('tuurio.tokens', []);
         $userInfo = $request->session()->get('tuurio.userinfo', []);
 
         return view('home', [
@@ -37,9 +36,6 @@ class TuurioAuthController extends Controller
                 'Webhook API header' => $config['webhook_api_key_header'],
             ],
             'userInfo' => $userInfo,
-            'userInfoJson' => $this->prettyJson($userInfo),
-            'idTokenJson' => $this->prettyJson($this->oidc->decodeJwt($tokens['id_token'] ?? null)),
-            'accessTokenJson' => $this->prettyJson($this->oidc->decodeJwt($tokens['access_token'] ?? null)),
             'errorMessage' => $request->session()->pull('tuurio.error'),
             'successMessage' => $request->session()->pull('tuurio.success'),
             'isAuthenticated' => $request->session()->has('tuurio.tokens.access_token'),
@@ -84,10 +80,11 @@ class TuurioAuthController extends Controller
 
         try {
             $tokens = $this->oidc->exchangeCodeForTokens($code, $verifier);
-            $userInfo = [];
-            if (! empty($tokens['access_token'])) {
-                $userInfo = $this->oidc->fetchUserInfo((string) $tokens['access_token']);
+            $accessToken = trim((string) ($tokens['access_token'] ?? ''));
+            if ($accessToken === '') {
+                throw new \RuntimeException('Token endpoint returned no access token.');
             }
+            $userInfo = $this->oidc->fetchUserInfo($accessToken);
 
             $request->session()->put('tuurio.tokens', $tokens);
             $request->session()->put('tuurio.userinfo', $userInfo);
@@ -114,12 +111,4 @@ class TuurioAuthController extends Controller
         return view('auth.logout-callback');
     }
 
-    private function prettyJson(mixed $value): ?string
-    {
-        if ($value === null || $value === [] || $value === '') {
-            return null;
-        }
-
-        return json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    }
 }

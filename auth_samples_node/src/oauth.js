@@ -4,13 +4,6 @@ function base64urlEncode(buffer) {
   return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function base64urlDecode(value) {
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
-  const padLength = padded.length % 4;
-  const base64 = padLength ? padded.padEnd(padded.length + (4 - padLength), '=') : padded;
-  return Buffer.from(base64, 'base64');
-}
-
 function generateRandomString(length = 32) {
   return base64urlEncode(crypto.randomBytes(length));
 }
@@ -88,18 +81,6 @@ async function fetchUserInfo(config, accessToken) {
   return await response.json();
 }
 
-function decodeJwt(token) {
-  if (!token) return null;
-  const parts = token.split('.');
-  if (parts.length < 2) return null;
-  try {
-    const payload = JSON.parse(base64urlDecode(parts[1]).toString('utf8'));
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
 function formatTime(unixSeconds) {
   if (!unixSeconds) return 'unknown time';
   const date = new Date(unixSeconds * 1000);
@@ -112,6 +93,5 @@ module.exports = {
   exchangeCodeForTokens,
   fetchDiscovery,
   fetchUserInfo,
-  decodeJwt,
   formatTime,
 };

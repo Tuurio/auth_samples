@@ -1,6 +1,6 @@
 # Tuurio Auth Android Demo
 
-An Android (Jetpack Compose) demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+An Android (Jetpack Compose) demo that signs in with OAuth 2.0 / OpenID Connect, shows safe session metadata, and supports logout.
 
 ## Integration guide
 
@@ -34,8 +34,7 @@ Then run the `app` configuration on an emulator or device.
 - A login screen with a “Continue with Tuurio ID” button.
 - After you authenticate, you are redirected back to the app.
 - The app shows:
-  - Access token and ID token (raw + decoded claims).
-  - Token expiry time and scope.
+  - Token expiry time and scope without rendering token values.
   - UserInfo JSON (user profile).
   - Logout button that ends the session and returns to the app.
 
@@ -47,12 +46,12 @@ Edit `app/src/main/java/com/tuurio/authsample/auth/AuthConfig.kt` with the value
 https://<tenantId>.id.tuurio.com/admin/clients
 ```
 
-The current sample values are:
+Replace the placeholders with values for your own tenant and native client:
 
 ```
-authorizeEndpoint: https://test.id.tuurio.com/oauth2/authorize
-tokenEndpoint: https://test.id.tuurio.com/oauth2/token
-clientId: spa-K53I
+authorizeEndpoint: https://YOUR_TENANT.id.tuurio.com/oauth2/authorize
+tokenEndpoint: https://YOUR_TENANT.id.tuurio.com/oauth2/token
+clientId: YOUR_CLIENT_ID
 redirectUri: com.example.app://oauth2redirect
 scope: openid profile email
 postLogoutRedirectUri: http://localhost:5173/

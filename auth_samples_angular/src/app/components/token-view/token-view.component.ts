@@ -3,13 +3,11 @@ import { JsonPipe } from "@angular/common";
 import type { User } from "oidc-client-ts";
 import { authConfig } from "../../auth/auth.config";
 import { CardComponent } from "../card/card.component";
-import { TokenPanelComponent } from "../token-panel/token-panel.component";
-import { decodeJwt } from "../../utils/jwt";
 
 @Component({
   selector: "app-token-view",
   standalone: true,
-  imports: [CardComponent, TokenPanelComponent, JsonPipe],
+  imports: [CardComponent, JsonPipe],
   template: `
     <div class="stack">
       <app-card tone="hero">
@@ -40,19 +38,6 @@ import { decodeJwt } from "../../utils/jwt";
         <pre class="code-block">{{ profile() ? (profile() | json) : "No profile data." }}</pre>
       </app-card>
 
-      <app-token-panel
-        title="Access Token"
-        [token]="user().access_token"
-        [decoded]="accessTokenInfo()"
-        description="Authorizes API requests on behalf of the user."
-      ></app-token-panel>
-      <app-token-panel
-        title="ID Token"
-        [token]="idToken()"
-        [decoded]="idTokenInfo()"
-        description="Cryptographic proof of the authenticated identity."
-      ></app-token-panel>
-
       <app-card>
         <div class="section-header">
           <div class="section-icon">ID</div>
@@ -80,20 +65,14 @@ export class TokenViewComponent {
   user = input.required<User>();
   profile = input<Record<string, unknown> | null>(null);
 
-  accessTokenInfo = computed(() => decodeJwt(this.user().access_token));
-  idToken = computed(() => this.user().id_token ?? "");
-  idTokenInfo = computed(() => decodeJwt(this.idToken()));
   scopeLabel = computed(() => this.user().scope || "openid profile email");
   authority = authConfig.authority;
   discoveryUrl = `${authConfig.authority}/.well-known/openid-configuration`;
   timingLabel = computed(() => {
     const parts: string[] = [];
-    const issuedAt = this.accessTokenInfo()?.iat;
-    if (typeof issuedAt === "number") {
-      parts.push(`Issued ${formatDuration(Math.floor(Date.now() / 1000) - issuedAt)} ago`);
-    }
-    if (this.user().expires_at) {
-      const remaining = this.user().expires_at - Math.floor(Date.now() / 1000);
+    const expiresAt = this.user().expires_at;
+    if (expiresAt) {
+      const remaining = expiresAt - Math.floor(Date.now() / 1000);
       parts.push(
         remaining > 0
           ? `${formatDuration(remaining)} remaining`

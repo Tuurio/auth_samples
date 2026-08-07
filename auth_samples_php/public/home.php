@@ -139,24 +139,14 @@ HTML;
 
 function render_token_view(array $session, array $config): string
 {
-    $accessToken = $session['access_token'] ?? '';
-    $idToken = $session['id_token'] ?? '';
     $scopeLabel = $session['scope'] ?? 'openid profile email';
     $profileJson = $session['profile_json'] ?? 'No profile data.';
     $logoutUrl = url('/logout');
 
-    $accessDecoded = decode_jwt($accessToken);
-    $idDecoded = decode_jwt($idToken);
-
     // ── Token timing ─────────────────────────────────────
     $now = time();
     $expiresAt = $session['expires_at'] ?? null;
-    $iat = $accessDecoded['iat'] ?? null;
-
     $timingParts = [];
-    if ($iat !== null) {
-        $timingParts[] = 'Issued ' . format_duration($now - (int) $iat) . ' ago';
-    }
     if ($expiresAt !== null) {
         $remaining = (int) $expiresAt - $now;
         $timingParts[] = $remaining > 0
@@ -168,27 +158,8 @@ function render_token_view(array $session, array $config): string
         ? "<code>{$scopeLabel}</code> &middot; {$timingLabel}"
         : "<code>{$scopeLabel}</code>";
 
-    // ── Prepare panels ───────────────────────────────────
-    $accessDecodedText = $accessDecoded
-        ? json_encode($accessDecoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-        : 'Not a JWT or unable to decode.';
-    $idDecodedText = $idDecoded
-        ? json_encode($idDecoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-        : 'Not a JWT or unable to decode.';
-
-    $keyIcon = icon('key', 18);
-    $idIcon = icon('id-card', 18);
     $userIcon = icon('user', 18);
     $checkIcon = icon('check-circle', 14);
-
-    $accessPanel = render_token_panel(
-        'Access Token', $accessToken, $accessDecodedText,
-        'Authorizes API requests on behalf of the user.', $keyIcon
-    );
-    $idPanel = render_token_panel(
-        'ID Token', $idToken, $idDecodedText,
-        'Cryptographic proof of the authenticated identity.', $idIcon
-    );
 
     $profileHighlighted = highlight_json_html(escape_html($profileJson));
 
@@ -222,53 +193,8 @@ function render_token_view(array $session, array $config): string
         <pre class="code-block">{$profileHighlighted}</pre>
       </section>
 
-      {$accessPanel}
-      {$idPanel}
-
       {$discoverySection}
     </div>
-HTML;
-}
-
-// ── Token panel ──────────────────────────────────────────
-
-function render_token_panel(
-    string $title,
-    string $token,
-    string $decoded,
-    string $description,
-    string $iconSvg = ''
-): string {
-    $titleLabel = escape_html($title);
-    $descriptionLabel = escape_html($description);
-    $tokenEscaped = $token !== '' ? escape_html($token) : '';
-    $decodedHighlighted = highlight_json_html(escape_html($decoded));
-
-    $preview = $token !== ''
-        ? escape_html(substr($token, 0, 48)) . '&hellip;'
-        : 'Not provided';
-
-    return <<<HTML
-    <section class="card">
-      <div class="section-header">
-        <div class="section-icon">{$iconSvg}</div>
-        <div>
-          <h3 class="section-title">{$titleLabel}</h3>
-          <p class="muted">{$descriptionLabel}</p>
-        </div>
-      </div>
-      <details class="token-details">
-        <summary class="token-summary">
-          <span class="eyebrow">Raw JWT</span>
-          <code class="token-preview">{$preview}</code>
-        </summary>
-        <pre class="token-block">{$tokenEscaped}</pre>
-      </details>
-      <div class="token-claims">
-        <span class="eyebrow">Decoded payload</span>
-        <pre class="code-block">{$decodedHighlighted}</pre>
-      </div>
-    </section>
 HTML;
 }
 

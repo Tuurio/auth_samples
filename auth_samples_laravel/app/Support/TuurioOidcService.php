@@ -12,7 +12,7 @@ class TuurioOidcService
 {
     public function config(): array
     {
-        $issuer = $this->normalizeAuthority((string) config('services.tuurio.issuer', 'https://test.id.tuurio.com'));
+        $issuer = $this->normalizeAuthority((string) config('services.tuurio.issuer', 'https://your-tenant.id.tuurio.com'));
 
         return [
             'authority' => $issuer,
@@ -134,23 +134,6 @@ class TuurioOidcService
         return $payload;
     }
 
-    public function decodeJwt(?string $token): ?array
-    {
-        $raw = trim((string) $token);
-        if ($raw === '') {
-            return null;
-        }
-
-        $parts = explode('.', $raw);
-        if (count($parts) < 2) {
-            return null;
-        }
-
-        $decoded = json_decode($this->base64UrlDecode($parts[1]), true);
-
-        return is_array($decoded) ? $decoded : null;
-    }
-
     public function buildEndSessionUrl(): string
     {
         $config = $this->config();
@@ -177,7 +160,7 @@ class TuurioOidcService
     {
         $normalized = trim($value);
         if ($normalized === '') {
-            return 'https://test.id.tuurio.com';
+            return 'https://your-tenant.id.tuurio.com';
         }
 
         return rtrim($normalized, '/');
@@ -200,13 +183,4 @@ class TuurioOidcService
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
-    private function base64UrlDecode(string $data): string
-    {
-        $remainder = strlen($data) % 4;
-        if ($remainder > 0) {
-            $data .= str_repeat('=', 4 - $remainder);
-        }
-
-        return (string) base64_decode(strtr($data, '-_', '+/'), true);
-    }
 }

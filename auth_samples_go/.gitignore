@@ -1,0 +1,4 @@
+.env
+.env.*
+!.env.example
+auth_samples_go

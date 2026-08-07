@@ -31,6 +31,30 @@ test("packages the React pilot deterministically from an allow-list", () => {
   }
 });
 
+test("packages every ready template without shared credentials or raw-token guidance", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-catalog-test-"));
+  try {
+    const readyTemplates = manifest.templates.filter((template) => template.status === "ready");
+    assert.equal(readyTemplates.length, 14);
+    for (const template of readyTemplates) {
+      const output = resolve(temporary, template.id);
+      const result = packageTemplate(template, { output, sourceSha: "1".repeat(40) });
+      assert.equal(result.marker.templateId, template.id);
+      assert.ok(result.marker.managedFiles.length > 5, `${template.id} package is unexpectedly small`);
+
+      const readable = result.marker.managedFiles
+        .map((entry) => entry.path)
+        .filter((path) => /(?:\.env\.example|\.gradle|\.java|\.js|\.json|\.kt|\.kts|\.md|\.mjs|\.php|\.properties|\.py|\.sh|\.swift|\.ts|\.tsx|\.vue|\.xml|\.ya?ml|^Dockerfile$|^gradlew$)/.test(path))
+        .map((path) => readFileSync(resolve(output, path), "utf8"))
+        .join("\n");
+      assert.doesNotMatch(readable, /g\.daniel\.kraus@gmail\.com|22222222|spa-K53I|php-KQD8/);
+      assert.doesNotMatch(readable, /Access token and ID token \(raw|Raw JWT/i);
+    }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
 test("rejects symbolic links in reviewed package inputs", () => {
   const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-link-test-"));
   try {

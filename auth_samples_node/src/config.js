@@ -7,7 +7,7 @@ require('dotenv').config({ path: envPath });
 const isProduction = process.env.NODE_ENV === 'production';
 const hasAppConfig = ['TUURIO_ISSUER', 'TUURIO_CLIENT_ID', 'TUURIO_CLIENT_SECRET', 'TUURIO_REDIRECT_URI']
   .some((key) => String(process.env[key] || '').trim().length > 0);
-const authority = normalizeAuthority(process.env.TUURIO_ISSUER) || 'https://test.id.tuurio.com';
+const authority = normalizeAuthority(process.env.TUURIO_ISSUER) || 'https://your-tenant.id.tuurio.com';
 const sessionSameSite = sanitizeSameSite(process.env.TUURIO_SESSION_SAME_SITE) || 'lax';
 const sessionSecureCookie = toBoolean(
   process.env.TUURIO_SESSION_SECURE_COOKIE,
@@ -22,7 +22,7 @@ module.exports = {
   authorizeEndpoint: `${authority}/oauth2/authorize`,
   tokenEndpoint: `${authority}/oauth2/token`,
   discoveryEndpoint: `${authority}/.well-known/openid-configuration`,
-  clientId: sanitizeClientId(process.env.TUURIO_CLIENT_ID) || 'spa-K53I',
+  clientId: sanitizeClientId(process.env.TUURIO_CLIENT_ID) || 'replace-after-browser-handoff',
   clientSecret: process.env.TUURIO_CLIENT_SECRET || '',
   redirectUri: normalizeUrl(process.env.TUURIO_REDIRECT_URI) || 'http://localhost:8082/auth/callback',
   postLogoutRedirectUri:

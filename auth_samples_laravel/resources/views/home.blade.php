@@ -6,8 +6,8 @@
             <span class="eyebrow">Laravel web app</span>
             <h2>Server-rendered sign-in with Tuurio ID</h2>
             <p class="muted">
-                This sample authenticates against your tenant issuer, stores tokens in the Laravel session,
-                shows decoded claims, and provides a webhook listener protected by an API key header.
+                This sample authenticates against your tenant issuer, keeps tokens in the server-side Laravel session,
+                shows the UserInfo profile, and provides a webhook listener protected by an API key header.
             </p>
         </div>
         <div class="hero-actions">
@@ -70,37 +70,7 @@
                     @endforeach
                 </dl>
             @else
-                <p class="muted">No user is signed in yet. Start the flow to inspect ID token and UserInfo claims.</p>
-            @endif
-        </article>
-    </section>
-
-    <section class="grid two-up">
-        <article class="panel">
-            <div class="panel-header">
-                <div>
-                    <span class="eyebrow">ID token</span>
-                    <h3>Decoded claims</h3>
-                </div>
-            </div>
-            @if ($idTokenJson)
-                <pre class="token-block">{{ $idTokenJson }}</pre>
-            @else
-                <p class="muted">Sign in to inspect the ID token payload.</p>
-            @endif
-        </article>
-
-        <article class="panel">
-            <div class="panel-header">
-                <div>
-                    <span class="eyebrow">Access token</span>
-                    <h3>Decoded claims</h3>
-                </div>
-            </div>
-            @if ($accessTokenJson)
-                <pre class="token-block">{{ $accessTokenJson }}</pre>
-            @else
-                <p class="muted">Sign in to inspect the access token payload.</p>
+                <p class="muted">No user is signed in yet. Start the flow to load the UserInfo profile.</p>
             @endif
         </article>
     </section>
@@ -113,8 +83,8 @@
                     <h3>OpenID Connect user profile</h3>
                 </div>
             </div>
-            @if ($userInfoJson)
-                <pre class="token-block">{{ $userInfoJson }}</pre>
+            @if (!empty($userInfo))
+                <p class="muted">The validated profile is shown above. Raw access and ID tokens are never rendered.</p>
             @else
                 <p class="muted">UserInfo will appear here after a successful token exchange.</p>
             @endif

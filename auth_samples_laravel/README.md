@@ -1,6 +1,6 @@
 # Tuurio Auth Laravel Demo
 
-A server-rendered Laravel sample that signs in with OIDC, stores tokens in the Laravel session, renders decoded claims, supports RP-initiated logout, and exposes a webhook endpoint with API key header validation.
+A server-rendered Laravel sample that signs in with OIDC, keeps tokens in the Laravel session, renders UserInfo, supports RP-initiated logout, and exposes a webhook endpoint with API key header validation.
 
 ## Integration guide
 

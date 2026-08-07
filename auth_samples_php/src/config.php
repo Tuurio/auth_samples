@@ -26,8 +26,8 @@ foreach (['TUURIO_ISSUER', 'TUURIO_CLIENT_ID', 'TUURIO_CLIENT_SECRET', 'TUURIO_R
     }
 }
 
-$authority = normalizeAuthority(envValue($env, 'TUURIO_ISSUER')) ?? 'https://test.id.tuurio.com';
-$clientId = sanitizeClientId(envValue($env, 'TUURIO_CLIENT_ID')) ?? 'php-KQD8';
+$authority = normalizeAuthority(envValue($env, 'TUURIO_ISSUER')) ?? 'https://your-tenant.id.tuurio.com';
+$clientId = sanitizeClientId(envValue($env, 'TUURIO_CLIENT_ID')) ?? 'replace-after-browser-handoff';
 $scope = sanitizeScope(envValue($env, 'TUURIO_SCOPE')) ?? 'openid profile email';
 
 return [

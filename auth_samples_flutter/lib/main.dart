@@ -1,10 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'auth_controller.dart';
-import 'jwt.dart';
 
 void main() {
   runApp(const AuthSampleApp());
@@ -21,7 +17,7 @@ class AuthSampleApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0EA5A4),
-          background: const Color(0xFFF6F3EA),
+          surface: const Color(0xFFF6F3EA),
         ),
         scaffoldBackgroundColor: Colors.transparent,
       ),
@@ -80,7 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Expanded(child: SidePanel(status: status)),
                             const SizedBox(width: 32),
-                            Expanded(flex: 6, child: MainPanel(controller: controller)),
+                            Expanded(
+                                flex: 6,
+                                child: MainPanel(controller: controller)),
                           ],
                         )
                       : Column(
@@ -102,7 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ShellStatus _resolveStatus() {
     if (controller.loading) {
-      return const ShellStatus(label: 'Checking session', tone: StatusTone.neutral);
+      return const ShellStatus(
+          label: 'Checking session', tone: StatusTone.neutral);
     }
     if (controller.session != null) {
       return const ShellStatus(label: 'Authenticated', tone: StatusTone.good);
@@ -210,7 +209,7 @@ class SidePanel extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'A minimal Flutter client that signs in with OpenID Connect, displays decoded tokens, and supports secure logout redirects.',
+                  'A minimal Flutter client that signs in with OpenID Connect and supports secure logout redirects.',
                   style: TextStyle(color: Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 16),
@@ -219,7 +218,7 @@ class SidePanel extends StatelessWidget {
                     StatusPill(status: status),
                     const SizedBox(width: 12),
                     const Text(
-                      'Authority: test.id.tuurio.com',
+                      'Authority: configured tenant',
                       style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
                     ),
                   ],
@@ -228,7 +227,8 @@ class SidePanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          const InfoItem(title: 'Architecture', body: 'Authorization code flow + PKCE'),
+          const InfoItem(
+              title: 'Architecture', body: 'Authorization code flow + PKCE'),
           const SizedBox(height: 16),
           const InfoItem(title: 'Storage', body: 'Session storage for tokens'),
           const SizedBox(height: 16),
@@ -240,7 +240,8 @@ class SidePanel extends StatelessWidget {
 }
 
 class CardSurface extends StatelessWidget {
-  const CardSurface({super.key, required this.child, this.tone = CardTone.solid});
+  const CardSurface(
+      {super.key, required this.child, this.tone = CardTone.solid});
 
   final Widget child;
   final CardTone tone;
@@ -256,7 +257,6 @@ class CardSurface extends StatelessWidget {
         background = const Color(0xFFFEFAF4);
         break;
       case CardTone.solid:
-      default:
         background = Colors.white;
     }
 
@@ -396,14 +396,15 @@ class LoginView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0EA5A4),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Continue with Tuurio ID'),
               ),
               const SizedBox(height: 8),
               const Text(
-                'You\'ll be redirected to test.id.tuurio.com',
+                'You\'ll be redirected to your configured Tuurio tenant.',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
               ),
               if (error != null) ...[
@@ -419,11 +420,17 @@ class LoginView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FeatureItem(title: 'PKCE by default', body: 'Proof Key for Code Exchange protects the code flow.'),
+              FeatureItem(
+                  title: 'PKCE by default',
+                  body: 'Proof Key for Code Exchange protects the code flow.'),
               SizedBox(height: 12),
-              FeatureItem(title: 'Short-lived tokens', body: 'Access tokens are scoped to openid profile email.'),
+              FeatureItem(
+                  title: 'Short-lived tokens',
+                  body: 'Access tokens are scoped to openid profile email.'),
               SizedBox(height: 12),
-              FeatureItem(title: 'Session aware', body: 'Token state is persisted in session storage.'),
+              FeatureItem(
+                  title: 'Session aware',
+                  body: 'Token state is persisted in session storage.'),
             ],
           ),
         ),
@@ -484,29 +491,6 @@ class TokenView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        Wrap(
-          spacing: 20,
-          runSpacing: 20,
-          children: [
-            SizedBox(
-              width: 360,
-              child: TokenPanel(
-                title: 'Access Token',
-                token: session.accessToken,
-                description: 'Used to call protected APIs.',
-              ),
-            ),
-            SizedBox(
-              width: 360,
-              child: TokenPanel(
-                title: 'ID Token',
-                token: session.idToken ?? '',
-                description: 'Proves the authenticated user.',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
         CardSurface(
           tone: CardTone.soft,
           child: Column(
@@ -526,80 +510,11 @@ class TokenView extends StatelessWidget {
   }
 }
 
-class TokenPanel extends StatefulWidget {
-  const TokenPanel({super.key, required this.title, required this.token, required this.description});
-
-  final String title;
-  final String token;
-  final String description;
-
-  @override
-  State<TokenPanel> createState() => _TokenPanelState();
-}
-
-class _TokenPanelState extends State<TokenPanel> {
-  bool copied = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final decoded = decodeJwt(widget.token);
-
-    return CardSurface(
-      tone: CardTone.panel,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.description,
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton(
-                onPressed: widget.token.isEmpty
-                    ? null
-                    : () {
-                        Clipboard.setData(ClipboardData(text: widget.token));
-                        setState(() {
-                          copied = true;
-                        });
-                      },
-                child: Text(copied ? 'Copied' : 'Copy'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          CodeBlock(text: widget.token.isEmpty ? 'Not provided' : widget.token, dark: true),
-          const SizedBox(height: 12),
-          const Text(
-            'Decoded claims',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF0F766E),
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          CodeBlock(text: decoded == null ? 'Not a JWT or unable to decode.' : prettyJson(decoded)),
-        ],
-      ),
-    );
-  }
+String formatUnixTime(int? seconds) {
+  if (seconds == null || seconds <= 0) return 'unknown time';
+  return DateTime.fromMillisecondsSinceEpoch(seconds * 1000)
+      .toLocal()
+      .toString();
 }
 
 class FeatureItem extends StatelessWidget {
@@ -613,7 +528,8 @@ class FeatureItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 6),
         Text(body, style: const TextStyle(color: Color(0xFF64748B))),
       ],
@@ -667,7 +583,8 @@ class InfoItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(body, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        Text(body,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -699,8 +616,4 @@ class CodeBlock extends StatelessWidget {
       ),
     );
   }
-}
-
-String prettyJson(Map<String, dynamic> json) {
-  return const JsonEncoder.withIndent('  ').convert(json);
 }
