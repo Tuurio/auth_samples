@@ -10,6 +10,7 @@ import { compareMarkers } from "./verify-template-repos.mjs";
 
 const manifest = loadCatalog();
 const react = manifest.templates.find((template) => template.id === "react-vite");
+const laravel = manifest.templates.find((template) => template.id === "laravel");
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 
 test("packages the React pilot deterministically from an allow-list", () => {
@@ -50,6 +51,24 @@ test("packages every ready template without shared credentials or raw-token guid
       assert.doesNotMatch(readable, /g\.daniel\.kraus@gmail\.com|22222222|spa-K53I|php-KQD8/);
       assert.doesNotMatch(readable, /Access token and ID token \(raw|Raw JWT/i);
     }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("excludes ignored framework caches from managed template files", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-cache-test-"));
+  try {
+    const result = packageTemplate(laravel, {
+      output: resolve(temporary, "laravel"),
+      sourceSha: "2".repeat(40),
+    });
+    const managed = result.marker.managedFiles.map((entry) => entry.path);
+    assert.ok(managed.includes("bootstrap/cache/.gitignore"));
+    assert.ok(managed.includes("storage/framework/views/.gitignore"));
+    assert.ok(!managed.includes("bootstrap/cache/packages.php"));
+    assert.ok(!managed.some((path) => path.startsWith("storage/framework/views/") && path.endsWith(".php")));
+    assert.ok(!managed.includes("storage/logs/laravel.log"));
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }

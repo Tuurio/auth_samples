@@ -51,20 +51,29 @@ function isForbidden(path) {
   return FORBIDDEN_NAMES.has(name) || FORBIDDEN_FILE_PATTERNS.some((pattern) => pattern.test(name));
 }
 
-function copyReviewedTree(source, destination) {
+function copyReviewedTree(source, destination, trackedFiles) {
   if (isForbidden(source)) return;
   const metadata = lstatSync(source);
   if (metadata.isSymbolicLink()) throw new Error(`Symbolic links are not allowed in template packages: ${source}`);
   if (metadata.isDirectory()) {
-    mkdirSync(destination, { recursive: true });
     for (const name of readdirSync(source).sort()) {
-      copyReviewedTree(resolve(source, name), resolve(destination, name));
+      copyReviewedTree(resolve(source, name), resolve(destination, name), trackedFiles);
     }
     return;
   }
   if (!metadata.isFile()) throw new Error(`Unsupported source entry: ${source}`);
+  if (!trackedFiles.has(resolve(source))) return;
   mkdirSync(dirname(destination), { recursive: true });
   copyFileSync(source, destination);
+}
+
+function trackedSourceFiles(root, sourceRoot) {
+  const sourcePath = relative(root, sourceRoot);
+  const output = execFileSync("git", ["ls-files", "-z", "--", sourcePath], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  return new Set(output.split("\0").filter(Boolean).map((path) => resolve(root, path)));
 }
 
 function render(template, values) {
@@ -142,6 +151,7 @@ export function packageTemplate(template, { root = repositoryRoot, output, sourc
   }
   rmSync(outputPath, { recursive: true, force: true });
   mkdirSync(outputPath, { recursive: true });
+  const trackedFiles = trackedSourceFiles(root, sourceRoot);
 
   for (const entry of template.files) {
     assertSafeRelativePath(entry, `${template.id}.files`);
@@ -149,7 +159,7 @@ export function packageTemplate(template, { root = repositoryRoot, output, sourc
     if (!isInside(sourceRoot, source)) throw new Error(`${template.id}: allow-listed path escapes source`);
     const metadata = statSync(source);
     if (!metadata.isFile() && !metadata.isDirectory()) throw new Error(`${template.id}: invalid source entry ${entry}`);
-    copyReviewedTree(source, resolve(outputPath, entry));
+    copyReviewedTree(source, resolve(outputPath, entry), trackedFiles);
   }
 
   copyFileSync(resolve(root, "LICENSE"), resolve(outputPath, "LICENSE"));
