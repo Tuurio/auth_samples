@@ -21,6 +21,14 @@ const requireUnique = (templates, field, errors) => {
   }
 };
 
+const SAFE_RELATIVE_PATH = /^(?!\/)(?!.*(?:^|[\\/])\.\.(?:[\\/]|$))[^\0]+$/;
+
+const validateCommand = (value, field, errors) => {
+  if (typeof value !== "string" || !value.trim() || /[\r\n\0]/.test(value)) {
+    errors.push(`${field} must be a non-empty single-line command`);
+  }
+};
+
 export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
   const errors = [];
 
@@ -99,6 +107,31 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
     }
     if (!Array.isArray(template.verify) || template.verify.length < 1) {
       errors.push(`${prefix}: at least one verification command is required`);
+    } else {
+      template.verify.forEach((command, index) => validateCommand(command, `${prefix}.verify[${index}]`, errors));
+    }
+    if (template.start !== undefined) {
+      validateCommand(template.start, `${prefix}.start`, errors);
+    }
+    if (template.files !== undefined) {
+      if (!Array.isArray(template.files) || template.files.length < 1) {
+        errors.push(`${prefix}: files must contain at least one allow-listed path`);
+      } else {
+        const paths = new Set();
+        for (const path of template.files) {
+          if (typeof path !== "string" || !SAFE_RELATIVE_PATH.test(path)) {
+            errors.push(`${prefix}: unsafe allow-listed path ${String(path)}`);
+          } else if (paths.has(path)) {
+            errors.push(`${prefix}: duplicate allow-listed path ${path}`);
+          }
+          paths.add(path);
+        }
+      }
+      for (const field of ["framework", "runtime", "packageManager"]) {
+        if (typeof template[field] !== "string" || !template[field].trim()) {
+          errors.push(`${prefix}: ${field} is required when files are configured`);
+        }
+      }
     }
     if (template.status === "ready") {
       try {

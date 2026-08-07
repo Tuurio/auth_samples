@@ -14,10 +14,15 @@ templates:
     description: Production-oriented React and Vite authentication starter for Tuurio ID using OpenID Connect Authorization Code with PKCE.
     homepage: https://id.tuurio.com/public/developers/examples/react
     campaign: github_react_vite
+    framework: react
+    runtime: Node.js 20+
+    packageManager: npm
+    start: npm run dev -- --host 0.0.0.0
     kind: browser
     stackblitz: true
+    files: [.env.example, .gitignore, eslint.config.js, index.html, package.json, package-lock.json, src, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts]
     topics: [react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
-    verify: [npm install, npm run lint, npm run build]
+    verify: [npm ci, npm run lint, npm run build]
   - id: lovable
     displayName: Lovable Auth Starter
     status: ready
@@ -62,10 +67,15 @@ templates:
     description: Next.js App Router authentication starter for Tuurio ID with protected server routes and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/nextjs
     campaign: github_nextjs
+    framework: nextjs
+    runtime: Node.js 20+
+    packageManager: npm
+    start: npm run dev
     kind: server
     stackblitz: true
+    files: [.env.example, app, components, lib, next-env.d.ts, package.json, package-lock.json, providers, tsconfig.json]
     topics: [nextjs, react, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
-    verify: [npm install, npm run build]
+    verify: [npm ci, npm run build]
   - id: android
     displayName: Android OIDC Auth Starter
     status: ready
@@ -146,10 +156,14 @@ templates:
     description: Spring Boot authentication starter for Tuurio ID using Spring Security OAuth2 Client and OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/spring-boot
     campaign: github_spring_boot
+    framework: spring
+    runtime: Java 17+
+    packageManager: Gradle Wrapper
     kind: server
     stackblitz: false
+    files: [.env.example, build.gradle, gradle, gradlew, gradlew.bat, settings.gradle, src]
     topics: [java, spring-boot, spring-security, authentication, oidc, oauth2, openid-connect, tuurio, starter-template]
-    verify: [gradle test, gradle bootJar]
+    verify: [./gradlew --no-daemon test, ./gradlew --no-daemon bootJar]
   - id: php
     displayName: PHP OIDC Auth Starter
     status: ready

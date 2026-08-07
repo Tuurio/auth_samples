@@ -62,7 +62,10 @@
                   </p>
                 </div>
                 <div class="button-row">
-                  <a class="button ghost" href="/logout">Log out and end session</a>
+                  <form method="post" action="/logout">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button class="button ghost" type="submit">Log out and end session</button>
+                  </form>
                   <span class="helper">Clears local state and redirects through the identity provider.</span>
                 </div>
               </section>
@@ -76,48 +79,6 @@
                   </div>
                 </div>
                 <pre class="code-block">[[${profileJson}]]</pre>
-              </section>
-
-              <section class="card">
-                <div class="section-header">
-                  <div class="section-icon">AT</div>
-                  <div>
-                    <h3 class="section-title">Access Token</h3>
-                    <p class="muted">Authorizes API requests on behalf of the user.</p>
-                  </div>
-                </div>
-                <details class="token-details">
-                  <summary class="token-summary">
-                    <span class="eyebrow">Raw JWT</span>
-                    <code class="token-preview">[[${accessToken}]]</code>
-                  </summary>
-                  <pre class="token-block">[[${accessToken}]]</pre>
-                </details>
-                <div class="token-claims">
-                  <span class="eyebrow">Decoded payload</span>
-                  <pre class="code-block">[[${accessDecoded}]]</pre>
-                </div>
-              </section>
-
-              <section class="card">
-                <div class="section-header">
-                  <div class="section-icon">ID</div>
-                  <div>
-                    <h3 class="section-title">ID Token</h3>
-                    <p class="muted">Cryptographic proof of the authenticated identity.</p>
-                  </div>
-                </div>
-                <details class="token-details">
-                  <summary class="token-summary">
-                    <span class="eyebrow">Raw JWT</span>
-                    <code class="token-preview">[[${idToken}]]</code>
-                  </summary>
-                  <pre class="token-block">[[${idToken}]]</pre>
-                </details>
-                <div class="token-claims">
-                  <span class="eyebrow">Decoded payload</span>
-                  <pre class="code-block">[[${idDecoded}]]</pre>
-                </div>
               </section>
 
               <section class="card">

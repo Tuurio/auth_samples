@@ -1,5 +1,4 @@
 
-auth_samples_react/package-lock.json
 .env
 **/.env
 **/.env.local
@@ -7,5 +6,10 @@ auth_samples_react/package-lock.json
 **/local.properties
 **/.idea/
 **/node_modules/
+**/.gradle/
+**/.next/
+**/build/
+**/dist/
+distribution/out/
 
 .DS_Store

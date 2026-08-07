@@ -1,7 +1,7 @@
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 
-const DEFAULT_AUTHORITY = "https://test.id.tuurio.com";
-const DEFAULT_CLIENT_ID = "spa-K53I";
+const DEFAULT_AUTHORITY = "https://configuration-required.invalid";
+const DEFAULT_CLIENT_ID = "configuration-required";
 const DEFAULT_SCOPE = "openid profile email";
 const DEFAULT_REDIRECT_PATH = "/auth/callback";
 
@@ -15,6 +15,10 @@ type RuntimeAuthConfig = {
 };
 
 export const runtimeAuthConfig = resolveRuntimeAuthConfig();
+export const authConfigurationError =
+  runtimeAuthConfig.authority === DEFAULT_AUTHORITY || runtimeAuthConfig.clientId === DEFAULT_CLIENT_ID
+    ? "Tuurio ID is not configured. Run the pinned manage-tuurio-id command from the README first."
+    : null;
 
 type DiscoveryDocument = {
   userinfo_endpoint?: string;
@@ -68,8 +72,12 @@ export const authManager = new UserManager({
   userStore: new WebStorageStateStore({ store: window.sessionStorage }),
 });
 
-export const login = () => authManager.signinRedirect();
+export const login = () => {
+  if (authConfigurationError) throw new Error(authConfigurationError);
+  return authManager.signinRedirect();
+};
 export async function logout() {
+  const currentUser = await authManager.getUser().catch(() => null);
   await authManager.removeUser().catch(() => undefined);
   const logoutEndpoint = await getEndSessionEndpoint();
   if (typeof window === "undefined") {
@@ -80,6 +88,9 @@ export async function logout() {
     post_logout_redirect_uri: runtimeAuthConfig.postLogoutRedirectUri,
     state: createLogoutState(),
   });
+  if (currentUser?.id_token) {
+    params.set("id_token_hint", currentUser.id_token);
+  }
   window.location.assign(`${logoutEndpoint}?${params.toString()}`);
 }
 export const handleCallback = () => authManager.signinRedirectCallback();

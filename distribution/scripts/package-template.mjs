@@ -1,0 +1,196 @@
+import { createHash } from "node:crypto";
+import {
+  copyFileSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import process from "node:process";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { loadCatalog, parseCommonArgs, repositoryRoot, selectTemplates } from "./catalog.mjs";
+
+export const CLI_VERSION = "1.1.6";
+const FORBIDDEN_NAMES = new Set([
+  ".git",
+  ".idea",
+  ".next",
+  ".gradle",
+  "build",
+  "dist",
+  "node_modules",
+  "local.properties",
+  "tuurio.public.json",
+]);
+const FORBIDDEN_FILE_PATTERNS = [
+  /^\.env(?:\..+)?$/,
+  /\.(?:key|pem|p12|pfx)$/i,
+  /^(?:id_rsa|id_ed25519)$/,
+  /^\.DS_Store$/,
+];
+const SAFE_ENV_TEMPLATES = new Set([".env.example", ".env.sample", ".env.template"]);
+
+function isInside(parent, candidate) {
+  const path = relative(parent, candidate);
+  return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
+}
+
+function assertSafeRelativePath(value, field) {
+  if (typeof value !== "string" || !value || isAbsolute(value) || value.split(/[\\/]/).includes("..")) {
+    throw new Error(`${field} must be a safe relative path: ${String(value)}`);
+  }
+}
+
+function isForbidden(path) {
+  const name = basename(path);
+  if (SAFE_ENV_TEMPLATES.has(name)) return false;
+  return FORBIDDEN_NAMES.has(name) || FORBIDDEN_FILE_PATTERNS.some((pattern) => pattern.test(name));
+}
+
+function copyReviewedTree(source, destination) {
+  if (isForbidden(source)) return;
+  const metadata = lstatSync(source);
+  if (metadata.isSymbolicLink()) throw new Error(`Symbolic links are not allowed in template packages: ${source}`);
+  if (metadata.isDirectory()) {
+    mkdirSync(destination, { recursive: true });
+    for (const name of readdirSync(source).sort()) {
+      copyReviewedTree(resolve(source, name), resolve(destination, name));
+    }
+    return;
+  }
+  if (!metadata.isFile()) throw new Error(`Unsupported source entry: ${source}`);
+  mkdirSync(dirname(destination), { recursive: true });
+  copyFileSync(source, destination);
+}
+
+function render(template, values) {
+  return template.replace(/\{\{([A-Za-z][A-Za-z0-9]*)\}\}/g, (_match, key) => {
+    if (!(key in values)) throw new Error(`Missing README template value: ${key}`);
+    return String(values[key]);
+  });
+}
+
+function generatedWorkflow(template) {
+  const commands = template.verify.map((command) => `          ${command}`).join("\n");
+  const setup = template.packageManager === "npm"
+    ? "      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4\n        with:\n          node-version: 20\n          cache: npm\n"
+    : template.packageManager === "Gradle Wrapper"
+      ? "      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4\n        with:\n          distribution: temurin\n          java-version: 17\n          cache: gradle\n"
+      : "";
+  return `name: Verify template\n\non:\n  push:\n    branches: [main]\n  pull_request:\n\npermissions:\n  contents: read\n\njobs:\n  verify:\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n    steps:\n      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6\n${setup}      - name: Run template verification\n        run: |\n${commands}\n`;
+}
+
+function quickstartCommand(template) {
+  return [
+    `npx manage-tuurio-id@${CLI_VERSION} init`,
+    `--framework ${template.framework}`,
+    "--project-dir .",
+    "--auth browser",
+    "--yes",
+    "--output json",
+    `--campaign ${template.campaign}`,
+    "--no-open",
+    "--no-wait",
+  ].join(" ");
+}
+
+function listFiles(root, current = root) {
+  const results = [];
+  for (const name of readdirSync(current).sort()) {
+    const absolute = resolve(current, name);
+    const metadata = lstatSync(absolute);
+    if (metadata.isDirectory()) results.push(...listFiles(root, absolute));
+    else if (metadata.isFile()) results.push(relative(root, absolute).split(sep).join("/"));
+  }
+  return results;
+}
+
+function checksum(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+export function resolveSourceSha(root = repositoryRoot) {
+  return execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+}
+
+export function packageTemplate(template, { root = repositoryRoot, output, sourceSha = resolveSourceSha(root) }) {
+  if (!output) throw new Error("An output directory is required");
+  if (!Array.isArray(template.files) || template.files.length === 0) {
+    throw new Error(`${template.id}: files allow-list is required before packaging`);
+  }
+  for (const field of ["framework", "runtime", "packageManager"]) {
+    if (!template[field]) throw new Error(`${template.id}: ${field} is required before packaging`);
+  }
+  const outputPath = resolve(output);
+  const sourceRoot = resolve(root, template.source);
+  if (!isInside(root, sourceRoot) || sourceRoot === root) throw new Error(`${template.id}: source escapes repository root`);
+  if (!statSync(sourceRoot).isDirectory()) throw new Error(`${template.id}: source directory not found`);
+  if (isInside(sourceRoot, outputPath) || isInside(outputPath, sourceRoot) || outputPath === resolve(root)) {
+    throw new Error("Output must be isolated from the repository and selected source directory");
+  }
+  rmSync(outputPath, { recursive: true, force: true });
+  mkdirSync(outputPath, { recursive: true });
+
+  for (const entry of template.files) {
+    assertSafeRelativePath(entry, `${template.id}.files`);
+    const source = resolve(sourceRoot, entry);
+    if (!isInside(sourceRoot, source)) throw new Error(`${template.id}: allow-listed path escapes source`);
+    const metadata = statSync(source);
+    if (!metadata.isFile() && !metadata.isDirectory()) throw new Error(`${template.id}: invalid source entry ${entry}`);
+    copyReviewedTree(source, resolve(outputPath, entry));
+  }
+
+  copyFileSync(resolve(root, "LICENSE"), resolve(outputPath, "LICENSE"));
+  const sourceReadme = readFileSync(resolve(sourceRoot, "README.md"), "utf8");
+  const readmeTemplate = readFileSync(resolve(root, "distribution/README.template.md"), "utf8");
+  writeFileSync(
+    resolve(outputPath, "README.md"),
+    render(readmeTemplate, {
+      displayName: template.displayName,
+      description: template.description,
+      repository: template.repository,
+      source: template.source,
+      quickstartCommand: quickstartCommand(template),
+      runtime: template.runtime,
+      packageManager: template.packageManager,
+      verifySummary: template.verify.join(" && "),
+      sourceReadme,
+    }),
+  );
+  writeFileSync(
+    resolve(outputPath, "CONTRIBUTING.md"),
+    `# Contributing\n\nThis repository is generated from https://github.com/Tuurio/auth_samples/tree/main/${template.source}.\n\nOpen implementation changes in the source repository. Direct changes here may be replaced by a later synchronized commit.\n`,
+  );
+  mkdirSync(resolve(outputPath, ".github/workflows"), { recursive: true });
+  writeFileSync(resolve(outputPath, ".github/workflows/verify.yml"), generatedWorkflow(template));
+  if (template.stackblitz && template.start) {
+    writeFileSync(resolve(outputPath, ".stackblitzrc"), `${JSON.stringify({ startCommand: template.start }, null, 2)}\n`);
+  }
+
+  const managedFiles = listFiles(outputPath);
+  const marker = {
+    schemaVersion: 1,
+    sourceRepository: "Tuurio/auth_samples",
+    sourcePath: template.source,
+    sourceSha,
+    templateId: template.id,
+    managedFiles: managedFiles.map((path) => ({ path, sha256: checksum(resolve(outputPath, path)) })),
+  };
+  writeFileSync(resolve(outputPath, ".tuurio-template.json"), `${JSON.stringify(marker, null, 2)}\n`);
+  return { outputPath, marker };
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  const args = parseCommonArgs(process.argv.slice(2));
+  if (!args.output) throw new Error("--output is required");
+  const manifest = loadCatalog();
+  const templates = selectTemplates(manifest, args.ids);
+  if (templates.length !== 1) throw new Error("Select exactly one template with --id");
+  const result = packageTemplate(templates[0], { output: args.output });
+  console.log(JSON.stringify({ template: templates[0].id, output: result.outputPath, files: result.marker.managedFiles.length }));
+}

@@ -15,19 +15,13 @@ A Next.js demo that signs in with OAuth 2.0 / OpenID Connect, then displays toke
 npm install
 ```
 
-2. Create your local config:
+2. Provision a tenant-specific public client through the human-approved browser handoff:
 
 ```bash
-cp .env.example .env.local
+npx manage-tuurio-id@1.1.6 init --framework nextjs --project-dir . --auth browser --yes --output json --campaign github_nextjs --no-open --no-wait
 ```
 
-3. Update `.env.local` with your tenant values from:
-
-```text
-https://<tenantId>.id.tuurio.com/admin/clients
-```
-
-4. Start dev server:
+3. Start the development server after the CLI writes the ignored local configuration:
 
 ```bash
 npm run dev
@@ -47,8 +41,8 @@ Post-logout Redirect URI: http://localhost:3000/logout/callback
 ## `.env.local` keys
 
 ```env
-NEXT_PUBLIC_TUURIO_ISSUER=https://test.id.tuurio.com
-NEXT_PUBLIC_TUURIO_CLIENT_ID=spa-K53I
+NEXT_PUBLIC_TUURIO_ISSUER=https://your-tenant.id.tuurio.com
+NEXT_PUBLIC_TUURIO_CLIENT_ID=replace-with-your-public-client-id
 NEXT_PUBLIC_TUURIO_REDIRECT_URI=http://localhost:3000/auth/callback
 NEXT_PUBLIC_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:3000/logout/callback
 NEXT_PUBLIC_TUURIO_SCOPE=openid profile email

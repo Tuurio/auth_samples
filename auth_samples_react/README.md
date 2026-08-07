@@ -15,19 +15,13 @@ A React + Vite demo that signs in with OAuth 2.0 / OpenID Connect, then displays
 npm install
 ```
 
-2. Create your local config:
+2. Provision a tenant-specific public client through the human-approved browser handoff:
 
 ```bash
-cp .env.example .env
+npx manage-tuurio-id@1.1.6 init --framework react --project-dir . --auth browser --yes --output json --campaign github_react_vite --no-open --no-wait
 ```
 
-3. Update `.env` with your tenant values from:
-
-```text
-https://<tenantId>.id.tuurio.com/admin/clients
-```
-
-4. Start dev server:
+3. Start the development server after the CLI writes the ignored local configuration:
 
 ```bash
 npm run dev
@@ -49,8 +43,8 @@ The demo also accepts `/callback` for compatibility.
 ## `.env` keys
 
 ```env
-VITE_TUURIO_ISSUER=https://test.id.tuurio.com
-VITE_TUURIO_CLIENT_ID=spa-K53I
+VITE_TUURIO_ISSUER=https://your-tenant.id.tuurio.com
+VITE_TUURIO_CLIENT_ID=replace-with-your-public-client-id
 VITE_TUURIO_REDIRECT_URI=http://localhost:5173/auth/callback
 VITE_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173/logout/callback
 VITE_TUURIO_SCOPE=openid profile email

@@ -12,14 +12,14 @@ spring:
       client:
         registration:
           tuurio:
-            client-id: ${TUURIO_CLIENT_ID:php-KQD8}
-            client-secret: ${TUURIO_CLIENT_SECRET:YOUR_CLIENT_SECRET}
+            client-id: ${TUURIO_CLIENT_ID}
+            client-secret: ${TUURIO_CLIENT_SECRET}
             scope: ${TUURIO_SCOPE:openid,profile,email}
             authorization-grant-type: authorization_code
             redirect-uri: ${TUURIO_REDIRECT_URI:{baseUrl}/auth/callback}
         provider:
           tuurio:
-            issuer-uri: ${TUURIO_ISSUER:https://test.id.tuurio.com}
+            issuer-uri: ${TUURIO_ISSUER}
             user-name-attribute: sub
   mvc:
     throw-exception-if-no-handler-found: true

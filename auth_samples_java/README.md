@@ -11,8 +11,7 @@ A server-rendered Spring Boot demo that signs in with OAuth 2.0 / OpenID Connect
 
 ```bash
 cd auth_samples_java
-cp .env.example .env
-# edit .env with your tenant/client values
+npx manage-tuurio-id@1.1.6 init --framework spring --project-dir . --auth browser --yes --output json --campaign github_spring_boot --no-open --no-wait
 ./gradlew bootRun
 ```
 
@@ -30,9 +29,9 @@ Post-logout Redirect URI: http://localhost:8085/logout/callback
 ## `.env` keys
 
 ```env
-TUURIO_ISSUER=https://test.id.tuurio.com
-TUURIO_CLIENT_ID=php-KQD8
-TUURIO_CLIENT_SECRET=YOUR_CLIENT_SECRET
+TUURIO_ISSUER=https://your-tenant.id.tuurio.com
+TUURIO_CLIENT_ID=replace-with-your-server-client-id
+TUURIO_CLIENT_SECRET=replace-with-your-client-secret
 TUURIO_REDIRECT_URI=http://localhost:8085/auth/callback
 TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:8085/logout/callback
 TUURIO_SCOPE=openid,profile,email

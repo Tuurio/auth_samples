@@ -195,15 +195,10 @@ function TokenView({
 
   const timingParts: string[] = [];
   if (typeof accessTokenInfo?.iat === "number") {
-    timingParts.push(`Issued ${formatDuration(Math.floor(Date.now() / 1000) - accessTokenInfo.iat)} ago`);
+    timingParts.push(`Issued ${new Date(accessTokenInfo.iat * 1000).toLocaleString()}`);
   }
   if (user.expires_at) {
-    const remaining = user.expires_at - Math.floor(Date.now() / 1000);
-    timingParts.push(
-      remaining > 0
-        ? `${formatDuration(remaining)} remaining`
-        : `expired ${formatDuration(Math.abs(remaining))} ago`,
-    );
+    timingParts.push(`Expires ${new Date(user.expires_at * 1000).toLocaleString()}`);
   }
 
   return (
@@ -238,17 +233,15 @@ function TokenView({
 
       <TokenPanel
         icon="key"
-        title="Access Token"
-        token={user.access_token}
+        title="Access-token claims"
         decoded={accessTokenInfo}
-        description="Authorizes API requests on behalf of the user."
+        description="Non-secret claim metadata from the validated session. The raw token is never rendered."
       />
       <TokenPanel
         icon="id-card"
-        title="ID Token"
-        token={idToken}
+        title="ID-token claims"
         decoded={idTokenInfo}
-        description="Cryptographic proof of the authenticated identity."
+        description="Validated identity claims. The raw token is never rendered."
       />
 
       <Card>
@@ -283,41 +276,18 @@ function TokenView({
 function TokenPanel({
   icon,
   title,
-  token,
   decoded,
   description,
 }: {
   icon: IconName;
   title: string;
-  token: string;
   decoded: Record<string, unknown> | null;
   description: string;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    if (!navigator.clipboard || !token) return;
-    await navigator.clipboard.writeText(token);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
-  };
-
   return (
     <Card>
       <SectionHeader icon={icon} title={title} description={description} />
-      <details className="token-details">
-        <summary className="token-summary">
-          <span className="eyebrow">Raw JWT</span>
-          <code className="token-preview">{token ? `${token.slice(0, 48)}...` : "Not provided"}</code>
-        </summary>
-        <pre className="token-block">{token || "Not provided"}</pre>
-      </details>
-      <div className="panel-header">
-        <span className="eyebrow">Decoded payload</span>
-        <button className="button small ghost" onClick={handleCopy} disabled={!token}>
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
+      <span className="eyebrow">Decoded claims</span>
       <pre className="code-block">
         {decoded ? JSON.stringify(decoded, null, 2) : "Not a JWT or unable to decode."}
       </pre>
@@ -345,8 +315,8 @@ function Shell({
         <div className="side-card">
           <h1>Design for<br />secure sign in.</h1>
           <p className="muted">
-            A minimal React client that authenticates with OpenID Connect, inspects decoded
-            tokens, and supports logout redirects.
+            A minimal React client that authenticates with OpenID Connect, keeps raw tokens
+            out of the UI, and supports logout redirects.
           </p>
           <div className="status-row">
             <span className={`status status-${status.tone}`}>{status.label}</span>
@@ -573,19 +543,6 @@ function decodeBase64Url(value: string) {
   const padLength = padded.length % 4;
   const base64 = padLength ? padded.padEnd(padded.length + (4 - padLength), "=") : padded;
   return atob(base64);
-}
-
-function formatDuration(seconds: number) {
-  const abs = Math.abs(seconds);
-  if (abs < 60) return `${abs}s`;
-  if (abs < 3600) {
-    const minutes = Math.floor(abs / 60);
-    const remainder = abs % 60;
-    return remainder > 0 ? `${minutes}m ${remainder}s` : `${minutes}m`;
-  }
-  const hours = Math.floor(abs / 3600);
-  const minutes = Math.floor((abs % 3600) / 60);
-  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
 }
 
 export default App;

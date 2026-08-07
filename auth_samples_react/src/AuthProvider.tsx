@@ -96,7 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error,
       login: async () => {
         setError(null);
-        await login();
+        try {
+          await login();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Unable to start sign-in.");
+        }
       },
       logout: async () => {
         setError(null);
@@ -128,6 +132,8 @@ function isUserExpired(currentUser: User) {
   return currentUser.expires_at <= Math.floor(Date.now() / 1000);
 }
 
+// Context hooks intentionally live beside their provider to keep this small starter self-contained.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
