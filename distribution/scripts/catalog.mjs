@@ -25,6 +25,19 @@ export function selectTemplates(manifest, ids = []) {
   return templates;
 }
 
+export function distributables(manifest) {
+  return [...manifest.templates, ...(manifest.products ?? [])];
+}
+
+export function selectDistributables(manifest, ids = []) {
+  const requested = new Set(ids.filter(Boolean));
+  const entries = distributables(manifest).filter((entry) => requested.size === 0 || requested.has(entry.id));
+  const found = new Set(entries.map((entry) => entry.id));
+  const missing = [...requested].filter((id) => !found.has(id));
+  if (missing.length) throw new Error(`Unknown distribution id(s): ${missing.join(", ")}`);
+  return entries;
+}
+
 export function parseCommonArgs(argv) {
   const ids = [];
   let output = null;

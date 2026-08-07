@@ -1,0 +1,56 @@
+name: AI SaaS starter
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/ai-saas-starter.yml"
+      - "ai_saas_starter/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ai-saas-starter.yml"
+      - "ai_saas_starter/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-saas-starter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: starter_test_password
+          POSTGRES_DB: starter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d starter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: ai_saas_starter
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ai_saas_starter/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+        env:
+          TEST_DATABASE_URL: postgres://postgres:starter_test_password@127.0.0.1:5432/starter_test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

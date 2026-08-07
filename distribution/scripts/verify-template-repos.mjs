@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { loadCatalog, parseCommonArgs, repositoryRoot, selectTemplates } from "./catalog.mjs";
+import { loadCatalog, parseCommonArgs, repositoryRoot, selectDistributables } from "./catalog.mjs";
 import { ghJson, run } from "./github.mjs";
 import { packageTemplate, resolveSourceSha } from "./package-template.mjs";
 
@@ -67,7 +67,7 @@ export function verifyTemplate(template, { root = repositoryRoot } = {}) {
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const args = parseCommonArgs(process.argv.slice(2));
-  const results = selectTemplates(loadCatalog(), args.ids)
+  const results = selectDistributables(loadCatalog(), args.ids)
     .filter((template) => template.files)
     .map(verifyTemplate);
   console.log(JSON.stringify(results, null, 2));

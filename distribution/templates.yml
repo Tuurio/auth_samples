@@ -348,3 +348,22 @@ templates:
     files: [.env.example, .gitignore, app, pyproject.toml, requirements.txt, tests]
     topics: [python, fastapi, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
     verify: [python3 -m pip install -r requirements.txt, python3 -m compileall -q app tests, python3 -m pytest -q]
+products:
+  - id: ai-saas
+    displayName: Tuurio AI SaaS Starter
+    status: ready
+    source: ai_saas_starter
+    repository: Tuurio/ai-saas-starter
+    description: Production-oriented multi-tenant AI SaaS starter with Next.js, streaming AI, Postgres, usage controls, audit, and Tuurio ID.
+    homepage: https://id.tuurio.com/vibe
+    campaign: github_ai_saas
+    framework: nextjs
+    runtime: Node.js 24+
+    nodeVersion: 24
+    packageManager: npm
+    start: npm run dev
+    kind: server
+    stackblitz: false
+    files: [.env.example, .gitignore, .github/social-preview.png, AGENTS.md, CLAUDE.md, db, docs, next-env.d.ts, next.config.ts, package.json, package-lock.json, playwright.config.ts, scripts, src, tests, tsconfig.json, vitest.config.ts]
+    topics: [ai-saas, nextjs, typescript, postgresql, authentication, oidc, pkce, multi-tenant, tuurio, starter-template, eu-hosted]
+    verify: [npm ci, npm run typecheck, npm test, npm run build, npx playwright install --with-deps chromium, npm run test:e2e]
