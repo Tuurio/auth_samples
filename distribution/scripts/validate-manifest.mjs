@@ -145,8 +145,8 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
 
   const readyCount = templates.filter((template) => template.status === "ready").length;
   const plannedCount = templates.filter((template) => template.status === "planned").length;
-  if (readyCount !== 14) errors.push(`expected 14 ready templates, found ${readyCount}`);
-  if (plannedCount !== 6) errors.push(`expected 6 planned templates, found ${plannedCount}`);
+  if (readyCount !== 20) errors.push(`expected 20 ready templates, found ${readyCount}`);
+  if (plannedCount !== 0) errors.push(`expected 0 planned templates, found ${plannedCount}`);
 
   return { errors, templates, readyCount, plannedCount };
 };

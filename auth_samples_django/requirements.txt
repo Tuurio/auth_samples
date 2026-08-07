@@ -1,0 +1,4 @@
+Django==6.1
+Authlib==1.7.2
+python-dotenv==1.2.1
+requests==2.34.2
