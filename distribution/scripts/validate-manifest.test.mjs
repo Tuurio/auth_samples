@@ -33,3 +33,39 @@ test("rejects duplicate display names and topics", () => {
   assert.ok(errors.some((error) => error.includes("duplicate displayName")));
   assert.ok(errors.some((error) => error.includes("duplicate GitHub topic")));
 });
+
+test("enforces the catalog identity, license, and cardinality", () => {
+  const manifest = copy();
+  manifest.version = 2;
+  manifest.license = "MIT";
+  manifest.sourceRepository = "Example/auth_samples";
+  manifest.templates.pop();
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.includes("manifest version must be 1"));
+  assert.ok(errors.includes("manifest license must be Apache-2.0"));
+  assert.ok(errors.includes("unexpected source repository"));
+  assert.ok(errors.some((error) => error.includes("expected 20 templates")));
+  assert.ok(errors.some((error) => error.includes("expected 6 planned templates")));
+});
+
+test("rejects duplicate repository and campaign values", () => {
+  const manifest = copy();
+  manifest.templates[1].repository = manifest.templates[0].repository;
+  manifest.templates[1].campaign = manifest.templates[0].campaign;
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.some((error) => error.includes("duplicate repository")));
+  assert.ok(errors.some((error) => error.includes("duplicate campaign")));
+});
+
+test("rejects unsafe metadata and a missing ready source", () => {
+  const manifest = copy();
+  manifest.templates[0].homepage = "http://example.com";
+  manifest.templates[0].campaign = "cursor-directory";
+  manifest.templates[0].topics = ["-invalid"];
+  manifest.templates[0].source = "missing-source";
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.some((error) => error.includes("homepage must be HTTPS")));
+  assert.ok(errors.some((error) => error.includes("campaign must use")));
+  assert.ok(errors.some((error) => error.includes("invalid GitHub topic")));
+  assert.ok(errors.some((error) => error.includes("ready source must exist")));
+});

@@ -42,7 +42,7 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
   } else {
     const sourceTopics = new Set();
     for (const topic of manifest.sourceMetadata.topics) {
-      if (!/^[a-z0-9-]{1,50}$/.test(topic)) {
+      if (!/^[a-z0-9][a-z0-9-]{0,49}$/.test(topic)) {
         errors.push(`invalid source repository topic ${topic}`);
       } else if (sourceTopics.has(topic)) {
         errors.push(`duplicate source repository topic ${topic}`);
@@ -89,7 +89,7 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
     } else {
       const topics = new Set();
       for (const topic of template.topics) {
-        if (!/^[a-z0-9-]{1,50}$/.test(topic)) {
+        if (!/^[a-z0-9][a-z0-9-]{0,49}$/.test(topic)) {
           errors.push(`${prefix}: invalid GitHub topic ${topic}`);
         } else if (topics.has(topic)) {
           errors.push(`${prefix}: duplicate GitHub topic ${topic}`);
