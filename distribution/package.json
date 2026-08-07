@@ -1,0 +1,12 @@
+{
+  "name": "@tuurio/auth-sample-distribution",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs",
+    "validate": "npm test && node scripts/validate-manifest.mjs"
+  },
+  "devDependencies": {
+    "yaml": "2.9.0"
+  }
+}

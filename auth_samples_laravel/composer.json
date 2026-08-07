@@ -4,7 +4,7 @@
     "type": "project",
     "description": "Tuurio ID Laravel auth sample with OIDC login, logout, token inspection, and webhooks.",
     "keywords": ["tuurio", "laravel", "oidc", "oauth2", "openid-connect"],
-    "license": "MIT",
+    "license": "Apache-2.0",
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
