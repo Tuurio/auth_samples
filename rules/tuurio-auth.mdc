@@ -10,9 +10,9 @@ Before provisioning, determine every environment file the CLI may update, includ
 
 Before running provisioning tooling, show the user the exact command and wait for explicit approval. Use only the reviewed CLI version below; never substitute a floating dist-tag or another version automatically:
 
-`npx manage-tuurio-id@1.1.2 init --framework auto --project-dir . --auth browser --yes --output json --campaign cursor_directory --no-open`
+`npx manage-tuurio-id@1.1.6 init --framework auto --project-dir . --auth browser --yes --output json --campaign cursor_directory --no-open --no-wait`
 
-If version `1.1.2` is unavailable or a different version is required, stop and ask the user instead of changing the command. After the approved command starts, show the browser verification URL and ask the user to complete the secure browser handoff.
+If version `1.1.6` is unavailable or a different version is required, stop and ask the user instead of changing the command. Run the approved command once. When its JSON result has `status: "authorization_required"`, show `verificationUriComplete` and wait without keeping a process open. After the user confirms browser completion, rerun the exact same approved command unchanged. The CLI resumes its saved handoff and returns either `authorization_required` again or `configured`. Never run overlapping init commands, delete the saved handoff state, or add `--fresh-handoff` without new explicit approval.
 
 Never ask the user to paste passwords, bootstrap tokens, client secrets, authorization codes, access tokens, refresh tokens, session cookies, or `.env` contents. Never print, disclose, log, expose, or commit these values. Allow the established OIDC library to receive and process authorization codes and tokens as protocol values, but never surface them to the user, agent context, logs, or repository.
 
