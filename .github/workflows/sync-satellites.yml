@@ -1,23 +1,90 @@
 name: Sync template satellites
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      full_catalog:
+        description: Synchronize every ready satellite instead of only changed sources
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
 
+concurrency:
+  group: template-satellite-sync-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  sync:
+  prepare:
     if: github.repository == 'Tuurio/auth_samples'
     runs-on: ubuntu-latest
+    outputs:
+      ids: ${{ steps.selection.outputs.ids }}
+      count: ${{ steps.selection.outputs.count }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: distribution/package-lock.json
+      - name: Install distribution tooling
+        working-directory: distribution
+        run: npm ci
+      - name: Select affected templates
+        id: selection
+        working-directory: distribution
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          FULL_CATALOG: ${{ inputs.full_catalog }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$FULL_CATALOG" = "true" ]; then
+            node scripts/affected-templates.mjs --all > selection.json
+          else
+            node scripts/affected-templates.mjs --base "$BEFORE_SHA" --head "$HEAD_SHA" > selection.json
+          fi
+          cat selection.json
+          node --input-type=module >> "$GITHUB_OUTPUT" <<'NODE'
+            import { readFileSync } from "node:fs";
+            const selection = JSON.parse(readFileSync("selection.json", "utf8"));
+            console.log(`ids=${JSON.stringify(selection.ids)}`);
+            console.log(`count=${selection.count}`);
+          NODE
+          {
+            echo "### Satellite selection"
+            echo
+            echo "Selected $(node -p 'require(\"./selection.json\").count') template(s)."
+            echo
+            echo '```json'
+            cat selection.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  sync:
+    needs: prepare
+    if: needs.prepare.outputs.count != '0'
+    runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        template: ${{ fromJSON(needs.prepare.outputs.ids) }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: distribution/package-lock.json
       - name: Require narrowly scoped satellite token
@@ -31,9 +98,37 @@ jobs:
       - name: Install distribution tooling
         working-directory: distribution
         run: npm ci
-      - name: Sync pilot repositories
+      - name: Configure authenticated Git transport
         env:
           GH_TOKEN: ${{ secrets.SATELLITE_SYNC_TOKEN }}
+        run: gh auth setup-git
+      - name: Synchronize ${{ matrix.template }}
+        env:
+          GH_TOKEN: ${{ secrets.SATELLITE_SYNC_TOKEN }}
+          TEMPLATE_ID: ${{ matrix.template }}
         working-directory: distribution
-        run: npm run sync -- --id react-vite --id nextjs --id spring-boot --apply
-
+        run: |
+          set +e
+          npm run --silent sync -- --id "$TEMPLATE_ID" --apply > sync-result.json 2> sync-error.log
+          status=$?
+          set -e
+          {
+            echo "### $TEMPLATE_ID"
+            echo
+            if [ "$status" -eq 0 ]; then
+              echo "Synchronization completed with a normal commit (or no changes were needed)."
+              echo '```json'
+              cat sync-result.json
+              echo '```'
+            else
+              echo "Synchronization failed. No force-push or destructive recovery was attempted."
+              echo '```text'
+              cat sync-error.log
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat sync-result.json
+          if [ "$status" -ne 0 ]; then
+            cat sync-error.log >&2
+            exit "$status"
+          fi

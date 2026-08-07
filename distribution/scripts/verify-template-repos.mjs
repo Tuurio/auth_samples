@@ -16,8 +16,11 @@ function managedFilesByPath(marker) {
 
 export function compareMarkers(actual, expected) {
   const errors = [];
-  for (const field of ["schemaVersion", "sourceRepository", "sourcePath", "sourceSha", "templateId"]) {
+  for (const field of ["schemaVersion", "sourceRepository", "sourcePath", "packageSha256", "templateId"]) {
     if (actual[field] !== expected[field]) errors.push(`marker ${field} mismatch`);
+  }
+  if (typeof actual.sourceSha !== "string" || !/^[a-f0-9]{40}$/.test(actual.sourceSha)) {
+    errors.push("marker sourceSha is not a full Git commit");
   }
   const actualFiles = managedFilesByPath(actual);
   const expectedFiles = managedFilesByPath(expected);

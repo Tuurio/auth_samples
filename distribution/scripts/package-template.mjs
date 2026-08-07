@@ -130,6 +130,17 @@ function checksum(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
+function packageChecksum(managedFiles) {
+  const digest = createHash("sha256");
+  for (const entry of managedFiles) {
+    digest.update(entry.path);
+    digest.update("\0");
+    digest.update(entry.sha256);
+    digest.update("\n");
+  }
+  return digest.digest("hex");
+}
+
 export function resolveSourceSha(root = repositoryRoot) {
   return execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 }
@@ -189,14 +200,18 @@ export function packageTemplate(template, { root = repositoryRoot, output, sourc
     writeFileSync(resolve(outputPath, ".stackblitzrc"), `${JSON.stringify({ startCommand: template.start }, null, 2)}\n`);
   }
 
-  const managedFiles = listFiles(outputPath);
+  const managedFiles = listFiles(outputPath).map((path) => ({
+    path,
+    sha256: checksum(resolve(outputPath, path)),
+  }));
   const marker = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceRepository: "Tuurio/auth_samples",
     sourcePath: template.source,
     sourceSha,
+    packageSha256: packageChecksum(managedFiles),
     templateId: template.id,
-    managedFiles: managedFiles.map((path) => ({ path, sha256: checksum(resolve(outputPath, path)) })),
+    managedFiles,
   };
   writeFileSync(resolve(outputPath, ".tuurio-template.json"), `${JSON.stringify(marker, null, 2)}\n`);
   return { outputPath, marker };

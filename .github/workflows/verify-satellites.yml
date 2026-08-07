@@ -3,7 +3,7 @@ name: Verify template satellites
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 5 * * 1"
+    - cron: "17 5 * * *"
 
 permissions:
   contents: read
@@ -12,19 +12,45 @@ jobs:
   verify:
     if: github.repository == 'Tuurio/auth_samples'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: distribution/package-lock.json
       - name: Install distribution tooling
         working-directory: distribution
         run: npm ci
-      - name: Verify pilot repositories
+      - name: Verify all managed repositories
         env:
           GH_TOKEN: ${{ github.token }}
         working-directory: distribution
-        run: npm run verify:remotes -- --id react-vite --id nextjs --id spring-boot
+        run: |
+          set +e
+          npm run --silent verify:remotes > verification.json 2> verification-error.log
+          status=$?
+          set -e
+          {
+            echo "### Nightly satellite drift report"
+            echo
+            if [ "$status" -eq 0 ]; then
+              echo "All managed files, checksums, markers, topics, descriptions, homepages, and template flags match the catalog."
+            else
+              echo "Drift or a verification failure was detected. Review the report before running a full catalog synchronization."
+            fi
+            echo '```json'
+            cat verification.json
+            echo '```'
+            if [ -s verification-error.log ]; then
+              echo '```text'
+              cat verification-error.log
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat verification.json
+          if [ "$status" -ne 0 ]; then
+            cat verification-error.log >&2
+            exit "$status"
+          fi
