@@ -1,0 +1,228 @@
+version: 1
+license: Apache-2.0
+sourceRepository: Tuurio/auth_samples
+sourceMetadata:
+  description: Runnable Tuurio ID authentication starters for web, mobile, native, and server-side frameworks using standards-based OpenID Connect.
+  homepage: https://id.tuurio.com/public/developers
+  topics: [authentication, oidc, oauth2, pkce, openid-connect, react, nextjs, spring-boot, flutter, tuurio, starter-template, eu-hosted]
+templates:
+  - id: react-vite
+    status: ready
+    source: auth_samples_react
+    repository: Tuurio/react-vite-oidc-starter
+    description: Production-oriented React and Vite authentication starter for Tuurio ID using OpenID Connect Authorization Code with PKCE.
+    homepage: https://id.tuurio.com/public/developers/examples/react
+    campaign: github_react_vite
+    kind: browser
+    stackblitz: true
+    topics: [react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
+    verify: [npm install, npm run lint, npm run build]
+  - id: lovable
+    status: ready
+    source: auth_samples_lovable
+    repository: Tuurio/lovable-auth-starter
+    description: Deployable Lovable React authentication starter for Tuurio ID with exact preview and production origins, OIDC, and PKCE.
+    homepage: https://id.tuurio.com/vibe/lovable
+    campaign: github_lovable
+    kind: browser
+    stackblitz: false
+    topics: [lovable, react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, eu-hosted]
+    verify: [npm ci, npm run typecheck, npm run build]
+  - id: vue
+    status: ready
+    source: auth_samples_vue3
+    repository: Tuurio/vue-oidc-auth-starter
+    description: Vue 3 and Vite authentication starter for Tuurio ID with protected routes and OpenID Connect Authorization Code with PKCE.
+    homepage: https://id.tuurio.com/public/developers/examples/vue
+    campaign: github_vue
+    kind: browser
+    stackblitz: true
+    topics: [vue, vue3, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template]
+    verify: [npm ci, npm run build]
+  - id: angular
+    status: ready
+    source: auth_samples_angular
+    repository: Tuurio/angular-oidc-auth-starter
+    description: Angular authentication starter for Tuurio ID with standalone components, route protection, OpenID Connect, and PKCE.
+    homepage: https://id.tuurio.com/public/developers/examples/angular
+    campaign: github_angular
+    kind: browser
+    stackblitz: true
+    topics: [angular, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
+    verify: [npm install, npm run build]
+  - id: nextjs
+    status: ready
+    source: auth_samples_nextjs
+    repository: Tuurio/nextjs-auth-starter
+    description: Next.js App Router authentication starter for Tuurio ID with protected server routes and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/nextjs
+    campaign: github_nextjs
+    kind: server
+    stackblitz: true
+    topics: [nextjs, react, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
+    verify: [npm install, npm run build]
+  - id: android
+    status: ready
+    source: auth_samples_android
+    repository: Tuurio/android-oidc-auth-starter
+    description: Android Jetpack Compose authentication starter for Tuurio ID using AppAuth, Authorization Code, PKCE, and native redirects.
+    homepage: https://id.tuurio.com/public/developers/examples/android
+    campaign: github_android
+    kind: native
+    stackblitz: false
+    topics: [android, kotlin, jetpack-compose, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
+    verify: [./gradlew assembleDebug]
+  - id: ios
+    status: ready
+    source: auth_samples_ios
+    repository: Tuurio/ios-oidc-auth-starter
+    description: SwiftUI authentication starter for Tuurio ID using AppAuth, Authorization Code, PKCE, and secure native redirects.
+    homepage: https://id.tuurio.com/public/developers/examples/ios
+    campaign: github_ios
+    kind: native
+    stackblitz: false
+    topics: [ios, swift, swiftui, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
+    verify: [swiftc -parse TuurioAuthSample/*.swift]
+  - id: flutter
+    status: ready
+    source: auth_samples_flutter
+    repository: Tuurio/flutter-oidc-auth-starter
+    description: Flutter authentication starter for Tuurio ID using flutter_appauth, Authorization Code, PKCE, and native callback handling.
+    homepage: https://id.tuurio.com/public/developers/examples/flutter
+    campaign: github_flutter
+    kind: native
+    stackblitz: false
+    topics: [flutter, dart, authentication, oidc, oauth2, pkce, appauth, mobile, tuurio, starter-template]
+    verify: [flutter pub get, flutter analyze]
+  - id: express
+    status: ready
+    source: auth_samples_node
+    repository: Tuurio/express-oidc-auth-starter
+    description: Node.js and Express authentication starter for Tuurio ID with server-side sessions and OpenID Connect Authorization Code flow.
+    homepage: https://id.tuurio.com/public/developers/examples/node
+    campaign: github_express
+    kind: server
+    stackblitz: true
+    topics: [nodejs, express, javascript, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
+    verify: [npm install, node --check server.js, node --check src/oauth.js]
+  - id: flask
+    status: ready
+    source: auth_samples_python
+    repository: Tuurio/flask-oidc-auth-starter
+    description: Python Flask authentication starter for Tuurio ID with server-side sessions and OpenID Connect Authorization Code flow.
+    homepage: https://id.tuurio.com/public/developers/examples/python
+    campaign: github_flask
+    kind: server
+    stackblitz: false
+    topics: [python, flask, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
+    verify: [python3 -m compileall -q .]
+  - id: go
+    status: ready
+    source: auth_samples_go
+    repository: Tuurio/go-oidc-auth-starter
+    description: Go net/http authentication starter for Tuurio ID with secure sessions and OpenID Connect Authorization Code flow.
+    homepage: https://id.tuurio.com/public/developers/examples/go
+    campaign: github_go
+    kind: server
+    stackblitz: false
+    topics: [go, golang, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
+    verify: [go test ./..., go build ./...]
+  - id: spring-boot
+    status: ready
+    source: auth_samples_java
+    repository: Tuurio/spring-boot-oidc-starter
+    description: Spring Boot authentication starter for Tuurio ID using Spring Security OAuth2 Client and OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/spring-boot
+    campaign: github_spring_boot
+    kind: server
+    stackblitz: false
+    topics: [java, spring-boot, spring-security, authentication, oidc, oauth2, openid-connect, tuurio, starter-template]
+    verify: [gradle test, gradle bootJar]
+  - id: php
+    status: ready
+    source: auth_samples_php
+    repository: Tuurio/php-oidc-auth-starter
+    description: Dependency-light PHP authentication starter for Tuurio ID with secure sessions and OpenID Connect Authorization Code flow.
+    homepage: https://id.tuurio.com/public/developers/examples/php
+    campaign: github_php
+    kind: server
+    stackblitz: false
+    topics: [php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
+    verify: [find . -name '*.php' -print0 | xargs -0 -n1 php -l]
+  - id: laravel
+    status: ready
+    source: auth_samples_laravel
+    repository: Tuurio/laravel-oidc-auth-starter
+    description: Laravel authentication starter for Tuurio ID with sessions, protected routes, logout, and OpenID Connect Authorization Code flow.
+    homepage: https://id.tuurio.com/public/developers/examples/laravel
+    campaign: github_laravel
+    kind: server
+    stackblitz: false
+    topics: [laravel, php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
+    verify: [composer install --no-interaction, php artisan test]
+  - id: sveltekit
+    status: planned
+    source: auth_samples_sveltekit
+    repository: Tuurio/sveltekit-oidc-auth-starter
+    description: SvelteKit authentication starter for Tuurio ID with protected routes and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/sveltekit
+    campaign: github_sveltekit
+    kind: server
+    stackblitz: true
+    topics: [svelte, sveltekit, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
+    verify: [npm ci, npm run check, npm run build]
+  - id: nuxt
+    status: planned
+    source: auth_samples_nuxt
+    repository: Tuurio/nuxt-oidc-auth-starter
+    description: Nuxt authentication starter for Tuurio ID with protected server routes and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/nuxt
+    campaign: github_nuxt
+    kind: server
+    stackblitz: true
+    topics: [nuxt, vue, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
+    verify: [npm ci, npm run typecheck, npm run build]
+  - id: astro
+    status: planned
+    source: auth_samples_astro
+    repository: Tuurio/astro-oidc-auth-starter
+    description: Astro authentication starter for Tuurio ID with protected server routes and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/astro
+    campaign: github_astro
+    kind: server
+    stackblitz: true
+    topics: [astro, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
+    verify: [npm ci, npm run check, npm run build]
+  - id: react-router
+    status: planned
+    source: auth_samples_react_router
+    repository: Tuurio/react-router-auth-starter
+    description: React Router full-stack authentication starter for Tuurio ID with protected routes and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/react-router
+    campaign: github_react_router
+    kind: server
+    stackblitz: true
+    topics: [react, react-router, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
+    verify: [npm ci, npm run typecheck, npm run build]
+  - id: django
+    status: planned
+    source: auth_samples_django
+    repository: Tuurio/django-oidc-auth-starter
+    description: Django authentication starter for Tuurio ID with server-side sessions and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/django
+    campaign: github_django
+    kind: server
+    stackblitz: false
+    topics: [python, django, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
+    verify: [python3 manage.py check, python3 manage.py test]
+  - id: fastapi
+    status: planned
+    source: auth_samples_fastapi
+    repository: Tuurio/fastapi-oidc-auth-starter
+    description: FastAPI authentication starter for Tuurio ID with secure sessions and standards-based OpenID Connect.
+    homepage: https://id.tuurio.com/public/developers/examples/fastapi
+    campaign: github_fastapi
+    kind: server
+    stackblitz: false
+    topics: [python, fastapi, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
+    verify: [python3 -m compileall -q ., pytest]

@@ -2,6 +2,8 @@
 
 Sample integrations for [Tuurio ID](https://id.tuurio.com) across SPA, mobile, and server-side stacks.
 
+This repository is the authoritative source for Tuurio's framework-specific GitHub templates. The generated satellite repositories are distribution surfaces; implementation fixes belong here first.
+
 ## Cursor and AI coding agents
 
 This repository also publishes an installable Cursor rule at [`rules/tuurio-auth.mdc`](./rules/tuurio-auth.mdc). The rule is self-contained: it does not load mutable remote instructions, requires explicit approval before provisioning, and pins the reviewed `manage-tuurio-id` CLI version. Signup, approval, and secrets remain in a human-controlled browser handoff.
@@ -71,8 +73,26 @@ npm install
 npm run dev
 ```
 
+## Template distribution
+
+The reviewed catalog and target repository metadata live in [`distribution/templates.yml`](./distribution/templates.yml). It currently inventories 14 implemented samples and six planned additions. The distribution pipeline validates, packages, and synchronizes each source directory into a separately discoverable GitHub template repository without making the satellite an independent source of truth.
+
+Validate the catalog with:
+
+```bash
+cd distribution
+npm ci
+npm run validate
+```
+
+Generated repositories must preserve their upstream-source notice, use normal synchronization commits, and never contain local environment files or credentials.
+
 ## Notes
 
 - Sample environment values are placeholders. Replace them with values from your own Tuurio tenant.
 - SPA and mobile samples are public clients and should not use confidential client secrets.
 - Server-side samples show confidential-client setups where a client secret is expected.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](./LICENSE).

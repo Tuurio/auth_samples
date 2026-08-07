@@ -4,5 +4,8 @@ auth_samples_react/package-lock.json
 **/.env
 **/.env.local
 **/__pycache__/
+**/local.properties
+**/.idea/
+**/node_modules/
 
 .DS_Store
