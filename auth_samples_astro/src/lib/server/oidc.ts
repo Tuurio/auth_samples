@@ -1,3 +1,4 @@
+import { getSecret } from 'astro:env/server';
 import * as oidc from 'openid-client';
 
 type Transaction = { verifier: string; state: string; expiresAt: number };
@@ -21,7 +22,7 @@ function requireCapacity(store: Map<string, unknown>, kind: string) {
 }
 
 function required(name: string): string {
-  const value = process.env[name]?.trim();
+  const value = getSecret(name)?.trim();
   if (!value || value.startsWith('YOUR_')) throw new Error(`${name} is not configured.`);
   return value;
 }
@@ -40,10 +41,10 @@ function settings() {
   return {
     issuer,
     clientId: required('TUURIO_CLIENT_ID'),
-    clientSecret: process.env.TUURIO_CLIENT_SECRET?.trim() || undefined,
+    clientSecret: getSecret('TUURIO_CLIENT_SECRET')?.trim() || undefined,
     redirectUri: redirectUri('TUURIO_REDIRECT_URI'),
     postLogoutRedirectUri: redirectUri('TUURIO_POST_LOGOUT_REDIRECT_URI'),
-    scope: process.env.TUURIO_SCOPE?.trim() || 'openid profile email'
+    scope: getSecret('TUURIO_SCOPE')?.trim() || 'openid profile email'
   };
 }
 
