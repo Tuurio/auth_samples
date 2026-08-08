@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { loadCatalog } from "./catalog.mjs";
 import { packageTemplate } from "./package-template.mjs";
-import { copyPackageContents, removeManagedFiles } from "./sync-template-repos.mjs";
+import { assertNoUnmanagedCollisions, copyPackageContents, removeManagedFiles } from "./sync-template-repos.mjs";
 import { compareMarkers } from "./verify-template-repos.mjs";
 
 const manifest = loadCatalog();
@@ -30,7 +30,9 @@ test("packages the React pilot deterministically from an allow-list", () => {
     const firstResult = packageTemplate(react, { output: first, sourceSha });
     const secondResult = packageTemplate(react, { output: second, sourceSha });
     assert.deepEqual(firstResult.marker, secondResult.marker);
+    assert.equal(firstResult.marker.schemaVersion, 2);
     assert.equal(firstResult.marker.sourceSha, sourceSha);
+    assert.match(firstResult.marker.packageSha256, /^[a-f0-9]{64}$/);
     assert.ok(firstResult.marker.managedFiles.some((entry) => entry.path === "LICENSE"));
     assert.ok(firstResult.marker.managedFiles.some((entry) => entry.path === "package-lock.json"));
     assert.ok(!firstResult.marker.managedFiles.some((entry) => entry.path === ".env"));
@@ -155,23 +157,44 @@ test("sync rejects unsafe paths from a tampered management marker", () => {
   }
 });
 
-test("remote verification detects source drift and unexpected managed files", () => {
+test("sync refuses to overwrite files that are not owned by the management marker", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-sync-collision-test-"));
+  try {
+    const packaged = resolve(temporary, "packaged");
+    const clone = resolve(temporary, "clone");
+    mkdirSync(packaged);
+    mkdirSync(clone);
+    writeFileSync(resolve(packaged, "README.md"), "generated\n");
+    writeFileSync(resolve(clone, "README.md"), "maintainer-owned\n");
+    assert.throws(() => assertNoUnmanagedCollisions(packaged, clone), /overwrite an unmanaged file/);
+    assert.equal(readFileSync(resolve(clone, "README.md"), "utf8"), "maintainer-owned\n");
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("remote verification detects package drift without coupling to unrelated source commits", () => {
   const base = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceRepository: "Tuurio/auth_samples",
     sourcePath: "auth_samples_react",
     sourceSha: "e".repeat(40),
+    packageSha256: "a".repeat(64),
     templateId: "react-vite",
     managedFiles: [{ path: "README.md", sha256: "one" }],
   };
   assert.deepEqual(compareMarkers(base, base), []);
+  assert.deepEqual(compareMarkers({ ...base, sourceSha: "f".repeat(40) }, base), []);
+  assert.deepEqual(compareMarkers({ ...base, sourceSha: "not-a-commit" }, base), [
+    "marker sourceSha is not a full Git commit",
+  ]);
   const drifted = {
     ...base,
-    sourceSha: "f".repeat(40),
+    packageSha256: "b".repeat(64),
     managedFiles: [...base.managedFiles, { path: "unexpected.txt", sha256: "two" }],
   };
   assert.deepEqual(compareMarkers(drifted, base), [
-    "marker sourceSha mismatch",
+    "marker packageSha256 mismatch",
     "marker has unexpected managed file unexpected.txt",
   ]);
 });

@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import process from "node:process";
@@ -38,6 +38,34 @@ export function copyPackageContents(packaged, clone) {
   }
 }
 
+function packageFiles(root, current = root) {
+  const files = [];
+  for (const name of readdirSync(current).sort()) {
+    const absolute = resolve(current, name);
+    const metadata = lstatSync(absolute);
+    if (metadata.isDirectory()) files.push(...packageFiles(root, absolute));
+    else if (metadata.isFile()) files.push(relative(root, absolute));
+    else throw new Error(`Unsupported packaged entry: ${absolute}`);
+  }
+  return files;
+}
+
+export function assertNoUnmanagedCollisions(packaged, clone) {
+  for (const path of packageFiles(packaged)) {
+    const destination = assertManagedPath(clone, path);
+    let parent = resolve(destination, "..");
+    while (parent !== resolve(clone)) {
+      if (existsSync(parent) && lstatSync(parent).isSymbolicLink()) {
+        throw new Error(`Packaged path crosses an unmanaged symbolic link: ${path}`);
+      }
+      parent = resolve(parent, "..");
+    }
+    if (existsSync(destination)) {
+      throw new Error(`Packaged path would overwrite an unmanaged file: ${path}`);
+    }
+  }
+}
+
 export function syncTemplate(template, { apply = false, initialize = false, root = repositoryRoot } = {}) {
   const temporary = mkdtempSync(resolve(tmpdir(), `tuurio-sync-${template.id}-`));
   try {
@@ -59,6 +87,7 @@ export function syncTemplate(template, { apply = false, initialize = false, root
         throw new Error(`${template.repository} has an invalid management marker: ${error.message}`);
       }
     }
+    assertNoUnmanagedCollisions(packaged, clone);
     copyPackageContents(packaged, clone);
     run("git", ["add", "--all"], { cwd: clone });
     const status = run("git", ["status", "--short"], { cwd: clone });
