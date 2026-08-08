@@ -2,6 +2,8 @@
 
 `auth_samples` is the source of truth for 20 public GitHub template repositories. Satellite repositories are normal repositories with preserved issues, settings, and unmanaged files; synchronization updates only files listed in `.tuurio-template.json` and never force-pushes.
 
+The current catalog release, clean-room validation matrix, remote repository checks, and live-auth acceptance procedure are recorded in [`ACCEPTANCE.md`](ACCEPTANCE.md).
+
 ## Automation
 
 - A push to `main` computes the affected catalog entries from changed source paths and synchronizes only those satellites.
