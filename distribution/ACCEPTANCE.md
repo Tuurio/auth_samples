@@ -65,11 +65,27 @@ The released [`react-vite-oidc-starter`](https://github.com/Tuurio/react-vite-oi
 - The administrator completed organization selection and the legal approval in the browser; the agent did not accept contracts or receive credentials.
 - Re-running the identical command resumed the saved handoff and configured one React public client instead of creating another authorization flow.
 - The CLI wrote only `.env.local` plus the exact `/.env.local` ignore entry. The environment file was ignored and untracked, and contained no client-secret key.
-- `npm ci`, `npm run lint`, and `npm run build` passed with zero reported dependency vulnerabilities.
+- `npm ci`, `npm run lint`, and `npm run build` passed with zero reported dependency vulnerabilities. The production build was then served with `npm run preview -- --host 127.0.0.1 --port 4173`; this intentionally tests Vite's built preview rather than the README's development server on port `5173`.
 - A real Authorization Code with PKCE sign-in returned through `/auth/callback`, produced an authenticated application state, and loaded the protected user view.
 - RP-initiated logout returned through `/logout/callback`; revisiting `/` remained signed out.
 
 No credential, raw token, authorization code, session cookie, or generated environment value is stored in this repository or this acceptance record.
+
+The non-sensitive verification transcript was:
+
+```text
+CLI status: configured
+Framework: REACT_SPA
+Environment target: .env.local
+Registered redirect: http://127.0.0.1:4173/auth/callback
+Registered post-logout redirect: http://127.0.0.1:4173/logout/callback
+git diff -- .gitignore: +/.env.local
+git check-ignore .env.local: .gitignore:25:/.env.local
+git ls-files -- .env.local: no output
+secret-key name scan: no CLIENT_SECRET or client_secret match
+```
+
+The clean template initially contained the broader `*.local` ignore rule. The CLI nevertheless added the more specific tracked `/.env.local` entry while writing the ignored environment file; that expected `.gitignore` change was the only repository diff in the disposable checkout.
 
 For a browser template, perform the following against a disposable checkout and test organization:
 
