@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as oidc from 'openid-client';
 
 type Transaction = { verifier: string; state: string; expiresAt: number };
