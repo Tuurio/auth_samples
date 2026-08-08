@@ -12,6 +12,7 @@ const manifest = loadCatalog();
 const aiSaas = manifest.products.find((product) => product.id === "ai-saas");
 const react = manifest.templates.find((template) => template.id === "react-vite");
 const laravel = manifest.templates.find((template) => template.id === "laravel");
+const django = manifest.templates.find((template) => template.id === "django");
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 const sliceFourSecurityFiles = new Map([
   ["sveltekit", ["src/lib/server/oidc.ts"]],
@@ -78,6 +79,18 @@ test("packages the AI SaaS product separately from the twenty framework satellit
     assert.ok(result.marker.managedFiles.some((entry) => entry.path === "db/schema.sql"));
     assert.ok(result.marker.managedFiles.some((entry) => entry.path === "src/tuurio.public.json"));
     assert.doesNotMatch(readFileSync(resolve(output, "src/tuurio.public.json"), "utf8"), /clientSecret/);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("generates the declared runtime version in satellite CI", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-runtime-test-"));
+  try {
+    const output = resolve(temporary, "django");
+    packageTemplate(django, { output, sourceSha: "7".repeat(40) });
+    const workflow = readFileSync(resolve(output, ".github/workflows/verify.yml"), "utf8");
+    assert.match(workflow, /python-version: '3\.12'/);
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }

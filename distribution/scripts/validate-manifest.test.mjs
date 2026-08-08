@@ -98,3 +98,11 @@ test("rejects a framework label that cannot render safely", () => {
   const { errors } = validateManifest(manifest, { repositoryRoot: root });
   assert.ok(errors.some((error) => error.includes("framework must use 1-24 lowercase ASCII slug characters")));
 });
+
+test("requires Python 3.12 CI for templates that declare that runtime", () => {
+  const manifest = copy();
+  const django = manifest.templates.find((template) => template.id === "django");
+  django.pythonVersion = "3.11";
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.some((error) => error.includes("Python 3.12 runtime must generate CI")));
+});

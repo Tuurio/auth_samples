@@ -92,7 +92,11 @@ function generatedWorkflow(template) {
           cache: npm
 `,
     "Gradle Wrapper": "      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4\n        with:\n          distribution: temurin\n          java-version: 17\n          cache: gradle\n",
-    pip: "      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5\n        with:\n          python-version: '3.11'\n          cache: pip\n",
+    pip: `      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '${template.pythonVersion ?? "3.11"}'
+          cache: pip
+`,
     "Go modules": "      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5\n        with:\n          go-version-file: go.mod\n          cache: true\n",
     "Flutter pub": "      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2\n        with:\n          channel: stable\n          cache: true\n",
     Composer: "      - uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # 2.35.5\n        with:\n          php-version: '8.3'\n          tools: composer:v2\n          coverage: none\n",
