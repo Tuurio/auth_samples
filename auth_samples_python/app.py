@@ -71,8 +71,8 @@ def auth_callback():
         resp.raise_for_status()
         userinfo = resp.json()
         session["userinfo"] = userinfo
-    except Exception as exc:  # pylint: disable=broad-except
-        session["error"] = str(exc) or "Login failed."
+    except Exception:  # pylint: disable=broad-except
+        session["error"] = "Login could not be completed."
     return redirect("/")
 
 
@@ -96,8 +96,8 @@ def logout():
             params["id_token_hint"] = id_token_hint
 
         return redirect(end_session + "?" + urlencode(params))
-    except Exception as exc:  # pylint: disable=broad-except
-        session["error"] = str(exc) or "Logout failed."
+    except Exception:  # pylint: disable=broad-except
+        session["error"] = "Logout could not be completed."
         return redirect("/")
 
 

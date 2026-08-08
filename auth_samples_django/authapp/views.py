@@ -4,6 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
+from tuurio_starter.settings import validate_tuurio_config
 
 from .oauth import oauth
 
@@ -13,7 +14,7 @@ def index(request):
 
 @require_GET
 def login(request):
-    settings.validate_tuurio_config()
+    validate_tuurio_config()
     return oauth.tuurio.authorize_redirect(request, settings.TUURIO_REDIRECT_URI)
 
 @require_GET
@@ -46,7 +47,7 @@ def dashboard(request):
 
 @require_GET
 def logout(request):
-    settings.validate_tuurio_config()
+    validate_tuurio_config()
     id_token = request.session.get("tuurio_id_token")
     metadata = oauth.tuurio.load_server_metadata()
     endpoint = metadata.get("end_session_endpoint")

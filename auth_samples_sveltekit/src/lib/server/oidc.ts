@@ -52,7 +52,10 @@ function settings() {
 
 async function config() {
   const value = settings();
-  configuration ??= oidc.discovery(value.issuer, value.clientId, value.clientSecret);
+  configuration ??= oidc.discovery(value.issuer, value.clientId, value.clientSecret).catch((error) => {
+    configuration = undefined;
+    throw error;
+  });
   return configuration;
 }
 

@@ -1,7 +1,7 @@
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { resolve } from 'node:path';
-import { beginLogin, completeLogin, endSession, getSession } from './oidc.js';
+import { AuthenticationFlowError, beginLogin, completeLogin, endSession, getSession } from './oidc.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -35,5 +35,8 @@ if (process.env.NODE_ENV === 'production') {
   app.use(vite.middlewares);
 }
 
-app.use((_error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => { response.status(400).send('Authentication request could not be completed.'); });
+app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+  const status = error instanceof AuthenticationFlowError ? error.status : 502;
+  response.status(status).send('Authentication request could not be completed.');
+});
 app.listen(Number(process.env.PORT || 3000), () => console.log(`Listening on http://localhost:${process.env.PORT || 3000}`));

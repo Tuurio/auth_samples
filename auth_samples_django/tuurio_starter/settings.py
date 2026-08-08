@@ -36,7 +36,7 @@ TUURIO_POST_LOGOUT_REDIRECT_URI = os.getenv("TUURIO_POST_LOGOUT_REDIRECT_URI", "
 TUURIO_SCOPE = os.getenv("TUURIO_SCOPE", "openid profile email").strip()
 
 def validate_tuurio_config():
-    if not TUURIO_ISSUER or not TUURIO_CLIENT_ID or TUURIO_CLIENT_ID.startswith("YOUR_"):
+    if not TUURIO_ISSUER or "YOUR_" in TUURIO_ISSUER or not TUURIO_CLIENT_ID or TUURIO_CLIENT_ID.startswith("YOUR_"):
         raise RuntimeError("TUURIO_ISSUER and TUURIO_CLIENT_ID must be configured.")
     issuer = urlparse(TUURIO_ISSUER)
     issuer_loopback = issuer.hostname in {"localhost", "127.0.0.1", "::1"}

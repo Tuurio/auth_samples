@@ -135,8 +135,8 @@ app.get('/auth/callback', async (req, res) => {
 
     req.session.oauth = null;
     res.redirect('/');
-  } catch (err) {
-    req.session.error = err instanceof Error ? err.message : 'Login failed.';
+  } catch {
+    req.session.error = 'Login could not be completed.';
     res.redirect('/');
   }
 });
@@ -176,8 +176,8 @@ app.get('/logout', async (req, res) => {
     });
     res.clearCookie(config.sessionCookieName);
     res.redirect(`${endSession}?${params.toString()}`);
-  } catch (err) {
-    req.session.error = err instanceof Error ? err.message : 'Logout failed.';
+  } catch {
+    req.session.error = 'Logout could not be completed.';
     res.redirect('/');
   }
 });

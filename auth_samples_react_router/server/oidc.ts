@@ -8,8 +8,12 @@ const sessions = new Map<string, StoredSession>();
 const MAX_EPHEMERAL_ENTRIES = 10_000;
 let configuration: Promise<oidc.Configuration> | undefined;
 
+export class AuthenticationFlowError extends Error {
+  constructor(message: string, readonly status: 400 | 503) { super(message); }
+}
+
 function pruneExpired() { const now = Date.now(); for (const [id, value] of transactions) if (value.expiresAt <= now) transactions.delete(id); for (const [id, value] of sessions) if (value.expiresAt <= now) sessions.delete(id); }
-function requireCapacity(store: Map<string, unknown>, kind: string) { pruneExpired(); if (store.size >= MAX_EPHEMERAL_ENTRIES) throw new Error(`Too many active ${kind}; try again later.`); }
+function requireCapacity(store: Map<string, unknown>, kind: string) { pruneExpired(); if (store.size >= MAX_EPHEMERAL_ENTRIES) throw new AuthenticationFlowError(`Too many active ${kind}; try again later.`, 503); }
 
 function required(name: string) { const value = process.env[name]?.trim(); if (!value || value.startsWith('YOUR_')) throw new Error(`${name} is not configured.`); return value; }
 function redirectUri(name: string) { const value = new URL(required(name)); const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(value.hostname); if (value.protocol !== 'https:' && !(value.protocol === 'http:' && loopback)) throw new Error(`${name} must use HTTPS outside an explicit loopback host.`); return value.href; }
@@ -19,7 +23,14 @@ function settings() {
   if (issuer.protocol !== 'https:' && !(issuer.protocol === 'http:' && loopback)) throw new Error('TUURIO_ISSUER must use HTTPS outside an explicit loopback host.');
   return { issuer, clientId: required('TUURIO_CLIENT_ID'), clientSecret: process.env.TUURIO_CLIENT_SECRET?.trim() || undefined, redirectUri: redirectUri('TUURIO_REDIRECT_URI'), postLogoutRedirectUri: redirectUri('TUURIO_POST_LOGOUT_REDIRECT_URI'), scope: process.env.TUURIO_SCOPE?.trim() || 'openid profile email' };
 }
-async function config() { const value = settings(); configuration ??= oidc.discovery(value.issuer, value.clientId, value.clientSecret); return configuration; }
+async function config() {
+  const value = settings();
+  configuration ??= oidc.discovery(value.issuer, value.clientId, value.clientSecret).catch((error) => {
+    configuration = undefined;
+    throw error;
+  });
+  return configuration;
+}
 
 export async function beginLogin() {
   requireCapacity(transactions, 'login transactions');
@@ -32,9 +43,9 @@ export async function beginLogin() {
 export async function completeLogin(currentUrl: URL, transactionId?: string) {
   pruneExpired();
   const transaction = transactionId ? transactions.get(transactionId) : undefined;
-  if (!transaction || transaction.expiresAt < Date.now()) throw new Error('Login transaction expired.');
+  if (!transaction || transaction.expiresAt < Date.now()) throw new AuthenticationFlowError('Login transaction expired.', 400);
   transactions.delete(transactionId!);
-  if (currentUrl.searchParams.get('state') !== transaction.state) throw new Error('Invalid login state.');
+  if (currentUrl.searchParams.get('state') !== transaction.state) throw new AuthenticationFlowError('Invalid login state.', 400);
   const client = await config();
   const tokens = await oidc.authorizationCodeGrant(client, currentUrl, { pkceCodeVerifier: transaction.verifier, expectedState: transaction.state });
   const claims = tokens.claims(); if (!tokens.access_token || !claims?.sub) throw new Error('Validated identity is missing.');
