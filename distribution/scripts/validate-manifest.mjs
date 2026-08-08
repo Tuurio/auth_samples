@@ -117,6 +117,25 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
     if (template.start !== undefined) {
       validateCommand(template.start, `${prefix}.start`, errors);
     }
+    if (
+      template.nodeVersion !== undefined &&
+      !/^[0-9]+(?:\.[0-9]+){0,2}$/.test(String(template.nodeVersion))
+    ) {
+      errors.push(`${prefix}: nodeVersion must be a numeric version`);
+    }
+    if (
+      template.pythonVersion !== undefined &&
+      !/^[0-9]+(?:\.[0-9]+){1,2}$/.test(String(template.pythonVersion))
+    ) {
+      errors.push(`${prefix}: pythonVersion must include major and minor numeric versions`);
+    }
+    if (
+      template.packageManager === "pip" &&
+      template.runtime?.startsWith("Python 3.12") &&
+      String(template.pythonVersion) !== "3.12"
+    ) {
+      errors.push(`${prefix}: Python 3.12 runtime must generate CI with pythonVersion 3.12`);
+    }
     if (template.files !== undefined) {
       if (!Array.isArray(template.files) || template.files.length < 1) {
         errors.push(`${prefix}: files must contain at least one allow-listed path`);
