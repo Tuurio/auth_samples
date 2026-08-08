@@ -404,8 +404,8 @@ func handleCallback(w http.ResponseWriter, r *http.Request, session *Session) {
 
 	userInfoJSON, err := fetchUserInfo(r.Context(), token.AccessToken)
 	if err != nil {
-		session.Error = err.Error()
 		clearAuthFlow(session)
+		session.Error = err.Error()
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
@@ -420,6 +420,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request, session *Session) {
 	session.ProfileJSON = userInfoJSON
 
 	clearAuthFlow(session)
+	session.Error = ""
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -782,7 +783,6 @@ func resetSession(session *Session) {
 func clearAuthFlow(session *Session) {
 	session.State = ""
 	session.Verifier = ""
-	session.Error = ""
 }
 
 func statusForSession(session *Session) map[string]string {
