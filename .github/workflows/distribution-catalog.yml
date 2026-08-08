@@ -5,6 +5,8 @@ on:
     paths:
       - ".github/workflows/distribution-catalog.yml"
       - "distribution/**"
+      - "auth_samples_*/.github/social-preview.*"
+      - "ai_saas_starter/.github/social-preview.png"
       - "LICENSE"
       - "README.md"
   push:
@@ -13,6 +15,8 @@ on:
     paths:
       - ".github/workflows/distribution-catalog.yml"
       - "distribution/**"
+      - "auth_samples_*/.github/social-preview.*"
+      - "ai_saas_starter/.github/social-preview.png"
       - "LICENSE"
       - "README.md"
 
@@ -46,6 +50,9 @@ jobs:
 
       - name: Validate catalog
         run: npm run validate
+
+      - name: Check social previews are reproducible
+        run: npm run previews && git diff --exit-code -- ../auth_samples_*/.github/social-preview.svg
 
       - name: Audit validator dependencies
         run: npm audit --audit-level=moderate

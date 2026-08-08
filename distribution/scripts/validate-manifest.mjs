@@ -136,6 +136,9 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
           errors.push(`${prefix}: ${field} is required when files are configured`);
         }
       }
+      if (typeof template.framework === "string" && !/^[a-z0-9.+-]{1,24}$/.test(template.framework)) {
+        errors.push(`${prefix}: framework must use 1-24 lowercase ASCII slug characters`);
+      }
     }
     if (template.status === "ready") {
       try {

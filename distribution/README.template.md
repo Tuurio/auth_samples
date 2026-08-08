@@ -4,6 +4,8 @@
 
 [![Verify template](https://github.com/{{repository}}/actions/workflows/verify.yml/badge.svg)](https://github.com/{{repository}}/actions/workflows/verify.yml)
 
+![{{displayName}} social preview](.github/social-preview.png)
+
 > Generated from [`Tuurio/auth_samples/{{source}}`](https://github.com/Tuurio/auth_samples/tree/main/{{source}}). Submit implementation fixes upstream so they are not replaced by the next synchronized release.
 
 ## What you get

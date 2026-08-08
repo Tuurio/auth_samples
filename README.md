@@ -33,6 +33,10 @@ The samples in this repository show practical Tuurio ID client integrations for 
 | Vue 3 | Vite + Composition API | [Vue guide](https://id.tuurio.com/public/developers/examples/vue) | [auth_samples_vue3](./auth_samples_vue3) |
 | Angular | Standalone Components | [Angular guide](https://id.tuurio.com/public/developers/examples/angular) | [auth_samples_angular](./auth_samples_angular) |
 | Next.js | App Router + Auth.js | [Next.js guide](https://id.tuurio.com/public/developers/examples/nextjs) | [auth_samples_nextjs](./auth_samples_nextjs) |
+| SvelteKit | SvelteKit + server hooks | [SvelteKit guide](https://id.tuurio.com/public/developers/examples/sveltekit) | [auth_samples_sveltekit](./auth_samples_sveltekit) |
+| Nuxt | Nuxt + server routes | [Nuxt guide](https://id.tuurio.com/public/developers/examples/nuxt) | [auth_samples_nuxt](./auth_samples_nuxt) |
+| Astro | Astro + server sessions | [Astro guide](https://id.tuurio.com/public/developers/examples/astro) | [auth_samples_astro](./auth_samples_astro) |
+| React Router | React Router framework mode | [React Router guide](https://id.tuurio.com/public/developers/examples/react-router) | [auth_samples_react_router](./auth_samples_react_router) |
 
 ### Mobile and Native
 
@@ -52,6 +56,8 @@ The samples in this repository show practical Tuurio ID client integrations for 
 | Java | Spring Boot 3 | [Spring Boot guide](https://id.tuurio.com/public/developers/examples/spring-boot) | [auth_samples_java](./auth_samples_java) |
 | PHP | Vanilla PHP | [PHP guide](https://id.tuurio.com/public/developers/examples/php) | [auth_samples_php](./auth_samples_php) |
 | Laravel | Laravel 12 | [Laravel guide](https://id.tuurio.com/public/developers/examples/laravel) | [auth_samples_laravel](./auth_samples_laravel) |
+| Python | Django | [Django guide](https://id.tuurio.com/public/developers/examples/django) | [auth_samples_django](./auth_samples_django) |
+| Python | FastAPI | [FastAPI guide](https://id.tuurio.com/public/developers/examples/fastapi) | [auth_samples_fastapi](./auth_samples_fastapi) |
 
 ## Getting Started
 
@@ -75,7 +81,7 @@ npm run dev
 
 ## Template distribution
 
-The reviewed catalog and target repository metadata live in [`distribution/templates.yml`](./distribution/templates.yml). It currently inventories 14 implemented samples and six planned additions. The distribution pipeline validates, packages, and synchronizes each source directory into a separately discoverable GitHub template repository without making the satellite an independent source of truth.
+The reviewed catalog and target repository metadata live in [`distribution/templates.yml`](./distribution/templates.yml). It inventories 20 implemented framework templates. The distribution pipeline validates, packages, and synchronizes each source directory into a separately discoverable GitHub template repository without making the satellite an independent source of truth.
 
 Validate the catalog with:
 

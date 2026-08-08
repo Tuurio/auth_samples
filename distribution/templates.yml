@@ -20,7 +20,7 @@ templates:
     start: npm run dev -- --host 0.0.0.0
     kind: browser
     stackblitz: true
-    files: [.env.example, .gitignore, eslint.config.js, index.html, package.json, package-lock.json, src, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, eslint.config.js, index.html, package.json, package-lock.json, src, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts]
     topics: [react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
     verify: [npm ci, npm run lint, npm run build]
   - id: lovable
@@ -37,7 +37,7 @@ templates:
     start: npm run dev -- --host 0.0.0.0
     kind: browser
     stackblitz: false
-    files: [.gitignore, index.html, package.json, package-lock.json, src, tsconfig.json, vite.config.ts]
+    files: [.gitignore, .github/social-preview.png, .github/social-preview.svg, index.html, package.json, package-lock.json, src, tsconfig.json, vite.config.ts]
     topics: [lovable, react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, eu-hosted]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: vue
@@ -54,7 +54,7 @@ templates:
     start: npm run dev -- --host 0.0.0.0
     kind: browser
     stackblitz: true
-    files: [.env.example, .gitignore, index.html, package.json, package-lock.json, public, src, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, index.html, package.json, package-lock.json, public, src, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts]
     topics: [vue, vue3, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template]
     verify: [npm ci, npm run build]
   - id: angular
@@ -72,7 +72,7 @@ templates:
     start: npm start -- --host 0.0.0.0
     kind: browser
     stackblitz: true
-    files: [.env.example, .gitignore, angular.json, package.json, package-lock.json, scripts, src, tsconfig.app.json, tsconfig.json]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, angular.json, package.json, package-lock.json, scripts, src, tsconfig.app.json, tsconfig.json]
     topics: [angular, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
     verify: [npm ci, npm run build]
   - id: nextjs
@@ -89,7 +89,7 @@ templates:
     start: npm run dev
     kind: server
     stackblitz: true
-    files: [.env.example, app, components, lib, next-env.d.ts, package.json, package-lock.json, providers, tsconfig.json]
+    files: [.env.example, .github/social-preview.png, .github/social-preview.svg, app, components, lib, next-env.d.ts, package.json, package-lock.json, providers, tsconfig.json]
     topics: [nextjs, react, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
     verify: [npm ci, npm run build]
   - id: android
@@ -105,7 +105,7 @@ templates:
     packageManager: Gradle Wrapper
     kind: native
     stackblitz: false
-    files: [.gitignore, app, build.gradle.kts, gradle, gradle.properties, gradlew, gradlew.bat, settings.gradle.kts]
+    files: [.gitignore, .github/social-preview.png, .github/social-preview.svg, app, build.gradle.kts, gradle, gradle.properties, gradlew, gradlew.bat, settings.gradle.kts]
     topics: [android, kotlin, jetpack-compose, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
     verify: [./gradlew assembleDebug]
   - id: ios
@@ -122,7 +122,7 @@ templates:
     runner: macos-15
     kind: native
     stackblitz: false
-    files: [TuurioAuthSample]
+    files: [.github/social-preview.png, .github/social-preview.svg, TuurioAuthSample]
     topics: [ios, swift, swiftui, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
     verify: [swiftc -parse TuurioAuthSample/*.swift]
   - id: flutter
@@ -138,7 +138,7 @@ templates:
     packageManager: Flutter pub
     kind: native
     stackblitz: false
-    files: [.gitignore, lib, pubspec.yaml, pubspec.lock]
+    files: [.gitignore, .github/social-preview.png, .github/social-preview.svg, lib, pubspec.yaml, pubspec.lock]
     topics: [flutter, dart, authentication, oidc, oauth2, pkce, appauth, mobile, tuurio, starter-template]
     verify: [flutter pub get, flutter analyze]
   - id: express
@@ -155,7 +155,7 @@ templates:
     start: npm start
     kind: server
     stackblitz: true
-    files: [.env.example, .gitignore, package.json, package-lock.json, server.js, src]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, package.json, package-lock.json, server.js, src]
     topics: [nodejs, express, javascript, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [npm ci, node --check server.js, node --check src/oauth.js]
   - id: flask
@@ -172,7 +172,7 @@ templates:
     start: python3 app.py
     kind: server
     stackblitz: false
-    files: [.env.example, .gitignore, app.py, config.py, requirements.txt, static]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, app.py, config.py, requirements.txt, static]
     topics: [python, flask, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [python3 -m pip install -r requirements.txt, python3 -m compileall -q .]
   - id: go
@@ -189,7 +189,7 @@ templates:
     start: go run .
     kind: server
     stackblitz: false
-    files: [.env.example, .gitignore, go.mod, go.sum, main.go, public]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, go.mod, go.sum, main.go, public]
     topics: [go, golang, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [go test ./..., go build ./...]
   - id: spring-boot
@@ -205,7 +205,7 @@ templates:
     packageManager: Gradle Wrapper
     kind: server
     stackblitz: false
-    files: [.env.example, build.gradle, gradle, gradlew, gradlew.bat, settings.gradle, src]
+    files: [.env.example, .github/social-preview.png, .github/social-preview.svg, build.gradle, gradle, gradlew, gradlew.bat, settings.gradle, src]
     topics: [java, spring-boot, spring-security, authentication, oidc, oauth2, openid-connect, tuurio, starter-template]
     verify: [./gradlew --no-daemon test, ./gradlew --no-daemon bootJar]
   - id: php
@@ -222,7 +222,7 @@ templates:
     start: php -S 127.0.0.1:8080 router.php
     kind: server
     stackblitz: false
-    files: [.env.example, .gitignore, .htaccess, public, router.php, src]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, .htaccess, public, router.php, src]
     topics: [php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [find . -name '*.php' -print0 | xargs -0 -n1 php -l]
   - id: laravel
@@ -239,7 +239,7 @@ templates:
     start: php artisan serve --host=127.0.0.1 --port=8000
     kind: server
     stackblitz: false
-    files: [.editorconfig, .env.example, .gitattributes, .gitignore, .styleci.yml, app, artisan, bootstrap, composer.json, composer.lock, config, database, phpunit.xml, public, resources, routes, storage, tests]
+    files: [.editorconfig, .env.example, .gitattributes, .gitignore, .github/social-preview.png, .github/social-preview.svg, .styleci.yml, app, artisan, bootstrap, composer.json, composer.lock, config, database, phpunit.xml, public, resources, routes, storage, tests]
     topics: [laravel, php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [composer install --no-interaction, cp .env.example .env, php artisan key:generate, php artisan test]
   - id: sveltekit
@@ -257,7 +257,7 @@ templates:
     start: npm run dev -- --host 0.0.0.0
     kind: server
     stackblitz: true
-    files: [.env.example, .gitignore, package.json, package-lock.json, src, svelte.config.js, tsconfig.json, vite.config.ts]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, package.json, package-lock.json, src, svelte.config.js, tsconfig.json, vite.config.ts]
     topics: [svelte, sveltekit, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run check, npm run build]
   - id: nuxt
@@ -275,7 +275,7 @@ templates:
     start: npm run dev -- --host 0.0.0.0
     kind: server
     stackblitz: true
-    files: [.env.example, .gitignore, app, nuxt.config.ts, package.json, package-lock.json, server, tsconfig.json]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, app, nuxt.config.ts, package.json, package-lock.json, server, tsconfig.json]
     topics: [nuxt, vue, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: astro
@@ -293,7 +293,7 @@ templates:
     start: npm run dev -- --host 0.0.0.0
     kind: server
     stackblitz: true
-    files: [.env.example, .gitignore, astro.config.mjs, package.json, package-lock.json, src, tsconfig.json]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, astro.config.mjs, package.json, package-lock.json, src, tsconfig.json]
     topics: [astro, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
     verify: [npm ci, npm run check, npm run build]
   - id: react-router
@@ -311,7 +311,7 @@ templates:
     start: npm run dev
     kind: server
     stackblitz: true
-    files: [.env.example, .gitignore, index.html, package.json, package-lock.json, server, src, tsconfig.json, tsconfig.server.json, vite.config.ts]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, index.html, package.json, package-lock.json, server, src, tsconfig.json, tsconfig.server.json, vite.config.ts]
     topics: [react, react-router, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: django
@@ -328,7 +328,7 @@ templates:
     start: python3 manage.py runserver 0.0.0.0:8000
     kind: server
     stackblitz: false
-    files: [.env.example, .gitignore, authapp, manage.py, requirements.txt, templates, tuurio_starter]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, authapp, manage.py, requirements.txt, templates, tuurio_starter]
     topics: [python, django, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
     verify: [python3 -m pip install -r requirements.txt, python3 manage.py check, python3 manage.py test]
   - id: fastapi
@@ -345,7 +345,7 @@ templates:
     start: uvicorn app.main:app --host 0.0.0.0 --port 8000
     kind: server
     stackblitz: false
-    files: [.env.example, .gitignore, app, pyproject.toml, requirements.txt, tests]
+    files: [.env.example, .gitignore, .github/social-preview.png, .github/social-preview.svg, app, pyproject.toml, requirements.txt, tests]
     topics: [python, fastapi, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
     verify: [python3 -m pip install -r requirements.txt, python3 -m compileall -q app tests, python3 -m pytest -q]
 products:

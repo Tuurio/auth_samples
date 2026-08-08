@@ -91,3 +91,10 @@ test("requires packaging metadata with an allow-list", () => {
   assert.ok(errors.some((error) => error.includes("files must contain")));
   assert.ok(errors.some((error) => error.includes("framework is required")));
 });
+
+test("rejects a framework label that cannot render safely", () => {
+  const manifest = copy();
+  manifest.templates[0].framework = "React framework with spaces 登录";
+  const { errors } = validateManifest(manifest, { repositoryRoot: root });
+  assert.ok(errors.some((error) => error.includes("framework must use 1-24 lowercase ASCII slug characters")));
+});
