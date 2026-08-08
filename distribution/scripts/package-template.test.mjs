@@ -10,6 +10,7 @@ import { compareMarkers } from "./verify-template-repos.mjs";
 
 const manifest = loadCatalog();
 const react = manifest.templates.find((template) => template.id === "react-vite");
+const laravel = manifest.templates.find((template) => template.id === "laravel");
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 
 test("packages the React pilot deterministically from an allow-list", () => {
@@ -26,6 +27,48 @@ test("packages the React pilot deterministically from an allow-list", () => {
     assert.ok(firstResult.marker.managedFiles.some((entry) => entry.path === "package-lock.json"));
     assert.ok(!firstResult.marker.managedFiles.some((entry) => entry.path === ".env"));
     assert.match(readFileSync(resolve(first, "README.md"), "utf8"), /manage-tuurio-id@1\.1\.6/);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("packages every ready template without shared credentials or raw-token guidance", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-catalog-test-"));
+  try {
+    const readyTemplates = manifest.templates.filter((template) => template.status === "ready");
+    assert.equal(readyTemplates.length, 14);
+    for (const template of readyTemplates) {
+      const output = resolve(temporary, template.id);
+      const result = packageTemplate(template, { output, sourceSha: "1".repeat(40) });
+      assert.equal(result.marker.templateId, template.id);
+      assert.ok(result.marker.managedFiles.length > 5, `${template.id} package is unexpectedly small`);
+
+      const readable = result.marker.managedFiles
+        .map((entry) => entry.path)
+        .filter((path) => /(?:\.env\.example|\.gradle|\.java|\.js|\.json|\.kt|\.kts|\.md|\.mjs|\.php|\.properties|\.py|\.sh|\.swift|\.ts|\.tsx|\.vue|\.xml|\.ya?ml|^Dockerfile$|^gradlew$)/.test(path))
+        .map((path) => readFileSync(resolve(output, path), "utf8"))
+        .join("\n");
+      assert.doesNotMatch(readable, /spa-K53I|php-KQD8/);
+      assert.doesNotMatch(readable, /Access token and ID token \(raw|Raw JWT/i);
+    }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("excludes ignored framework caches from managed template files", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-cache-test-"));
+  try {
+    const result = packageTemplate(laravel, {
+      output: resolve(temporary, "laravel"),
+      sourceSha: "2".repeat(40),
+    });
+    const managed = result.marker.managedFiles.map((entry) => entry.path);
+    assert.ok(managed.includes("bootstrap/cache/.gitignore"));
+    assert.ok(managed.includes("storage/framework/views/.gitignore"));
+    assert.ok(!managed.includes("bootstrap/cache/packages.php"));
+    assert.ok(!managed.some((path) => path.startsWith("storage/framework/views/") && path.endsWith(".php")));
+    assert.ok(!managed.includes("storage/logs/laravel.log"));
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }

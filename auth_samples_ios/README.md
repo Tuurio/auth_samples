@@ -1,6 +1,6 @@
 # Tuurio Auth iOS Demo
 
-An iOS (SwiftUI) demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+An iOS (SwiftUI) demo that signs in with OAuth 2.0 / OpenID Connect, shows safe session metadata, and supports logout.
 
 ## Integration guide
 
@@ -34,8 +34,7 @@ Post-logout Redirect URI: http://localhost:5173/
 - A login screen with a “Continue with Tuurio ID” button.
 - After you authenticate, you are redirected back to the app.
 - The app shows:
-  - Access token and ID token (raw + decoded claims).
-  - Token expiry time and scope.
+  - Token expiry time and scope without rendering token values.
   - UserInfo JSON (user profile).
   - Logout button that ends the session and returns to the app.
 
@@ -47,12 +46,12 @@ Edit `TuurioAuthSample/AuthConfig.swift` with the values from your **Connect** p
 https://<tenantId>.id.tuurio.com/admin/clients
 ```
 
-The current sample values are:
+Replace the placeholders with values for your own tenant and native client:
 
 ```
-authorizationEndpoint: https://test.id.tuurio.com/oauth2/authorize
-tokenEndpoint: https://test.id.tuurio.com/oauth2/token
-clientId: spa-K53I
+authorizationEndpoint: https://YOUR_TENANT.id.tuurio.com/oauth2/authorize
+tokenEndpoint: https://YOUR_TENANT.id.tuurio.com/oauth2/token
+clientId: YOUR_CLIENT_ID
 redirectURI: com.example.app://oauth2redirect
 scopes: openid profile email
 postLogoutRedirectURI: http://localhost:5173/

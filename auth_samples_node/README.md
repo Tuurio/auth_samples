@@ -1,6 +1,6 @@
 # Tuurio Auth Node.js Demo
 
-A server-rendered Node.js demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+A server-rendered Node.js demo that signs in with OAuth 2.0 / OpenID Connect, keeps tokens server-side, and supports logout.
 
 ## Integration guide
 
@@ -31,8 +31,8 @@ Post-logout Redirect URI: http://localhost:8082/logout/callback
 ## `.env` keys
 
 ```env
-TUURIO_ISSUER=https://test.id.tuurio.com
-TUURIO_CLIENT_ID=spa-K53I
+TUURIO_ISSUER=https://YOUR_TENANT.id.tuurio.com
+TUURIO_CLIENT_ID=YOUR_CLIENT_ID
 TUURIO_CLIENT_SECRET=
 TUURIO_REDIRECT_URI=http://localhost:8082/auth/callback
 TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:8082/logout/callback

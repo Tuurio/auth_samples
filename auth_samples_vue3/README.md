@@ -49,8 +49,8 @@ The demo also accepts `/callback` for compatibility.
 ## `.env` keys
 
 ```env
-VITE_TUURIO_ISSUER=https://test.id.tuurio.com
-VITE_TUURIO_CLIENT_ID=spa-K53I
+VITE_TUURIO_ISSUER=https://YOUR_TENANT.id.tuurio.com
+VITE_TUURIO_CLIENT_ID=YOUR_CLIENT_ID
 VITE_TUURIO_REDIRECT_URI=http://localhost:5173/auth/callback
 VITE_TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173/logout/callback
 VITE_TUURIO_SCOPE=openid profile email

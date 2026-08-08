@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -72,13 +73,13 @@ def _sanitize_header_name(value: str | None) -> str | None:
     return raw
 
 
-AUTHORITY = _normalize_authority(os.getenv("TUURIO_ISSUER")) or "https://test.id.tuurio.com"
+AUTHORITY = _normalize_authority(os.getenv("TUURIO_ISSUER")) or "https://your-tenant.id.tuurio.com"
 AUTHORIZE_ENDPOINT = f"{AUTHORITY}/oauth2/authorize"
 TOKEN_ENDPOINT = f"{AUTHORITY}/oauth2/token"
 DISCOVERY_ENDPOINT = f"{AUTHORITY}/.well-known/openid-configuration"
 
-CLIENT_ID = _sanitize_client_id(os.getenv("TUURIO_CLIENT_ID")) or "php-KQD8"
-CLIENT_SECRET = os.getenv("TUURIO_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
+CLIENT_ID = _sanitize_client_id(os.getenv("TUURIO_CLIENT_ID")) or "replace-after-browser-handoff"
+CLIENT_SECRET = os.getenv("TUURIO_CLIENT_SECRET", "")
 
 REDIRECT_URI = _normalize_url(os.getenv("TUURIO_REDIRECT_URI")) or "http://localhost:8083/auth/callback"
 POST_LOGOUT_REDIRECT_URI = (
@@ -86,7 +87,11 @@ POST_LOGOUT_REDIRECT_URI = (
 )
 SCOPE = _sanitize_scope(os.getenv("TUURIO_SCOPE")) or "openid profile email"
 
-SECRET_KEY = os.getenv("TUURIO_SESSION_SECRET", "tuurio-auth-sample")
+SECRET_KEY = os.getenv("TUURIO_SESSION_SECRET", "development-only-change-before-deploy")
+SESSION_DIR = os.getenv(
+    "TUURIO_SESSION_DIR",
+    str(Path(__file__).resolve().parent / ".flask_session"),
+)
 
 WEBHOOK_ID = str(os.getenv("TUURIO_WEBHOOK_ID", "")).strip()
 WEBHOOK_URL = _normalize_url(os.getenv("TUURIO_WEBHOOK_URL")) or ""

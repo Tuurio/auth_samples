@@ -117,7 +117,7 @@ function renderShell(status, content) {
           <h1>Design for<br>secure sign in.</h1>
           <p class="muted">
             A minimal Node.js server that authenticates with OpenID Connect,
-            inspects decoded tokens, and handles secure logout.
+            keeps tokens server-side, and handles secure logout.
           </p>
           <div class="status-row">
             <span class="status status-${tone}">${label}</span>
@@ -203,15 +203,10 @@ function renderLoginView({ error, authorityHost: host, configMissing = false }) 
 }
 
 function renderTokenView(session, options) {
-  const accessClaims = session.accessClaims || null;
-  const idClaims = session.idClaims || null;
   const profileJson = session.profileJson || 'No profile data.';
   const scopeLabel = session.scope || 'openid profile email';
 
   const timingParts = [];
-  if (accessClaims && typeof accessClaims.iat === 'number') {
-    timingParts.push(`Issued ${formatDuration(Math.floor(Date.now() / 1000) - accessClaims.iat)} ago`);
-  }
   if (typeof session.expiresAt === 'number') {
     const remaining = session.expiresAt - Math.floor(Date.now() / 1000);
     timingParts.push(
@@ -249,54 +244,8 @@ function renderTokenView(session, options) {
         <pre class="code-block">${highlightJsonHtml(escapeHtml(profileJson))}</pre>
       </section>
 
-      ${renderTokenPanel(
-        'Access Token',
-        session.access_token || '',
-        accessClaims,
-        'Authorizes API requests on behalf of the user.',
-        'key',
-      )}
-      ${renderTokenPanel(
-        'ID Token',
-        session.id_token || '',
-        idClaims,
-        'Cryptographic proof of the authenticated identity.',
-        'id-card',
-      )}
-
       ${renderDiscoverySection(options.authority, options.discoveryEndpoint)}
     </div>
-  `;
-}
-
-function renderTokenPanel(title, token, decoded, description, iconName) {
-  const tokenValue = token ? escapeHtml(token) : 'Not provided';
-  const preview = token ? `${escapeHtml(token.slice(0, 48))}&hellip;` : 'Not provided';
-  const decodedText = decoded
-    ? JSON.stringify(decoded, null, 2)
-    : 'Not a JWT or unable to decode.';
-
-  return `
-    <section class="card">
-      <div class="section-header">
-        <div class="section-icon">${icon(iconName, 18)}</div>
-        <div>
-          <h3 class="section-title">${escapeHtml(title)}</h3>
-          <p class="muted">${escapeHtml(description)}</p>
-        </div>
-      </div>
-      <details class="token-details">
-        <summary class="token-summary">
-          <span class="eyebrow">Raw JWT</span>
-          <code class="token-preview">${preview}</code>
-        </summary>
-        <pre class="token-block">${tokenValue}</pre>
-      </details>
-      <div class="token-claims">
-        <span class="eyebrow">Decoded payload</span>
-        <pre class="code-block">${highlightJsonHtml(escapeHtml(decodedText))}</pre>
-      </div>
-    </section>
   `;
 }
 

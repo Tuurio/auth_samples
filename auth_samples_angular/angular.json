@@ -10,12 +10,9 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/auth-samples-angular",
-            "index": "src/index.html",
-            "main": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [],
             "styles": ["src/styles.css"],
@@ -41,14 +38,10 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-            "browserTarget": "auth-samples-angular:build",
-            "port": 4200
-          },
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "auth-samples-angular:build:production"
+              "buildTarget": "auth-samples-angular:build:production"
             }
           }
         }

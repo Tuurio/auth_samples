@@ -4,13 +4,6 @@ function base64urlEncode(buffer) {
   return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function base64urlDecode(value) {
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
-  const padLength = padded.length % 4;
-  const base64 = padLength ? padded.padEnd(padded.length + (4 - padLength), '=') : padded;
-  return Buffer.from(base64, 'base64');
-}
-
 function generateRandomString(length = 32) {
   return base64urlEncode(crypto.randomBytes(length));
 }
@@ -52,18 +45,20 @@ async function exchangeCodeForTokens(config, code, verifier) {
     method: 'POST',
     headers,
     body,
+    signal: AbortSignal.timeout(10_000),
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || 'Token exchange failed.');
+    throw new Error('Token exchange failed.');
   }
 
   return await response.json();
 }
 
 async function fetchDiscovery(config) {
-  const response = await fetch(config.discoveryEndpoint);
+  const response = await fetch(config.discoveryEndpoint, {
+    signal: AbortSignal.timeout(10_000),
+  });
   if (!response.ok) {
     throw new Error('Unable to load discovery document.');
   }
@@ -80,24 +75,12 @@ async function fetchUserInfo(config, accessToken) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || 'Failed to load user profile.');
+    throw new Error('Failed to load user profile.');
   }
   return await response.json();
-}
-
-function decodeJwt(token) {
-  if (!token) return null;
-  const parts = token.split('.');
-  if (parts.length < 2) return null;
-  try {
-    const payload = JSON.parse(base64urlDecode(parts[1]).toString('utf8'));
-    return payload;
-  } catch {
-    return null;
-  }
 }
 
 function formatTime(unixSeconds) {
@@ -112,6 +95,5 @@ module.exports = {
   exchangeCodeForTokens,
   fetchDiscovery,
   fetchUserInfo,
-  decodeJwt,
   formatTime,
 };

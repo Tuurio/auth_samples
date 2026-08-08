@@ -20,23 +20,18 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tuurio.authsample.auth.UserSession
-import com.tuurio.authsample.auth.decodeJwt
 import com.tuurio.authsample.auth.formatTime
 
 @Immutable
@@ -122,12 +117,12 @@ private fun SidePanel(status: ShellStatus, modifier: Modifier) {
           fontSize = 28.sp,
         )
         Text(
-          "A minimal Android client that signs in with OpenID Connect, displays decoded tokens, and supports secure logout redirects.",
+          "A minimal Android client that signs in with OpenID Connect and supports secure logout redirects.",
           color = Color(0xFF64748B),
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
           StatusPill(status)
-          Text("Authority: test.id.tuurio.com", color = Color(0xFF64748B), fontSize = 13.sp)
+          Text("Authority: configured tenant", color = Color(0xFF64748B), fontSize = 13.sp)
         }
       }
     }
@@ -251,7 +246,7 @@ fun LoginView(error: String?, onLogin: () -> Unit) {
         ) {
           Text("Continue with Tuurio ID", color = Color.White, fontWeight = FontWeight.SemiBold)
         }
-        Text("You'll be redirected to test.id.tuurio.com", color = Color(0xFF64748B), fontSize = 13.sp)
+        Text("You'll be redirected to your configured Tuurio tenant.", color = Color(0xFF64748B), fontSize = 13.sp)
       }
       if (!error.isNullOrBlank()) {
         Spacer(modifier = Modifier.height(12.dp))
@@ -294,11 +289,6 @@ fun TokenView(session: UserSession, onLogout: () -> Unit) {
       }
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-      TokenPanel("Access Token", session.accessToken, "Used to call protected APIs.")
-      TokenPanel("ID Token", session.idToken ?: "", "Proves the authenticated user.")
-    }
-
     CardSurface(tone = CardTone.Soft) {
       Text("User profile (UserInfo)", fontWeight = FontWeight.SemiBold)
       CodeBlock(session.profileJson ?: "No profile data.")
@@ -323,39 +313,6 @@ private fun StatusMessage(message: String) {
       .padding(horizontal = 12.dp, vertical = 6.dp),
   ) {
     Text(message, color = Color(0xFFB91C1C), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-  }
-}
-
-@Composable
-private fun TokenPanel(title: String, token: String, description: String) {
-  val clipboard = LocalClipboardManager.current
-  val copied = remember { mutableStateOf(false) }
-  val decoded = remember(token) { decodeJwt(token) }
-
-  CardSurface(tone = CardTone.Panel) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top,
-      ) {
-        Column(modifier = Modifier.weight(1f)) {
-          Text(title, fontWeight = FontWeight.SemiBold)
-          Text(description, color = Color(0xFF64748B), fontSize = 13.sp)
-        }
-        TextButton(onClick = {
-          clipboard.setText(androidx.compose.ui.text.AnnotatedString(token))
-          copied.value = true
-        }) {
-          Text(if (copied.value) "Copied" else "Copy")
-        }
-      }
-      CodeBlock(if (token.isBlank()) "Not provided" else token)
-      Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Decoded claims", color = Color(0xFF0F766E), fontSize = 12.sp, letterSpacing = 1.4.sp)
-        CodeBlock(decoded ?: "Not a JWT or unable to decode.")
-      }
-    }
   }
 }
 

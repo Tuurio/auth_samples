@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "tuurio/auth-samples-laravel",
     "type": "project",
-    "description": "Tuurio ID Laravel auth sample with OIDC login, logout, token inspection, and webhooks.",
+    "description": "Tuurio ID Laravel auth sample with OIDC login, logout, protected server-side tokens, and webhooks.",
     "keywords": ["tuurio", "laravel", "oidc", "oauth2", "openid-connect"],
     "license": "Apache-2.0",
     "require": {
@@ -66,6 +66,9 @@
         }
     },
     "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,

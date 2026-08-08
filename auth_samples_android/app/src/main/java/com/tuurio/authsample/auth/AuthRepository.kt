@@ -115,7 +115,7 @@ class AuthRepository(context: Context) {
       if (responseCode >= 400) return null
       val payload = connection.inputStream.bufferedReader().use { it.readText() }
       val json = org.json.JSONObject(payload)
-      val endpoint = json.optString("userinfo_endpoint", null)
+      val endpoint = json.optString("userinfo_endpoint").takeIf { it.isNotBlank() }
       userInfoEndpoint = endpoint
       endpoint
     } finally {

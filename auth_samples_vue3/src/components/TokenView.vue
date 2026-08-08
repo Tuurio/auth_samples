@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import type { User } from 'oidc-client-ts';
 import Card from './Card.vue';
-import TokenPanel from './TokenPanel.vue';
 import { authConfig } from '../auth';
 
 const props = defineProps<{
@@ -16,9 +15,6 @@ const emit = defineEmits<{
 
 const scopeLabel = computed(() => props.user.scope || "openid profile email");
 const discoveryUrl = computed(() => `${authConfig.authority}/.well-known/openid-configuration`);
-
-const accessTokenInfo = computed(() => decodeJwt(props.user.access_token));
-const idTokenInfo = computed(() => decodeJwt(props.user.id_token ?? ""));
 
 function formatDuration(seconds: number) {
   const abs = Math.abs(seconds);
@@ -35,10 +31,6 @@ function formatDuration(seconds: number) {
 
 const timingLabel = computed(() => {
   const parts: string[] = [];
-  const issuedAt = accessTokenInfo.value?.iat;
-  if (typeof issuedAt === 'number') {
-    parts.push(`Issued ${formatDuration(Math.floor(Date.now() / 1000) - issuedAt)} ago`);
-  }
   if (props.user.expires_at) {
     const remaining = props.user.expires_at - Math.floor(Date.now() / 1000);
     parts.push(remaining > 0 ? `${formatDuration(remaining)} remaining` : `expired ${formatDuration(Math.abs(remaining))} ago`);
@@ -46,27 +38,6 @@ const timingLabel = computed(() => {
   return parts.join(' · ');
 });
 
-function decodeJwt(token: string): Record<string, unknown> | null {
-  if (!token) return null;
-  const parts = token.split(".");
-  if (parts.length < 2) return null;
-
-  try {
-    const payloadPart = parts[1];
-    if (!payloadPart) return null;
-    const payload = decodeBase64Url(payloadPart);
-    return JSON.parse(payload);
-  } catch {
-    return null;
-  }
-}
-
-function decodeBase64Url(value: string) {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padLength = padded.length % 4;
-  const base64 = padLength ? padded.padEnd(padded.length + (4 - padLength), "=") : padded;
-  return atob(base64);
-}
 </script>
 
 <template>
@@ -100,19 +71,6 @@ function decodeBase64Url(value: string) {
         {{ profile ? JSON.stringify(profile, null, 2) : "No profile data." }}
       </pre>
     </Card>
-
-    <TokenPanel
-      title="Access Token"
-      :token="user.access_token"
-      :decoded="accessTokenInfo"
-      description="Authorizes API requests on behalf of the user."
-    />
-    <TokenPanel
-      title="ID Token"
-      :token="user.id_token"
-      :decoded="idTokenInfo"
-      description="Cryptographic proof of the authenticated identity."
-    />
 
     <Card>
       <div class="section-header">

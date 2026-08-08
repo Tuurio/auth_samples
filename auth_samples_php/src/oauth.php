@@ -4,7 +4,7 @@
  * Tuurio Auth Studio — OAuth 2.1 / OpenID Connect helpers.
  *
  * Pure-PHP functions for PKCE generation, authorization URL building,
- * token exchange, discovery fetching, UserInfo calls, and JWT decoding.
+ * token exchange, discovery fetching, and UserInfo calls.
  * No external dependencies required.
  *
  * @author  Tuurio GmbH, Berlin
@@ -19,15 +19,6 @@ require_once __DIR__ . '/helpers.php';
 function base64url_encode(string $data): string
 {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-}
-
-function base64url_decode(string $data): string
-{
-    $remainder = strlen($data) % 4;
-    if ($remainder) {
-        $data .= str_repeat('=', 4 - $remainder);
-    }
-    return base64_decode(strtr($data, '-_', '+/')) ?: '';
 }
 
 function generate_random_string(int $length = 32): string
@@ -81,6 +72,8 @@ function exchange_code_for_tokens(array $config, string $code, string $verifier)
         CURLOPT_POSTFIELDS => $payload,
         CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10,
     ];
 
     if ($curlOptions) {
@@ -91,15 +84,14 @@ function exchange_code_for_tokens(array $config, string $code, string $verifier)
 
     $response = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
     curl_close($ch);
 
     if ($response === false) {
-        throw new RuntimeException('Token request failed: ' . $error);
+        throw new RuntimeException('Token request failed.');
     }
 
     if ($status >= 400) {
-        throw new RuntimeException('Token request failed: ' . $response);
+        throw new RuntimeException('Token request failed.');
     }
 
     $data = json_decode($response, true);
@@ -131,19 +123,20 @@ function fetch_userinfo(string $endpoint, string $accessToken): array
     curl_setopt_array($ch, [
         CURLOPT_HTTPHEADER => ["Authorization: Bearer {$accessToken}"],
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10,
     ]);
 
     $response = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
     curl_close($ch);
 
     if ($response === false) {
-        throw new RuntimeException('UserInfo request failed: ' . $error);
+        throw new RuntimeException('UserInfo request failed.');
     }
 
     if ($status >= 400) {
-        throw new RuntimeException('UserInfo request failed: ' . $response);
+        throw new RuntimeException('UserInfo request failed.');
     }
 
     $data = json_decode($response, true);
@@ -152,21 +145,6 @@ function fetch_userinfo(string $endpoint, string $accessToken): array
     }
 
     return $data;
-}
-
-function decode_jwt(string $token): ?array
-{
-    if ($token === '') {
-        return null;
-    }
-
-    $parts = explode('.', $token);
-    if (count($parts) < 2) {
-        return null;
-    }
-
-    $payload = json_decode(base64url_decode($parts[1]), true);
-    return is_array($payload) ? $payload : null;
 }
 
 /**

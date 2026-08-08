@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import json
 import html
 import re
@@ -8,12 +7,22 @@ from datetime import datetime
 from urllib.parse import urlencode, urlparse
 
 from authlib.integrations.flask_client import OAuth
+from cachelib.file import FileSystemCache
 from flask import Flask, redirect, request, session, url_for
+from flask_session import Session
 
 import config
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
+app.config.update(
+    SESSION_TYPE="cachelib",
+    SESSION_CACHELIB=FileSystemCache(cache_dir=config.SESSION_DIR, threshold=500),
+    SESSION_PERMANENT=False,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+Session(app)
 
 oauth = OAuth(app)
 oauth.register(
@@ -62,21 +71,21 @@ def auth_callback():
         token = oauth.tuurio.authorize_access_token()
         if not token or "access_token" not in token:
             raise RuntimeError("Missing access token.")
-        session["token"] = token
 
-        userinfo = None
-        try:
-            metadata = oauth.tuurio.load_server_metadata()
-            userinfo_endpoint = metadata.get("userinfo_endpoint")
-            if userinfo_endpoint:
-                resp = oauth.tuurio.get(userinfo_endpoint, token=token)
-                if resp.ok:
-                    userinfo = resp.json()
-        except Exception:  # pylint: disable=broad-except
-            userinfo = None
+        metadata = oauth.tuurio.load_server_metadata()
+        userinfo_endpoint = metadata.get("userinfo_endpoint")
+        if not userinfo_endpoint:
+            raise RuntimeError("UserInfo endpoint missing from discovery metadata.")
+        resp = oauth.tuurio.get(userinfo_endpoint, token=token)
+        resp.raise_for_status()
+        userinfo = resp.json()
+        session["token"] = token
         session["userinfo"] = userinfo
-    except Exception as exc:  # pylint: disable=broad-except
-        session["error"] = str(exc) or "Login failed."
+        session.pop("error", None)
+    except Exception:  # pylint: disable=broad-except
+        session.pop("token", None)
+        session.pop("userinfo", None)
+        session["error"] = "Login could not be completed."
     return redirect("/")
 
 
@@ -100,8 +109,8 @@ def logout():
             params["id_token_hint"] = id_token_hint
 
         return redirect(end_session + "?" + urlencode(params))
-    except Exception as exc:  # pylint: disable=broad-except
-        session["error"] = str(exc) or "Logout failed."
+    except Exception:  # pylint: disable=broad-except
+        session["error"] = "Logout could not be completed."
         return redirect("/")
 
 
@@ -283,23 +292,16 @@ def render_login_view(error: str | None, authority_host_label: str, config_missi
 
 
 def render_token_view(token: dict, authority: str, discovery_endpoint: str) -> str:
-    access_token = token.get("access_token", "")
-    id_token = token.get("id_token", "")
     scope_label = token.get("scope") or config.SCOPE
     expires_at = token.get("expires_at")
     if expires_at is None and token.get("expires_in"):
         expires_at = int(datetime.utcnow().timestamp()) + int(token.get("expires_in"))
-
-    access_decoded = decode_jwt(access_token)
-    id_decoded = decode_jwt(id_token)
 
     userinfo = session.get("userinfo")
     profile_json = json.dumps(userinfo, indent=2) if userinfo else "No profile data."
 
     now = int(datetime.utcnow().timestamp())
     timing_parts: list[str] = []
-    if access_decoded and isinstance(access_decoded.get("iat"), int):
-        timing_parts.append(f"Issued {format_duration(now - int(access_decoded['iat']))} ago")
     if expires_at is not None:
         remaining = int(expires_at) - now
         timing_parts.append(
@@ -311,21 +313,6 @@ def render_token_view(token: dict, authority: str, discovery_endpoint: str) -> s
         f"<code>{html.escape(scope_label)}</code> &middot; {' &middot; '.join(timing_parts)}"
         if timing_parts
         else f"<code>{html.escape(scope_label)}</code>"
-    )
-
-    access_panel = render_token_panel(
-        "Access Token",
-        access_token,
-        access_decoded,
-        "Authorizes API requests on behalf of the user.",
-        "key",
-    )
-    id_panel = render_token_panel(
-        "ID Token",
-        id_token,
-        id_decoded,
-        "Cryptographic proof of the authenticated identity.",
-        "id-card",
     )
 
     return f"""
@@ -353,45 +340,8 @@ def render_token_view(token: dict, authority: str, discovery_endpoint: str) -> s
         <pre class="code-block">{highlight_json_html(html.escape(profile_json))}</pre>
       </section>
 
-      {access_panel}
-      {id_panel}
-
       {render_discovery_section(authority, discovery_endpoint)}
     </div>
-    """
-
-
-def render_token_panel(
-    title: str,
-    token: str,
-    decoded: dict | None,
-    description: str,
-    icon_name: str,
-) -> str:
-    token_label = html.escape(token) if token else "Not provided"
-    decoded_text = json.dumps(decoded, indent=2) if decoded else "Not a JWT or unable to decode."
-    token_preview = f"{html.escape(token[:48])}&hellip;" if token else "Not provided"
-    return f"""
-    <section class="card">
-      <div class="section-header">
-        <div class="section-icon">{icon(icon_name, 18)}</div>
-        <div>
-          <h3 class="section-title">{html.escape(title)}</h3>
-          <p class="muted">{html.escape(description)}</p>
-        </div>
-      </div>
-      <details class="token-details">
-        <summary class="token-summary">
-          <span class="eyebrow">Raw JWT</span>
-          <code class="token-preview">{token_preview}</code>
-        </summary>
-        <pre class="token-block">{token_label}</pre>
-      </details>
-      <div class="token-claims">
-        <span class="eyebrow">Decoded payload</span>
-        <pre class="code-block">{highlight_json_html(html.escape(decoded_text))}</pre>
-      </div>
-    </section>
     """
 
 
@@ -562,25 +512,6 @@ def highlight_json_html(escaped_html: str) -> str:
         highlighted,
     )
     return highlighted
-
-
-def decode_jwt(token: str) -> dict | None:
-    if not token:
-        return None
-    parts = token.split(".")
-    if len(parts) < 2:
-        return None
-    try:
-        payload = base64url_decode(parts[1])
-        return json.loads(payload)
-    except Exception:  # pylint: disable=broad-except
-        return None
-
-
-def base64url_decode(value: str) -> str:
-    padding = '=' * (-len(value) % 4)
-    data = base64.urlsafe_b64decode(value + padding)
-    return data.decode('utf-8')
 
 
 def format_duration(seconds: int) -> str:

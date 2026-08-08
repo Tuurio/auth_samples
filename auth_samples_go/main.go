@@ -55,16 +55,14 @@ var oauthConfig = &oauth2.Config{
 }
 
 type Session struct {
-	State         string
-	Verifier      string
-	Token         *oauth2.Token
-	IDToken       string
-	ScopeLabel    string
-	ExpiresLabel  string
-	AccessDecoded string
-	IDDecoded     string
-	ProfileJSON   string
-	Error         string
+	State        string
+	Verifier     string
+	Token        *oauth2.Token
+	IDToken      string
+	ScopeLabel   string
+	ExpiresLabel string
+	ProfileJSON  string
+	Error        string
 }
 
 type sessionStore struct {
@@ -104,17 +102,17 @@ func loadConfig() Config {
 
 	authority := normalizeAuthority(os.Getenv("TUURIO_ISSUER"))
 	if authority == "" {
-		authority = "https://test.id.tuurio.com"
+		authority = "https://your-tenant.id.tuurio.com"
 	}
 
 	clientID := sanitizeClientID(os.Getenv("TUURIO_CLIENT_ID"))
 	if clientID == "" {
-		clientID = "php-KQD8"
+		clientID = "replace-after-browser-handoff"
 	}
 
 	clientSecret := strings.TrimSpace(os.Getenv("TUURIO_CLIENT_SECRET"))
 	if clientSecret == "" {
-		clientSecret = "YOUR_CLIENT_SECRET"
+		clientSecret = ""
 	}
 
 	redirectURI := normalizeHTTPURL(os.Getenv("TUURIO_REDIRECT_URI"))
@@ -404,7 +402,13 @@ func handleCallback(w http.ResponseWriter, r *http.Request, session *Session) {
 
 	idToken, _ := token.Extra("id_token").(string)
 
-	userInfoJSON := fetchUserInfo(r.Context(), token.AccessToken)
+	userInfoJSON, err := fetchUserInfo(r.Context(), token.AccessToken)
+	if err != nil {
+		clearAuthFlow(session)
+		session.Error = err.Error()
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
 
 	session.Token = token
 	session.IDToken = idToken
@@ -413,15 +417,10 @@ func handleCallback(w http.ResponseWriter, r *http.Request, session *Session) {
 		session.ScopeLabel = scopeRaw
 	}
 	session.ExpiresLabel = formatTime(token.Expiry)
-	session.AccessDecoded = formatDecoded(token.AccessToken)
-	session.IDDecoded = formatDecoded(idToken)
-	if userInfoJSON == "" {
-		session.ProfileJSON = "No profile data."
-	} else {
-		session.ProfileJSON = userInfoJSON
-	}
+	session.ProfileJSON = userInfoJSON
 
 	clearAuthFlow(session)
+	session.Error = ""
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -553,7 +552,7 @@ func renderShell(status map[string]string, content string) string {
         <div class="side-card">
           <h1>Design for<br>secure sign in.</h1>
           <p class="muted">
-            A minimal Go server that authenticates with OpenID Connect, inspects decoded tokens,
+            A minimal Go server that authenticates with OpenID Connect, keeps tokens server-side,
             and supports secure logout.
           </p>
           <div class="status-row">
@@ -671,9 +670,6 @@ func renderTokenView(session *Session) string {
         <pre class="code-block">%s</pre>
       </section>
 
-      %s
-      %s
-
       <section class="card">
         <div class="section-header">
           <div class="section-icon">ID</div>
@@ -698,53 +694,10 @@ func renderTokenView(session *Session) string {
 		html.EscapeString(session.ScopeLabel),
 		timingLabel,
 		html.EscapeString(session.ProfileJSON),
-		renderTokenPanel("Access Token", session.Token.AccessToken, session.AccessDecoded, "Authorizes API requests on behalf of the user.", "AT"),
-		renderTokenPanel("ID Token", session.IDToken, session.IDDecoded, "Cryptographic proof of the authenticated identity.", "ID"),
 		html.EscapeString(config.Authority),
 		html.EscapeString(config.Authority),
 		html.EscapeString(config.DiscoveryEndpoint),
 		html.EscapeString(config.DiscoveryEndpoint),
-	)
-}
-
-func renderTokenPanel(title, token, decoded, description, iconLabel string) string {
-	tokenLabel := "Not provided"
-	if token != "" {
-		tokenLabel = html.EscapeString(token)
-	}
-	tokenPreview := tokenLabel
-	if token != "" && len(token) > 48 {
-		tokenPreview = html.EscapeString(token[:48]) + "..."
-	}
-
-	return fmt.Sprintf(`
-    <section class="card">
-      <div class="section-header">
-        <div class="section-icon">%s</div>
-        <div>
-          <h3 class="section-title">%s</h3>
-          <p class="muted">%s</p>
-        </div>
-      </div>
-      <details class="token-details">
-        <summary class="token-summary">
-          <span class="eyebrow">Raw JWT</span>
-          <code class="token-preview">%s</code>
-        </summary>
-        <pre class="token-block">%s</pre>
-      </details>
-      <div class="token-claims">
-        <span class="eyebrow">Decoded payload</span>
-        <pre class="code-block">%s</pre>
-      </div>
-    </section>
-`,
-		iconLabel,
-		html.EscapeString(title),
-		html.EscapeString(description),
-		tokenPreview,
-		tokenLabel,
-		html.EscapeString(decoded),
 	)
 }
 
@@ -830,7 +783,6 @@ func resetSession(session *Session) {
 func clearAuthFlow(session *Session) {
 	session.State = ""
 	session.Verifier = ""
-	session.Error = ""
 }
 
 func statusForSession(session *Session) map[string]string {
@@ -861,37 +813,6 @@ func base64urlDecode(value string) ([]byte, error) {
 		value += strings.Repeat("=", 4-padding)
 	}
 	return base64.URLEncoding.DecodeString(value)
-}
-
-func formatDecoded(token string) string {
-	payload, ok := decodeJWT(token)
-	if !ok {
-		return "Not a JWT or unable to decode."
-	}
-	encoded, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
-		return "Not a JWT or unable to decode."
-	}
-	return string(encoded)
-}
-
-func decodeJWT(token string) (map[string]any, bool) {
-	if token == "" {
-		return nil, false
-	}
-	parts := strings.Split(token, ".")
-	if len(parts) < 2 {
-		return nil, false
-	}
-	payloadBytes, err := base64urlDecode(parts[1])
-	if err != nil {
-		return nil, false
-	}
-	var payload map[string]any
-	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
-		return nil, false
-	}
-	return payload, true
 }
 
 func formatTime(t time.Time) string {
@@ -951,42 +872,42 @@ func fetchDiscovery(ctx context.Context) (map[string]string, error) {
 	return result, nil
 }
 
-func fetchUserInfo(ctx context.Context, accessToken string) string {
+func fetchUserInfo(ctx context.Context, accessToken string) (string, error) {
 	endpoint := discoveryValue(ctx, "userinfo_endpoint")
 	if endpoint == "" {
-		return ""
+		return "", fmt.Errorf("UserInfo endpoint missing from discovery metadata")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return ""
+		return "", fmt.Errorf("UserInfo request failed: %s", resp.Status)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	var payload map[string]any
 	if err := json.Unmarshal(body, &payload); err != nil {
-		return ""
+		return "", err
 	}
 
 	pretty, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return string(pretty)
+	return string(pretty), nil
 }

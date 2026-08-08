@@ -25,7 +25,6 @@ const FORBIDDEN_NAMES = new Set([
   "dist",
   "node_modules",
   "local.properties",
-  "tuurio.public.json",
 ]);
 const FORBIDDEN_FILE_PATTERNS = [
   /^\.env(?:\..+)?$/,
@@ -52,20 +51,29 @@ function isForbidden(path) {
   return FORBIDDEN_NAMES.has(name) || FORBIDDEN_FILE_PATTERNS.some((pattern) => pattern.test(name));
 }
 
-function copyReviewedTree(source, destination) {
+function copyReviewedTree(source, destination, trackedFiles) {
   if (isForbidden(source)) return;
   const metadata = lstatSync(source);
   if (metadata.isSymbolicLink()) throw new Error(`Symbolic links are not allowed in template packages: ${source}`);
   if (metadata.isDirectory()) {
-    mkdirSync(destination, { recursive: true });
     for (const name of readdirSync(source).sort()) {
-      copyReviewedTree(resolve(source, name), resolve(destination, name));
+      copyReviewedTree(resolve(source, name), resolve(destination, name), trackedFiles);
     }
     return;
   }
   if (!metadata.isFile()) throw new Error(`Unsupported source entry: ${source}`);
+  if (!trackedFiles.has(resolve(source))) return;
   mkdirSync(dirname(destination), { recursive: true });
   copyFileSync(source, destination);
+}
+
+function trackedSourceFiles(root, sourceRoot) {
+  const sourcePath = relative(root, sourceRoot);
+  const output = execFileSync("git", ["ls-files", "-z", "--", sourcePath], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  return new Set(output.split("\0").filter(Boolean).map((path) => resolve(root, path)));
 }
 
 function render(template, values) {
@@ -77,12 +85,20 @@ function render(template, values) {
 
 function generatedWorkflow(template) {
   const commands = template.verify.map((command) => `          ${command}`).join("\n");
-  const setup = template.packageManager === "npm"
-    ? "      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4\n        with:\n          node-version: 20\n          cache: npm\n"
-    : template.packageManager === "Gradle Wrapper"
-      ? "      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4\n        with:\n          distribution: temurin\n          java-version: 17\n          cache: gradle\n"
-      : "";
-  return `name: Verify template\n\non:\n  push:\n    branches: [main]\n  pull_request:\n\npermissions:\n  contents: read\n\njobs:\n  verify:\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n    steps:\n      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6\n${setup}      - name: Run template verification\n        run: |\n${commands}\n`;
+  const setups = {
+    npm: `      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: ${template.nodeVersion ?? 20}
+          cache: npm
+`,
+    "Gradle Wrapper": "      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4\n        with:\n          distribution: temurin\n          java-version: 17\n          cache: gradle\n",
+    pip: "      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5\n        with:\n          python-version: '3.11'\n          cache: pip\n",
+    "Go modules": "      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5\n        with:\n          go-version-file: go.mod\n          cache: true\n",
+    "Flutter pub": "      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2\n        with:\n          channel: stable\n          cache: true\n",
+    Composer: "      - uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # 2.35.5\n        with:\n          php-version: '8.3'\n          tools: composer:v2\n          coverage: none\n",
+  };
+  const setup = setups[template.packageManager] ?? "";
+  return `name: Verify template\n\non:\n  push:\n    branches: [main]\n  pull_request:\n\npermissions:\n  contents: read\n\njobs:\n  verify:\n    runs-on: ${template.runner ?? "ubuntu-latest"}\n    timeout-minutes: 20\n    steps:\n      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6\n${setup}      - name: Run template verification\n        run: |\n${commands}\n`;
 }
 
 function quickstartCommand(template) {
@@ -135,6 +151,7 @@ export function packageTemplate(template, { root = repositoryRoot, output, sourc
   }
   rmSync(outputPath, { recursive: true, force: true });
   mkdirSync(outputPath, { recursive: true });
+  const trackedFiles = trackedSourceFiles(root, sourceRoot);
 
   for (const entry of template.files) {
     assertSafeRelativePath(entry, `${template.id}.files`);
@@ -142,7 +159,7 @@ export function packageTemplate(template, { root = repositoryRoot, output, sourc
     if (!isInside(sourceRoot, source)) throw new Error(`${template.id}: allow-listed path escapes source`);
     const metadata = statSync(source);
     if (!metadata.isFile() && !metadata.isDirectory()) throw new Error(`${template.id}: invalid source entry ${entry}`);
-    copyReviewedTree(source, resolve(outputPath, entry));
+    copyReviewedTree(source, resolve(outputPath, entry), trackedFiles);
   }
 
   copyFileSync(resolve(root, "LICENSE"), resolve(outputPath, "LICENSE"));

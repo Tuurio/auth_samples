@@ -51,11 +51,11 @@ try {
 
     $discovery = fetch_discovery($config);
     $userInfoEndpoint = $discovery['userinfo_endpoint'] ?? null;
-    $profileJson = null;
-    if ($userInfoEndpoint) {
-        $profile = fetch_userinfo($userInfoEndpoint, $accessToken);
-        $profileJson = json_encode($profile, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    if (!is_string($userInfoEndpoint) || $userInfoEndpoint === '') {
+        throw new RuntimeException('UserInfo endpoint missing from discovery metadata.');
     }
+    $profile = fetch_userinfo($userInfoEndpoint, $accessToken);
+    $profileJson = json_encode($profile, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
     $_SESSION['auth'] = [
         'access_token' => $accessToken,
@@ -69,8 +69,8 @@ try {
 
     header('Location: ' . url('/'), true, 302);
     exit;
-} catch (Throwable $exception) {
-    $_SESSION['error'] = $exception->getMessage();
+} catch (Throwable) {
+    $_SESSION['error'] = 'Login could not be completed.';
     header('Location: ' . url('/'), true, 302);
     exit;
 }

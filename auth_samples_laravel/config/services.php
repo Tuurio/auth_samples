@@ -36,7 +36,7 @@ return [
     ],
 
     'tuurio' => [
-        'issuer' => env('TUURIO_ISSUER', 'https://test.id.tuurio.com'),
+        'issuer' => env('TUURIO_ISSUER', 'https://your-tenant.id.tuurio.com'),
         'client_id' => env('TUURIO_CLIENT_ID', ''),
         'client_secret' => env('TUURIO_CLIENT_SECRET', ''),
         'redirect_uri' => env('TUURIO_REDIRECT_URI', 'http://localhost:8000/auth/callback'),

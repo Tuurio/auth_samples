@@ -31,8 +31,13 @@ templates:
     description: Deployable Lovable React authentication starter for Tuurio ID with exact preview and production origins, OIDC, and PKCE.
     homepage: https://id.tuurio.com/vibe/lovable
     campaign: github_lovable
+    framework: react
+    runtime: Node.js 20+
+    packageManager: npm
+    start: npm run dev -- --host 0.0.0.0
     kind: browser
     stackblitz: false
+    files: [.gitignore, index.html, package.json, package-lock.json, src, tsconfig.json, vite.config.ts]
     topics: [lovable, react, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, eu-hosted]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: vue
@@ -43,8 +48,13 @@ templates:
     description: Vue 3 and Vite authentication starter for Tuurio ID with protected routes and OpenID Connect Authorization Code with PKCE.
     homepage: https://id.tuurio.com/public/developers/examples/vue
     campaign: github_vue
+    framework: vue
+    runtime: Node.js 20+
+    packageManager: npm
+    start: npm run dev -- --host 0.0.0.0
     kind: browser
     stackblitz: true
+    files: [.env.example, .gitignore, index.html, package.json, package-lock.json, public, src, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts]
     topics: [vue, vue3, vite, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template]
     verify: [npm ci, npm run build]
   - id: angular
@@ -55,10 +65,16 @@ templates:
     description: Angular authentication starter for Tuurio ID with standalone components, route protection, OpenID Connect, and PKCE.
     homepage: https://id.tuurio.com/public/developers/examples/angular
     campaign: github_angular
+    framework: angular
+    runtime: Node.js 24+
+    nodeVersion: 24
+    packageManager: npm
+    start: npm start -- --host 0.0.0.0
     kind: browser
     stackblitz: true
+    files: [.env.example, .gitignore, angular.json, package.json, package-lock.json, scripts, src, tsconfig.app.json, tsconfig.json]
     topics: [angular, authentication, oidc, oauth2, pkce, typescript, tuurio, starter-template, eu-hosted]
-    verify: [npm install, npm run build]
+    verify: [npm ci, npm run build]
   - id: nextjs
     displayName: Next.js Auth Starter
     status: ready
@@ -84,8 +100,12 @@ templates:
     description: Android Jetpack Compose authentication starter for Tuurio ID using AppAuth, Authorization Code, PKCE, and native redirects.
     homepage: https://id.tuurio.com/public/developers/examples/android
     campaign: github_android
+    framework: android
+    runtime: Android SDK 36 / Java 17+
+    packageManager: Gradle Wrapper
     kind: native
     stackblitz: false
+    files: [.gitignore, app, build.gradle.kts, gradle, gradle.properties, gradlew, gradlew.bat, settings.gradle.kts]
     topics: [android, kotlin, jetpack-compose, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
     verify: [./gradlew assembleDebug]
   - id: ios
@@ -96,8 +116,13 @@ templates:
     description: SwiftUI authentication starter for Tuurio ID using AppAuth, Authorization Code, PKCE, and secure native redirects.
     homepage: https://id.tuurio.com/public/developers/examples/ios
     campaign: github_ios
+    framework: ios
+    runtime: Xcode 16+ / Swift 6+
+    packageManager: Swift Package Manager
+    runner: macos-15
     kind: native
     stackblitz: false
+    files: [TuurioAuthSample]
     topics: [ios, swift, swiftui, authentication, oidc, oauth2, pkce, appauth, tuurio, starter-template]
     verify: [swiftc -parse TuurioAuthSample/*.swift]
   - id: flutter
@@ -108,8 +133,12 @@ templates:
     description: Flutter authentication starter for Tuurio ID using flutter_appauth, Authorization Code, PKCE, and native callback handling.
     homepage: https://id.tuurio.com/public/developers/examples/flutter
     campaign: github_flutter
+    framework: flutter
+    runtime: Flutter 3.24+ / Dart 3.4+
+    packageManager: Flutter pub
     kind: native
     stackblitz: false
+    files: [.gitignore, lib, pubspec.yaml, pubspec.lock]
     topics: [flutter, dart, authentication, oidc, oauth2, pkce, appauth, mobile, tuurio, starter-template]
     verify: [flutter pub get, flutter analyze]
   - id: express
@@ -120,10 +149,15 @@ templates:
     description: Node.js and Express authentication starter for Tuurio ID with server-side sessions and OpenID Connect Authorization Code flow.
     homepage: https://id.tuurio.com/public/developers/examples/node
     campaign: github_express
+    framework: node
+    runtime: Node.js 20+
+    packageManager: npm
+    start: npm start
     kind: server
     stackblitz: true
+    files: [.env.example, .gitignore, package.json, package-lock.json, server.js, src]
     topics: [nodejs, express, javascript, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
-    verify: [npm install, node --check server.js, node --check src/oauth.js]
+    verify: [npm ci, node --check server.js, node --check src/oauth.js]
   - id: flask
     displayName: Flask OIDC Auth Starter
     status: ready
@@ -132,10 +166,15 @@ templates:
     description: Python Flask authentication starter for Tuurio ID with server-side sessions and OpenID Connect Authorization Code flow.
     homepage: https://id.tuurio.com/public/developers/examples/python
     campaign: github_flask
+    framework: python
+    runtime: Python 3.11+
+    packageManager: pip
+    start: python3 app.py
     kind: server
     stackblitz: false
+    files: [.env.example, .gitignore, app.py, config.py, requirements.txt, static]
     topics: [python, flask, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
-    verify: [python3 -m compileall -q .]
+    verify: [python3 -m pip install -r requirements.txt, python3 -m compileall -q .]
   - id: go
     displayName: Go OIDC Auth Starter
     status: ready
@@ -144,8 +183,13 @@ templates:
     description: Go net/http authentication starter for Tuurio ID with secure sessions and OpenID Connect Authorization Code flow.
     homepage: https://id.tuurio.com/public/developers/examples/go
     campaign: github_go
+    framework: go
+    runtime: Go 1.25+
+    packageManager: Go modules
+    start: go run .
     kind: server
     stackblitz: false
+    files: [.env.example, .gitignore, go.mod, go.sum, main.go, public]
     topics: [go, golang, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [go test ./..., go build ./...]
   - id: spring-boot
@@ -172,8 +216,13 @@ templates:
     description: Dependency-light PHP authentication starter for Tuurio ID with secure sessions and OpenID Connect Authorization Code flow.
     homepage: https://id.tuurio.com/public/developers/examples/php
     campaign: github_php
+    framework: php
+    runtime: PHP 8.2+
+    packageManager: None
+    start: php -S 127.0.0.1:8080 router.php
     kind: server
     stackblitz: false
+    files: [.env.example, .gitignore, .htaccess, public, router.php, src]
     topics: [php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
     verify: [find . -name '*.php' -print0 | xargs -0 -n1 php -l]
   - id: laravel
@@ -184,10 +233,15 @@ templates:
     description: Laravel authentication starter for Tuurio ID with sessions, protected routes, logout, and OpenID Connect Authorization Code flow.
     homepage: https://id.tuurio.com/public/developers/examples/laravel
     campaign: github_laravel
+    framework: laravel
+    runtime: PHP 8.2+
+    packageManager: Composer
+    start: php artisan serve --host=127.0.0.1 --port=8000
     kind: server
     stackblitz: false
+    files: [.editorconfig, .env.example, .gitattributes, .gitignore, .styleci.yml, app, artisan, bootstrap, composer.json, composer.lock, config, database, phpunit.xml, public, resources, routes, storage, tests]
     topics: [laravel, php, authentication, oidc, oauth2, openid-connect, tuurio, starter-template, eu-hosted]
-    verify: [composer install --no-interaction, php artisan test]
+    verify: [composer install --no-interaction, cp .env.example .env, php artisan key:generate, php artisan test]
   - id: sveltekit
     displayName: SvelteKit OIDC Auth Starter
     status: planned

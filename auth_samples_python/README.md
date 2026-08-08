@@ -1,6 +1,6 @@
 # Tuurio Auth Python Demo
 
-A server-rendered Flask demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+A server-rendered Flask demo that signs in with OAuth 2.0 / OpenID Connect, keeps tokens in a server-side session, and supports logout. The local starter uses a filesystem-backed CacheLib session store; use Redis or another shared Flask-Session backend for a multi-instance production deployment.
 
 ## Integration guide
 
@@ -33,8 +33,8 @@ Post-logout Redirect URI: http://localhost:8083/logout/callback
 ## `.env` keys
 
 ```env
-TUURIO_ISSUER=https://test.id.tuurio.com
-TUURIO_CLIENT_ID=php-KQD8
+TUURIO_ISSUER=https://YOUR_TENANT.id.tuurio.com
+TUURIO_CLIENT_ID=YOUR_CLIENT_ID
 TUURIO_CLIENT_SECRET=YOUR_CLIENT_SECRET
 TUURIO_REDIRECT_URI=http://localhost:8083/auth/callback
 TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:8083/logout/callback

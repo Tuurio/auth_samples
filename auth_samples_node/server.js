@@ -9,7 +9,6 @@ const {
   exchangeCodeForTokens,
   fetchDiscovery,
   fetchUserInfo,
-  decodeJwt,
   formatTime,
 } = require('./src/oauth');
 const {
@@ -123,14 +122,7 @@ app.get('/auth/callback', async (req, res) => {
       ? Math.floor(Date.now() / 1000) + Number(tokens.expires_in)
       : tokens.expires_at;
 
-    const accessDecoded = decodeJwt(tokens.access_token);
-    const idDecoded = decodeJwt(tokens.id_token || '');
-    let userInfo = null;
-    try {
-      userInfo = await fetchUserInfo(config, tokens.access_token);
-    } catch {
-      userInfo = null;
-    }
+    const userInfo = await fetchUserInfo(config, tokens.access_token);
 
     req.session.auth = {
       access_token: tokens.access_token,
@@ -138,15 +130,13 @@ app.get('/auth/callback', async (req, res) => {
       scope: tokens.scope || config.scope,
       expiresAt,
       expiresLabel: formatTime(expiresAt),
-      profileJson: userInfo ? JSON.stringify(userInfo, null, 2) : 'No profile data.',
-      accessClaims: accessDecoded,
-      idClaims: idDecoded,
+      profileJson: JSON.stringify(userInfo, null, 2),
     };
 
     req.session.oauth = null;
     res.redirect('/');
-  } catch (err) {
-    req.session.error = err instanceof Error ? err.message : 'Login failed.';
+  } catch {
+    req.session.error = 'Login could not be completed.';
     res.redirect('/');
   }
 });
@@ -186,8 +176,8 @@ app.get('/logout', async (req, res) => {
     });
     res.clearCookie(config.sessionCookieName);
     res.redirect(`${endSession}?${params.toString()}`);
-  } catch (err) {
-    req.session.error = err instanceof Error ? err.message : 'Logout failed.';
+  } catch {
+    req.session.error = 'Logout could not be completed.';
     res.redirect('/');
   }
 });

@@ -1,6 +1,6 @@
 # Tuurio Auth Go Demo
 
-A server-rendered Go demo that signs in with OAuth 2.0 / OpenID Connect, then displays token contents and a logout button.
+A server-rendered Go demo that signs in with OAuth 2.0 / OpenID Connect, keeps tokens server-side, and supports logout.
 
 ## Integration guide
 
@@ -30,8 +30,8 @@ Post-logout Redirect URI: http://localhost:8084/logout/callback
 ## `.env` keys
 
 ```env
-TUURIO_ISSUER=https://test.id.tuurio.com
-TUURIO_CLIENT_ID=php-KQD8
+TUURIO_ISSUER=https://YOUR_TENANT.id.tuurio.com
+TUURIO_CLIENT_ID=YOUR_CLIENT_ID
 TUURIO_CLIENT_SECRET=YOUR_CLIENT_SECRET
 TUURIO_REDIRECT_URI=http://localhost:8084/auth/callback
 TUURIO_POST_LOGOUT_REDIRECT_URI=http://localhost:8084/logout/callback
