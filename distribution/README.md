@@ -27,7 +27,7 @@ npm run verify:remotes -- --id react-vite
 
 Dry-run is the default. Add `--apply` only after reviewing the package and target repository. A manual full-catalog synchronization omits `--id`; the GitHub workflow is preferred because it provides per-template isolation and summaries.
 
-`npm run previews` deterministically regenerates the 1280 × 640 PNG and SVG social-preview assets for all 20 framework templates. Use `npm run previews -- --id react-vite` for a single catalog entry. The validator rejects missing, stale, oversized, transparent, or incorrectly sized assets before synchronization.
+`npm run previews` deterministically regenerates the 1280 × 640 PNG and SVG social-preview assets for all 20 framework templates with a pinned renderer and font files. Use `npm run previews -- --id react-vite` for a single catalog entry. The validator compares generated PNG pixels as well as SVG source and rejects missing, stale, oversized, transparent, or incorrectly sized assets before synchronization. The AI SaaS Starter retains separate curated artwork that is validated but never overwritten by this generator.
 
 ## Contribution policy
 

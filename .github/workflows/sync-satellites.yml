@@ -38,6 +38,9 @@ jobs:
       - name: Install distribution tooling
         working-directory: distribution
         run: npm ci
+      - name: Validate catalog and managed assets before synchronization
+        working-directory: distribution
+        run: npm run validate
       - name: Select affected templates
         id: selection
         working-directory: distribution
