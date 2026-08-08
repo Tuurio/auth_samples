@@ -40,12 +40,14 @@ test("enforces the catalog identity, license, and cardinality", () => {
   manifest.license = "MIT";
   manifest.sourceRepository = "Example/auth_samples";
   manifest.templates.pop();
+  manifest.products = [];
   manifest.templates[0].status = "planned";
   const { errors } = validateManifest(manifest, { repositoryRoot: root });
   assert.ok(errors.includes("manifest version must be 1"));
   assert.ok(errors.includes("manifest license must be Apache-2.0"));
   assert.ok(errors.includes("unexpected source repository"));
   assert.ok(errors.some((error) => error.includes("expected 20 templates")));
+  assert.ok(errors.some((error) => error.includes("expected 1 product starter")));
   assert.ok(errors.some((error) => error.includes("expected 20 ready templates")));
   assert.ok(errors.some((error) => error.includes("expected 0 planned templates")));
 });

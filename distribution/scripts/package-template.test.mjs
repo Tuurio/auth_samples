@@ -9,6 +9,7 @@ import { assertNoUnmanagedCollisions, copyPackageContents, removeManagedFiles } 
 import { compareMarkers } from "./verify-template-repos.mjs";
 
 const manifest = loadCatalog();
+const aiSaas = manifest.products.find((product) => product.id === "ai-saas");
 const react = manifest.templates.find((template) => template.id === "react-vite");
 const laravel = manifest.templates.find((template) => template.id === "laravel");
 const repositoryRoot = resolve(import.meta.dirname, "../..");
@@ -61,6 +62,22 @@ test("packages every ready template without shared credentials or raw-token guid
       assert.doesNotMatch(readable, /spa-K53I|php-KQD8/);
       assert.doesNotMatch(readable, /Access token and ID token \(raw|Raw JWT/i);
     }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("packages the AI SaaS product separately from the twenty framework satellites", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-ai-saas-product-test-"));
+  try {
+    assert.equal(manifest.templates.length, 20);
+    assert.equal(manifest.products.length, 1);
+    const output = resolve(temporary, "product");
+    const result = packageTemplate(aiSaas, { output, sourceSha: "6".repeat(40) });
+    assert.equal(result.marker.templateId, "ai-saas");
+    assert.ok(result.marker.managedFiles.some((entry) => entry.path === "db/schema.sql"));
+    assert.ok(result.marker.managedFiles.some((entry) => entry.path === "src/tuurio.public.json"));
+    assert.doesNotMatch(readFileSync(resolve(output, "src/tuurio.public.json"), "utf8"), /clientSecret/);
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }

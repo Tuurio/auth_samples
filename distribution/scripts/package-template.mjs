@@ -13,7 +13,7 @@ import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path
 import process from "node:process";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { loadCatalog, parseCommonArgs, repositoryRoot, selectTemplates } from "./catalog.mjs";
+import { loadCatalog, parseCommonArgs, repositoryRoot, selectDistributables } from "./catalog.mjs";
 
 export const CLI_VERSION = "1.1.6";
 const FORBIDDEN_NAMES = new Set([
@@ -221,7 +221,7 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   const args = parseCommonArgs(process.argv.slice(2));
   if (!args.output) throw new Error("--output is required");
   const manifest = loadCatalog();
-  const templates = selectTemplates(manifest, args.ids);
+  const templates = selectDistributables(manifest, args.ids);
   if (templates.length !== 1) throw new Error("Select exactly one template with --id");
   const result = packageTemplate(templates[0], { output: args.output });
   console.log(JSON.stringify({ template: templates[0].id, output: result.outputPath, files: result.marker.managedFiles.length }));

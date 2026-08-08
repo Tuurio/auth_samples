@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { loadCatalog, parseCommonArgs, repositoryRoot, selectTemplates } from "./catalog.mjs";
+import { loadCatalog, parseCommonArgs, repositoryRoot, selectDistributables } from "./catalog.mjs";
 import { packageTemplate, resolveSourceSha } from "./package-template.mjs";
 import { run } from "./github.mjs";
 
@@ -106,7 +106,7 @@ export function syncTemplate(template, { apply = false, initialize = false, root
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const args = parseCommonArgs(process.argv.slice(2));
-  const templates = selectTemplates(loadCatalog(), args.ids).filter((template) => template.files);
+  const templates = selectDistributables(loadCatalog(), args.ids).filter((template) => template.files);
   const results = templates.map((template) => syncTemplate(template, {
     apply: args.apply,
     initialize: args.initialize,

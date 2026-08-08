@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadCatalog } from "./catalog.mjs";
+import { distributables, loadCatalog } from "./catalog.mjs";
 import { affectedTemplateIds } from "./affected-templates.mjs";
 
-const templates = loadCatalog().templates;
+const templates = distributables(loadCatalog());
 const allReady = templates.filter((template) => template.status === "ready" && template.files).map((template) => template.id).sort();
 
 test("selects only templates whose reviewed source changed", () => {

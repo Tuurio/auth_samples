@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "issuer": "https://replace-with-your-tenant.id.tuurio.com",
+  "clientId": "replace-after-browser-handoff",
+  "scope": "openid profile email",
+  "targets": []
+}

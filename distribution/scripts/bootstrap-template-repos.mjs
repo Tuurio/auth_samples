@@ -1,7 +1,7 @@
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
-import { loadCatalog, parseCommonArgs, selectTemplates } from "./catalog.mjs";
+import { loadCatalog, parseCommonArgs, selectDistributables } from "./catalog.mjs";
 import { repositoryExists, run } from "./github.mjs";
 
 function expectedMetadata(template) {
@@ -50,7 +50,7 @@ function setTopics(template) {
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const args = parseCommonArgs(process.argv.slice(2));
-  const templates = selectTemplates(loadCatalog(), args.ids);
+  const templates = selectDistributables(loadCatalog(), args.ids);
   const results = [];
   for (const template of templates) {
     if (!template.files) continue;

@@ -60,13 +60,17 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
   }
 
   const templates = Array.isArray(manifest.templates) ? manifest.templates : [];
+  const products = Array.isArray(manifest.products) ? manifest.products : [];
   if (templates.length !== 20) errors.push(`expected 20 templates, found ${templates.length}`);
+  if (products.length !== 1) errors.push(`expected 1 product starter, found ${products.length}`);
+
+  const distributables = [...templates, ...products];
 
   for (const field of ["id", "displayName", "source", "repository", "campaign"]) {
-    requireUnique(templates, field, errors);
+    requireUnique(distributables, field, errors);
   }
 
-  for (const template of templates) {
+  for (const template of distributables) {
     const prefix = template.id ?? "unknown";
     if (!["ready", "planned"].includes(template.status)) {
       errors.push(`${prefix}: status must be ready or planned`);
@@ -147,8 +151,10 @@ export const validateManifest = (manifest, { repositoryRoot = root } = {}) => {
   const plannedCount = templates.filter((template) => template.status === "planned").length;
   if (readyCount !== 20) errors.push(`expected 20 ready templates, found ${readyCount}`);
   if (plannedCount !== 0) errors.push(`expected 0 planned templates, found ${plannedCount}`);
+  const readyProductCount = products.filter((product) => product.status === "ready").length;
+  if (readyProductCount !== 1) errors.push(`expected 1 ready product starter, found ${readyProductCount}`);
 
-  return { errors, templates, readyCount, plannedCount };
+  return { errors, templates, products, distributables, readyCount, plannedCount, readyProductCount };
 };
 
 if (fileURLToPath(import.meta.url) === resolve(process.argv[1] ?? "")) {
@@ -159,6 +165,6 @@ if (fileURLToPath(import.meta.url) === resolve(process.argv[1] ?? "")) {
     process.exit(1);
   }
   console.log(
-    `Validated ${result.templates.length} templates (${result.readyCount} ready, ${result.plannedCount} planned).`,
+    `Validated ${result.templates.length} templates and ${result.products.length} product starter (${result.readyCount + result.readyProductCount} ready total).`,
   );
 }

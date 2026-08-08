@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { loadCatalog, repositoryRoot } from "./catalog.mjs";
+import { distributables, loadCatalog, repositoryRoot } from "./catalog.mjs";
 
 const GLOBAL_PACKAGE_INPUTS = new Set([
   "LICENSE",
@@ -62,6 +62,6 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   const args = parseArgs(process.argv.slice(2));
   const catalog = loadCatalog();
   const changedFiles = args.fullCatalog ? [] : changedFilesBetween(args.base, args.head);
-  const ids = affectedTemplateIds(catalog.templates, changedFiles, { fullCatalog: args.fullCatalog });
+  const ids = affectedTemplateIds(distributables(catalog), changedFiles, { fullCatalog: args.fullCatalog });
   console.log(JSON.stringify({ ids, count: ids.length, changedFiles }));
 }
