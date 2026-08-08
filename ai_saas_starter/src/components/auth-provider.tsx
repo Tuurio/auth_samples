@@ -7,6 +7,8 @@ import { authManager } from "@/lib/auth/client";
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  configured: boolean | null;
+  configurationError: string | null;
   error: string | null;
   signIn(): Promise<void>;
   signOut(): Promise<void>;
@@ -18,12 +20,15 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [configurationError, setConfigurationError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     try {
       const manager = authManager();
+      setConfigured(true);
       const clear = () => { if (active) setUser(null); };
       manager.events.addUserUnloaded(clear);
       manager.events.addAccessTokenExpired(clear);
@@ -37,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         manager.events.removeAccessTokenExpired(clear);
       };
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Tuurio is not configured for this origin.");
+      setConfigured(false);
+      setConfigurationError(caught instanceof Error ? caught.message : "Tuurio is not configured for this origin.");
       setLoading(false);
       return () => { active = false; };
     }
@@ -45,7 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async () => {
     setError(null);
-    await authManager().signinRedirect({ state: { returnTo: "/workspace" } });
+    try {
+      await authManager().signinRedirect({ state: { returnTo: "/workspace" } });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not start sign-in.");
+    }
   }, []);
 
   const signOut = useCallback(async () => {
@@ -63,7 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return fetch(input, { ...init, headers });
   }, []);
 
-  const value = useMemo(() => ({ user, loading, error, signIn, signOut, apiFetch }), [user, loading, error, signIn, signOut, apiFetch]);
+  const value = useMemo(
+    () => ({ user, loading, configured, configurationError, error, signIn, signOut, apiFetch }),
+    [user, loading, configured, configurationError, error, signIn, signOut, apiFetch],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

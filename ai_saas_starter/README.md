@@ -15,14 +15,17 @@ A production-oriented, multi-tenant AI workspace with streamed conversations, te
 
 ## Quickstart
 
-1. Install and copy the environment template:
+1. Install, start the app, and explore the browser-only product demo:
 
 ```bash
 npm ci
 cp .env.example .env.local
+npm run dev
 ```
 
-2. For local development, review and run:
+Open `http://localhost:3000/demo`. The demo requires no account, makes no API or model request, and resets on refresh. Open `/setup` to get a pinned provisioning command generated for the exact origin currently in your browser.
+
+2. To enable the real protected workspace for local development, review and run:
 
 ```bash
 npx manage-tuurio-id@1.1.6 init --framework nextjs --project-dir . --base-url http://localhost:3000 --redirect-uri http://localhost:3000/auth/callback --post-logout-redirect-uri http://localhost:3000/logout/callback --public-config src/tuurio.public.json --auth browser --yes --output json --campaign github_ai_saas --no-open --no-wait
@@ -30,7 +33,7 @@ npx manage-tuurio-id@1.1.6 init --framework nextjs --project-dir . --base-url ht
 
 Complete the browser handoff yourself. Never give an agent credentials, tokens, authorization codes, session cookies, legal acceptance, or environment-file contents.
 
-3. Start the app:
+3. Restart the app after provisioning:
 
 ```bash
 npm run dev
