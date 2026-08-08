@@ -244,73 +244,107 @@ templates:
     verify: [composer install --no-interaction, cp .env.example .env, php artisan key:generate, php artisan test]
   - id: sveltekit
     displayName: SvelteKit OIDC Auth Starter
-    status: planned
+    status: ready
     source: auth_samples_sveltekit
     repository: Tuurio/sveltekit-oidc-auth-starter
     description: SvelteKit authentication starter for Tuurio ID with protected routes and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/sveltekit
     campaign: github_sveltekit
+    framework: sveltekit
+    runtime: Node.js 24.11+
+    nodeVersion: 24
+    packageManager: npm
+    start: npm run dev -- --host 0.0.0.0
     kind: server
     stackblitz: true
+    files: [.env.example, .gitignore, package.json, package-lock.json, src, svelte.config.js, tsconfig.json, vite.config.ts]
     topics: [svelte, sveltekit, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run check, npm run build]
   - id: nuxt
     displayName: Nuxt OIDC Auth Starter
-    status: planned
+    status: ready
     source: auth_samples_nuxt
     repository: Tuurio/nuxt-oidc-auth-starter
     description: Nuxt authentication starter for Tuurio ID with protected server routes and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/nuxt
     campaign: github_nuxt
+    framework: nuxt
+    runtime: Node.js 24.11+
+    nodeVersion: 24
+    packageManager: npm
+    start: npm run dev -- --host 0.0.0.0
     kind: server
     stackblitz: true
+    files: [.env.example, .gitignore, app, nuxt.config.ts, package.json, package-lock.json, server, tsconfig.json]
     topics: [nuxt, vue, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: astro
     displayName: Astro OIDC Auth Starter
-    status: planned
+    status: ready
     source: auth_samples_astro
     repository: Tuurio/astro-oidc-auth-starter
     description: Astro authentication starter for Tuurio ID with protected server routes and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/astro
     campaign: github_astro
+    framework: astro
+    runtime: Node.js 24.11+
+    nodeVersion: 24
+    packageManager: npm
+    start: npm run dev -- --host 0.0.0.0
     kind: server
     stackblitz: true
+    files: [.env.example, .gitignore, astro.config.mjs, package.json, package-lock.json, src, tsconfig.json]
     topics: [astro, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template, eu-hosted]
     verify: [npm ci, npm run check, npm run build]
   - id: react-router
     displayName: React Router Auth Starter
-    status: planned
+    status: ready
     source: auth_samples_react_router
     repository: Tuurio/react-router-auth-starter
     description: React Router full-stack authentication starter for Tuurio ID with protected routes and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/react-router
     campaign: github_react_router
+    framework: react-router
+    runtime: Node.js 24.11+
+    nodeVersion: 24
+    packageManager: npm
+    start: npm run dev
     kind: server
     stackblitz: true
+    files: [.env.example, .gitignore, index.html, package.json, package-lock.json, server, src, tsconfig.json, tsconfig.server.json, vite.config.ts]
     topics: [react, react-router, authentication, oidc, oauth2, typescript, tuurio, saas-starter, starter-template]
     verify: [npm ci, npm run typecheck, npm run build]
   - id: django
     displayName: Django OIDC Auth Starter
-    status: planned
+    status: ready
     source: auth_samples_django
     repository: Tuurio/django-oidc-auth-starter
     description: Django authentication starter for Tuurio ID with server-side sessions and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/django
     campaign: github_django
+    framework: django
+    runtime: Python 3.12+
+    packageManager: pip
+    start: python3 manage.py runserver 0.0.0.0:8000
     kind: server
     stackblitz: false
+    files: [.env.example, .gitignore, authapp, manage.py, requirements.txt, templates, tuurio_starter]
     topics: [python, django, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
-    verify: [python3 manage.py check, python3 manage.py test]
+    verify: [python3 -m pip install -r requirements.txt, python3 manage.py check, python3 manage.py test]
   - id: fastapi
     displayName: FastAPI OIDC Auth Starter
-    status: planned
+    status: ready
     source: auth_samples_fastapi
     repository: Tuurio/fastapi-oidc-auth-starter
     description: FastAPI authentication starter for Tuurio ID with secure sessions and standards-based OpenID Connect.
     homepage: https://id.tuurio.com/public/developers/examples/fastapi
     campaign: github_fastapi
+    framework: fastapi
+    runtime: Python 3.12+
+    packageManager: pip
+    start: uvicorn app.main:app --host 0.0.0.0 --port 8000
     kind: server
     stackblitz: false
+    files: [.env.example, .gitignore, app, pyproject.toml, requirements.txt, tests]
     topics: [python, fastapi, authentication, oidc, oauth2, openid-connect, tuurio, saas-starter, starter-template]
-    verify: [python3 -m compileall -q ., pytest]
+    verify: [python3 -m pip install -r requirements.txt, python3 -m compileall -q app tests, python3 -m pytest -q]

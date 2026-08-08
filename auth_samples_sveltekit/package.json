@@ -1,0 +1,23 @@
+{
+  "name": "tuurio-sveltekit-auth-starter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@sveltejs/adapter-node": "5.5.7",
+    "@sveltejs/kit": "2.70.2",
+    "openid-client": "6.8.4",
+    "svelte": "5.56.8"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.2.0",
+    "svelte-check": "4.4.5",
+    "typescript": "5.9.3",
+    "vite": "8.2.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "tuurio-astro-auth-starter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "astro dev", "check": "astro check", "build": "astro build" },
+  "dependencies": { "@astrojs/node": "11.1.0", "astro": "7.2.0", "openid-client": "6.8.4" },
+  "devDependencies": { "@astrojs/check": "0.9.6", "@types/node": "24.13.3", "typescript": "5.9.3" },
+  "engines": { "node": ">=24.11.0" }
+}

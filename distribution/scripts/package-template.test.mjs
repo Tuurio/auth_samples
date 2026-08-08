@@ -12,6 +12,14 @@ const manifest = loadCatalog();
 const react = manifest.templates.find((template) => template.id === "react-vite");
 const laravel = manifest.templates.find((template) => template.id === "laravel");
 const repositoryRoot = resolve(import.meta.dirname, "../..");
+const sliceFourSecurityFiles = new Map([
+  ["sveltekit", ["src/lib/server/oidc.ts"]],
+  ["nuxt", ["server/utils/tuurio-oidc.ts"]],
+  ["astro", ["src/lib/server/oidc.ts"]],
+  ["react-router", ["server/oidc.ts"]],
+  ["django", ["authapp/oauth.py", "authapp/views.py"]],
+  ["fastapi", ["app/main.py"]],
+]);
 
 test("packages the React pilot deterministically from an allow-list", () => {
   const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-test-"));
@@ -36,7 +44,7 @@ test("packages every ready template without shared credentials or raw-token guid
   const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-catalog-test-"));
   try {
     const readyTemplates = manifest.templates.filter((template) => template.status === "ready");
-    assert.equal(readyTemplates.length, 14);
+    assert.equal(readyTemplates.length, 20);
     for (const template of readyTemplates) {
       const output = resolve(temporary, template.id);
       const result = packageTemplate(template, { output, sourceSha: "1".repeat(40) });
@@ -50,6 +58,24 @@ test("packages every ready template without shared credentials or raw-token guid
         .join("\n");
       assert.doesNotMatch(readable, /spa-K53I|php-KQD8/);
       assert.doesNotMatch(readable, /Access token and ID token \(raw|Raw JWT/i);
+    }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
+test("packages the six server starters with the reviewed authentication contract", () => {
+  const temporary = mkdtempSync(resolve(tmpdir(), "tuurio-package-server-contract-test-"));
+  try {
+    for (const [templateId, securityFiles] of sliceFourSecurityFiles) {
+      const template = manifest.templates.find((candidate) => candidate.id === templateId);
+      const output = resolve(temporary, templateId);
+      packageTemplate(template, { output, sourceSha: "3".repeat(40) });
+      const implementation = securityFiles.map((path) => readFileSync(resolve(output, path), "utf8")).join("\n");
+      assert.match(implementation, /S256|code_challenge_method/i, `${templateId} must require PKCE S256`);
+      assert.match(implementation, /userinfo/i, `${templateId} must bind UserInfo to the validated subject`);
+      assert.match(implementation, /post_logout_redirect_uri/i, `${templateId} must implement RP-initiated logout`);
+      assert.doesNotMatch(implementation, /localStorage|sessionStorage/, `${templateId} must keep tokens server-side`);
     }
   } finally {
     rmSync(temporary, { recursive: true, force: true });

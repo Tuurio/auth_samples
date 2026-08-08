@@ -1,0 +1,4 @@
+---
+const user = Astro.locals.user;
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Tuurio ID · Astro</title><style>body{font-family:system-ui;margin:4rem auto;max-width:42rem;padding:0 1rem;color:#0f172a}a{display:inline-block;padding:.7rem 1rem;background:#0d6efd;color:white;border-radius:.5rem;text-decoration:none}</style></head><body><h1>Astro + Tuurio ID</h1><p>Server-side OpenID Connect with PKCE and opaque sessions.</p>{user ? <a href="/dashboard">Open dashboard</a> : <a href="/auth/login">Sign in with Tuurio ID</a>}</body></html>
