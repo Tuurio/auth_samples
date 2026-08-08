@@ -43,10 +43,19 @@ jobs:
         working-directory: distribution
         env:
           BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
           HEAD_SHA: ${{ github.sha }}
           FULL_CATALOG: ${{ inputs.full_catalog }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$FULL_CATALOG" = "true" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$FULL_CATALOG" = "true" ]; then
+              node scripts/affected-templates.mjs --all > selection.json
+            elif base_sha="$(git rev-parse "${HEAD_SHA}^" 2>/dev/null)"; then
+              node scripts/affected-templates.mjs --base "$base_sha" --head "$HEAD_SHA" > selection.json
+            else
+              node scripts/affected-templates.mjs --all > selection.json
+            fi
+          elif [ -z "$BEFORE_SHA" ]; then
             node scripts/affected-templates.mjs --all > selection.json
           else
             node scripts/affected-templates.mjs --base "$BEFORE_SHA" --head "$HEAD_SHA" > selection.json

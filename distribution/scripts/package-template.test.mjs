@@ -185,6 +185,9 @@ test("remote verification detects package drift without coupling to unrelated so
   };
   assert.deepEqual(compareMarkers(base, base), []);
   assert.deepEqual(compareMarkers({ ...base, sourceSha: "f".repeat(40) }, base), []);
+  assert.deepEqual(compareMarkers({ ...base, sourceSha: "not-a-commit" }, base), [
+    "marker sourceSha is not a full Git commit",
+  ]);
   const drifted = {
     ...base,
     packageSha256: "b".repeat(64),
