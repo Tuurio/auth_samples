@@ -13,3 +13,9 @@ test("unprovisioned protected routes fail closed with a useful message", async (
   await expect(page.getByRole("heading", { name: "Sign in to continue" })).toBeVisible();
   await expect(page.getByText(/issuer is not provisioned/i)).toBeVisible();
 });
+
+test("runtime deployment details require a validated bearer token", async ({ request }) => {
+  const response = await request.get("/api/config");
+  expect(response.status()).toBe(401);
+  expect(await response.json()).toEqual({ error: "A valid bearer token is required" });
+});

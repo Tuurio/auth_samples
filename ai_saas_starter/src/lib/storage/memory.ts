@@ -26,6 +26,7 @@ export class MemoryWorkspaceStore implements WorkspaceStore {
     return [...this.conversations.values()]
       .filter((conversation) => conversation.tenantId === identity.tenantId)
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+      .slice(0, 100)
       .map((conversation) => ({ ...conversation }));
   }
 
@@ -34,7 +35,7 @@ export class MemoryWorkspaceStore implements WorkspaceStore {
     if (!conversation || conversation.tenantId !== identity.tenantId) return null;
     return {
       ...conversation,
-      messages: (this.messages.get(conversationId) ?? []).map((message) => ({ ...message })),
+      messages: (this.messages.get(conversationId) ?? []).slice(-200).map((message) => ({ ...message })),
     };
   }
 
@@ -105,6 +106,18 @@ export class MemoryWorkspaceStore implements WorkspaceStore {
     };
     this.usage.set(key, next);
     return { period, ...next, limit };
+  }
+
+  async refundUsage(identity: Identity, decrement: UsageIncrement, decrementRequestCount = false): Promise<void> {
+    const key = `${identity.tenantId}:${currentPeriod()}`;
+    const current = this.usage.get(key);
+    if (!current) return;
+    this.usage.set(key, {
+      ...current,
+      inputUnits: Math.max(0, current.inputUnits - decrement.inputUnits),
+      outputUnits: Math.max(0, current.outputUnits - decrement.outputUnits),
+      requestCount: Math.max(0, current.requestCount - (decrementRequestCount ? 1 : 0)),
+    });
   }
 
   async addAudit(identity: Identity, action: string, targetId?: string): Promise<void> {

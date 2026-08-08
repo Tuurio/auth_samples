@@ -42,7 +42,9 @@ export class PostgresWorkspaceStore implements WorkspaceStore {
   constructor(private readonly sql: Sql) {}
 
   async listConversations(identity: Identity): Promise<Conversation[]> {
-    const rows = await this.sql`SELECT * FROM conversations WHERE tenant_id = ${identity.tenantId} ORDER BY updated_at DESC`;
+    const rows = await this.sql`
+      SELECT * FROM conversations WHERE tenant_id = ${identity.tenantId} ORDER BY updated_at DESC, id DESC LIMIT 100
+    `;
     return rows.map((row) => conversationFrom(row));
   }
 
@@ -50,9 +52,13 @@ export class PostgresWorkspaceStore implements WorkspaceStore {
     const rows = await this.sql`SELECT * FROM conversations WHERE id = ${conversationId} AND tenant_id = ${identity.tenantId}`;
     if (!rows[0]) return null;
     const messages = await this.sql`
-      SELECT * FROM messages
-      WHERE conversation_id = ${conversationId} AND tenant_id = ${identity.tenantId}
-      ORDER BY created_at ASC
+      SELECT * FROM (
+        SELECT * FROM messages
+        WHERE conversation_id = ${conversationId} AND tenant_id = ${identity.tenantId}
+        ORDER BY created_at DESC, id DESC
+        LIMIT 200
+      ) AS recent_messages
+      ORDER BY created_at ASC, id ASC
     `;
     return { ...conversationFrom(rows[0]), messages: messages.map((row) => messageFrom(row)) };
   }
@@ -135,6 +141,17 @@ export class PostgresWorkspaceStore implements WorkspaceStore {
       requestCount: Number(rows[0].request_count),
       limit,
     };
+  }
+
+  async refundUsage(identity: Identity, decrement: UsageIncrement, decrementRequestCount = false): Promise<void> {
+    const period = currentPeriod();
+    await this.sql`
+      UPDATE monthly_usage SET
+        input_units = GREATEST(0, input_units - ${decrement.inputUnits}),
+        output_units = GREATEST(0, output_units - ${decrement.outputUnits}),
+        request_count = GREATEST(0, request_count - ${decrementRequestCount ? 1 : 0})
+      WHERE tenant_id = ${identity.tenantId} AND period = ${period}
+    `;
   }
 
   async addAudit(identity: Identity, action: string, targetId?: string): Promise<void> {

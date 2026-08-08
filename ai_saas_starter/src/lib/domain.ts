@@ -58,6 +58,7 @@ export interface WorkspaceStore {
   deleteConversation(identity: Identity, conversationId: string): Promise<boolean>;
   getUsage(identity: Identity, limit: number): Promise<UsageSnapshot>;
   consumeUsage(identity: Identity, increment: UsageIncrement, limit: number): Promise<UsageSnapshot | null>;
+  refundUsage(identity: Identity, decrement: UsageIncrement, decrementRequestCount?: boolean): Promise<void>;
   addAudit(identity: Identity, action: string, targetId?: string): Promise<void>;
   listAudit(identity: Identity, limit?: number): Promise<AuditEvent[]>;
 }

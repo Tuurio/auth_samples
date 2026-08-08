@@ -8,7 +8,14 @@ const metadataSchema = z.object({
   jwks_uri: z.string().url(),
 });
 
-const metadataCache = new Map<string, Promise<z.infer<typeof metadataSchema>>>();
+interface MetadataCacheEntry {
+  expiresAt: number;
+  pending: Promise<z.infer<typeof metadataSchema>>;
+}
+
+const METADATA_CACHE_TTL_MS = 5 * 60_000;
+const MAX_METADATA_CACHE_ENTRIES = 32;
+const metadataCache = new Map<string, MetadataCacheEntry>();
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 export class AuthFailure extends Error {
@@ -40,21 +47,35 @@ export function identityFromClaims(payload: JWTPayload): Identity {
 }
 
 async function discovery(issuer: string) {
-  let pending = metadataCache.get(issuer);
-  if (!pending) {
-    pending = fetch(`${issuer}/.well-known/openid-configuration`, {
+  const now = Date.now();
+  for (const [candidate, entry] of metadataCache) {
+    if (entry.expiresAt <= now) metadataCache.delete(candidate);
+  }
+  let entry = metadataCache.get(issuer);
+  if (!entry) {
+    const pending = fetch(`${issuer}/.well-known/openid-configuration`, {
       headers: { accept: "application/json" },
-      cache: "force-cache",
+      cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
     }).then(async (response) => {
       if (!response.ok) throw new AuthFailure("OIDC discovery failed", 503);
       const metadata = metadataSchema.parse(await response.json());
       if (metadata.issuer !== issuer) throw new AuthFailure("OIDC discovery issuer mismatch", 503);
       if (new URL(metadata.jwks_uri).protocol !== "https:") throw new AuthFailure("OIDC JWKS must use HTTPS", 503);
       return metadata;
+    }).catch((error) => {
+      metadataCache.delete(issuer);
+      throw error;
     });
-    metadataCache.set(issuer, pending);
+    entry = { expiresAt: now + METADATA_CACHE_TTL_MS, pending };
+    metadataCache.set(issuer, entry);
+    while (metadataCache.size > MAX_METADATA_CACHE_ENTRIES) {
+      const oldest = metadataCache.keys().next().value as string | undefined;
+      if (!oldest) break;
+      metadataCache.delete(oldest);
+    }
   }
-  return pending;
+  return entry.pending;
 }
 
 async function verifyAccessToken(token: string): Promise<JWTPayload> {

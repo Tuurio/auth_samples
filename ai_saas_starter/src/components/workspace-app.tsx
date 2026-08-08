@@ -26,10 +26,11 @@ export function WorkspaceApp() {
     if (!user) return;
     try {
       const [conversationResponse, usageResponse, configResponse] = await Promise.all([
-        apiFetch("/api/conversations"), apiFetch("/api/usage"), fetch("/api/config"),
+        apiFetch("/api/conversations"), apiFetch("/api/usage"), apiFetch("/api/config"),
       ]);
       if (!conversationResponse.ok) throw new Error(await readError(conversationResponse));
       if (!usageResponse.ok) throw new Error(await readError(usageResponse));
+      if (!configResponse.ok) throw new Error(await readError(configResponse));
       const conversationData = await conversationResponse.json() as { conversations: Conversation[] };
       setConversations(conversationData.conversations);
       setUsage((await usageResponse.json() as { usage: UsageSnapshot }).usage);

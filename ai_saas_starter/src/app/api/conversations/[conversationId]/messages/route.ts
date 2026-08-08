@@ -30,15 +30,43 @@ export async function POST(request: Request, context: Context) {
     if (!await store.getConversation(identity, conversationId)) {
       return Response.json({ error: "Conversation not found" }, { status: 404 });
     }
+    const inputUnits = estimateUnits(input.content);
     const usage = await store.consumeUsage(identity, {
-      inputUnits: estimateUnits(input.content),
+      inputUnits,
       outputUnits: RESERVED_OUTPUT_UNITS,
     }, env.AI_MONTHLY_TOKEN_LIMIT);
     if (!usage) return Response.json({ error: "This workspace reached its monthly AI quota" }, { status: 402 });
 
-    await store.appendMessage(identity, conversationId, "user", input.content);
-    const conversation = await store.getConversation(identity, conversationId);
-    await store.addAudit(identity, "ai.requested", conversationId);
+    let reservationActive = true;
+    const refundReservedOutput = async () => {
+      if (!reservationActive) return;
+      reservationActive = false;
+      await store.refundUsage(identity, { inputUnits: 0, outputUnits: RESERVED_OUTPUT_UNITS });
+    };
+    const rollbackUsage = async () => {
+      if (!reservationActive) return;
+      reservationActive = false;
+      await store.refundUsage(identity, { inputUnits, outputUnits: RESERVED_OUTPUT_UNITS }, true);
+    };
+
+    let conversation;
+    try {
+      await store.appendMessage(identity, conversationId, "user", input.content);
+      conversation = await store.getConversation(identity, conversationId);
+    } catch (error) {
+      await rollbackUsage();
+      throw error;
+    }
+    if (!conversation) {
+      await rollbackUsage();
+      return Response.json({ error: "Conversation changed while the request was starting" }, { status: 409 });
+    }
+    try {
+      await store.addAudit(identity, "ai.requested", conversationId);
+    } catch (error) {
+      await rollbackUsage();
+      throw error;
+    }
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -52,9 +80,12 @@ export async function POST(request: Request, context: Context) {
             controller.enqueue(encoder.encode(chunk));
           }
           if (complete.trim()) await store.appendMessage(identity, conversationId, "assistant", complete);
+          reservationActive = false;
           await store.addAudit(identity, "ai.completed", conversationId);
           controller.close();
         } catch {
+          if (!complete.trim()) await refundReservedOutput();
+          else reservationActive = false;
           await store.addAudit(identity, "ai.failed", conversationId);
           controller.error(new Error("AI provider stream failed"));
         }

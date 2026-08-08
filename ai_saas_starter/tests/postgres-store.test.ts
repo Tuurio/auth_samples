@@ -30,6 +30,26 @@ suite("PostgresWorkspaceStore", () => {
     expect(await store!.getConversation(beta, conversation.id)).toBeNull();
     expect(await store!.consumeUsage(alpha, { inputUnits: 4, outputUnits: 5 }, 10)).not.toBeNull();
     expect(await store!.consumeUsage(alpha, { inputUnits: 1, outputUnits: 1 }, 10)).toBeNull();
+    await store!.refundUsage(alpha, { inputUnits: 0, outputUnits: 5 });
+    expect(await store!.consumeUsage(alpha, { inputUnits: 1, outputUnits: 1 }, 10)).not.toBeNull();
+    await store!.refundUsage(alpha, { inputUnits: 1, outputUnits: 1 }, true);
+    expect(await store!.getUsage(alpha, 10)).toMatchObject({ inputUnits: 4, outputUnits: 0, requestCount: 1 });
     expect((await store!.getUsage(beta, 10)).requestCount).toBe(0);
+  });
+
+  it("bounds conversation and message history returned to clients", async () => {
+    const bounded = identity("https://bounded.id.tuurio.com");
+    let latest = await store!.createConversation(bounded, "Conversation 0");
+    for (let index = 1; index <= 100; index += 1) {
+      latest = await store!.createConversation(bounded, `Conversation ${index}`);
+    }
+    for (let index = 0; index < 201; index += 1) {
+      await store!.appendMessage(bounded, latest.id, "user", `Message ${index}`);
+    }
+
+    expect(await store!.listConversations(bounded)).toHaveLength(100);
+    const messages = (await store!.getConversation(bounded, latest.id))?.messages ?? [];
+    expect(messages).toHaveLength(200);
+    expect(messages[0]?.content).toBe("Message 1");
   });
 });
