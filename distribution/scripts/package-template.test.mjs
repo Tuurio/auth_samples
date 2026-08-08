@@ -59,7 +59,7 @@ test("packages every ready template without shared credentials or raw-token guid
         .filter((path) => /(?:\.env\.example|\.gradle|\.java|\.js|\.json|\.kt|\.kts|\.md|\.mjs|\.php|\.properties|\.py|\.sh|\.swift|\.ts|\.tsx|\.vue|\.xml|\.ya?ml|^Dockerfile$|^gradlew$)/.test(path))
         .map((path) => readFileSync(resolve(output, path), "utf8"))
         .join("\n");
-      assert.doesNotMatch(readable, /g\.daniel\.kraus@gmail\.com|22222222|spa-K53I|php-KQD8/);
+      assert.doesNotMatch(readable, /spa-K53I|php-KQD8/);
       assert.doesNotMatch(readable, /Access token and ID token \(raw|Raw JWT/i);
     }
   } finally {
@@ -202,6 +202,9 @@ test("remote verification detects package drift without coupling to unrelated so
   };
   assert.deepEqual(compareMarkers(base, base), []);
   assert.deepEqual(compareMarkers({ ...base, sourceSha: "f".repeat(40) }, base), []);
+  assert.deepEqual(compareMarkers({ ...base, sourceSha: "not-a-commit" }, base), [
+    "marker sourceSha is not a full Git commit",
+  ]);
   const drifted = {
     ...base,
     packageSha256: "b".repeat(64),

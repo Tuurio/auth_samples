@@ -4,7 +4,7 @@ import { distributables, loadCatalog } from "./catalog.mjs";
 import { affectedTemplateIds } from "./affected-templates.mjs";
 
 const templates = distributables(loadCatalog());
-const allReady = templates.filter((template) => template.status === "ready" && template.files).map((template) => template.id);
+const allReady = templates.filter((template) => template.status === "ready" && template.files).map((template) => template.id).sort();
 
 test("selects only templates whose reviewed source changed", () => {
   assert.deepEqual(affectedTemplateIds(templates, ["auth_samples_react/src/App.tsx"]), ["react-vite"]);
@@ -15,8 +15,8 @@ test("selects only templates whose reviewed source changed", () => {
 });
 
 test("selects the full catalog for shared package inputs and explicit full syncs", () => {
-  assert.deepEqual(affectedTemplateIds(templates, ["distribution/README.template.md"]), allReady);
-  assert.deepEqual(affectedTemplateIds(templates, [], { fullCatalog: true }), allReady);
+  assert.deepEqual(affectedTemplateIds(templates, ["distribution/README.template.md"]).sort(), allReady);
+  assert.deepEqual(affectedTemplateIds(templates, [], { fullCatalog: true }).sort(), allReady);
 });
 
 test("does not sync satellites for distribution tooling that cannot change packages", () => {

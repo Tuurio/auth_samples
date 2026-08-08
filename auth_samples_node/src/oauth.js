@@ -45,18 +45,20 @@ async function exchangeCodeForTokens(config, code, verifier) {
     method: 'POST',
     headers,
     body,
+    signal: AbortSignal.timeout(10_000),
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || 'Token exchange failed.');
+    throw new Error('Token exchange failed.');
   }
 
   return await response.json();
 }
 
 async function fetchDiscovery(config) {
-  const response = await fetch(config.discoveryEndpoint);
+  const response = await fetch(config.discoveryEndpoint, {
+    signal: AbortSignal.timeout(10_000),
+  });
   if (!response.ok) {
     throw new Error('Unable to load discovery document.');
   }
@@ -73,10 +75,10 @@ async function fetchUserInfo(config, accessToken) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || 'Failed to load user profile.');
+    throw new Error('Failed to load user profile.');
   }
   return await response.json();
 }
