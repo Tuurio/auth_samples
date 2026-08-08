@@ -18,6 +18,7 @@ From `distribution/`:
 
 ```bash
 npm ci
+npm run previews
 npm run validate
 npm run affected -- --base <base-sha> --head <head-sha>
 npm run sync -- --id react-vite
@@ -25,6 +26,8 @@ npm run verify:remotes -- --id react-vite
 ```
 
 Dry-run is the default. Add `--apply` only after reviewing the package and target repository. A manual full-catalog synchronization omits `--id`; the GitHub workflow is preferred because it provides per-template isolation and summaries.
+
+`npm run previews` deterministically regenerates the 1280 × 640 PNG and SVG social-preview assets for all 20 framework templates. Use `npm run previews -- --id react-vite` for a single catalog entry. The validator rejects missing, stale, oversized, transparent, or incorrectly sized assets before synchronization.
 
 ## Contribution policy
 

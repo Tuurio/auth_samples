@@ -4,14 +4,16 @@
   "type": "module",
   "scripts": {
     "test": "node --test scripts/*.test.mjs",
-    "validate": "npm test && node scripts/validate-manifest.mjs",
+    "validate": "npm test && node scripts/validate-manifest.mjs && node scripts/validate-social-previews.mjs",
     "package": "node scripts/package-template.mjs",
+    "previews": "node scripts/generate-social-previews.mjs",
     "affected": "node scripts/affected-templates.mjs",
     "bootstrap": "node scripts/bootstrap-template-repos.mjs",
     "sync": "node scripts/sync-template-repos.mjs",
     "verify:remotes": "node scripts/verify-template-repos.mjs"
   },
   "devDependencies": {
+    "sharp": "0.35.3",
     "yaml": "2.9.0"
   }
 }
