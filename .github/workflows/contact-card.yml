@@ -1,0 +1,23 @@
+name: Contact card
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Contact card checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Test and package contact card
+        working-directory: contact_card
+        run: ./gradlew test bootJar --no-daemon

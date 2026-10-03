@@ -1,0 +1,6 @@
+gates:
+  requireCi: true
+  requireAiReview: true
+  requiredChecks:
+    - name: Contact card checks
+      appId: 15368
